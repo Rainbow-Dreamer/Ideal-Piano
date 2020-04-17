@@ -1,7 +1,6 @@
 from midiutil import MIDIFile
 from copy import deepcopy as copy
-import os
-import random
+import os, math, random
 from mido.midifiles.midifiles import MidiFile as midi
 from mido import Message
 import mido.midifiles.units as unit
@@ -38,6 +37,12 @@ def totuple(x):
         return tuple(x)
     except:
         return (x, )
+
+
+def getf(y):
+    if type(y) != note:
+        y = toNote(y)
+    return 440 * math.exp((y.degree - 57) * math.log(2) / 12)
 
 
 def secondary_dom(root, mode='major'):
