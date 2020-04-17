@@ -1,0 +1,5 @@
+d ; tab
+/ h ;
+a k '
+h tab r
+(repeat)
