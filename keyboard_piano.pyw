@@ -2,7 +2,6 @@ import pygame, keyboard, os, time, sys, pyglet
 from config import *
 from musicpy.musicpy import *
 import pygame.midi
-import keyboard
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = ['']
@@ -39,6 +38,17 @@ label3 = pyglet.text.Label('',
                            anchor_y='center')
 
 
+
+
+label_mode1 = pyglet.text.Label('press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file',
+                           font_name='Comic Sans MS',
+                           font_size=15,
+                           x=650,
+                           y=250,
+                           color=(0, 0, 0, 255),
+                           anchor_x='center',
+                           anchor_y='center')
+
 def load(dic, path, file_format, volume):
     wavedict = {
         i: pygame.mixer.Sound(f'{path}{dic[i]}.{file_format}')
@@ -55,7 +65,6 @@ def configkey(q):
 
 def configshow(content):
     label.text = str(content)
-    time.sleep(0.5)
 
 
 def switchs(q, name):
@@ -63,51 +72,68 @@ def switchs(q, name):
         globals()[name] = not globals()[name]
         configshow(f'{name} changes to {globals()[name]}')
 
-
+first_time = True
 message_label = False
 notedic = key_settings
-if mode == 'self':
-    if self_device == 'pc':
 
-        @window.event
-        def on_draw():
-            window.clear()
-            image.blit(0, 0)
-            label.draw()
-            label2.draw()
-            if message_label:
-                label3.draw()
-            for i in currentchord.notes:
-                plays[i.degree - 21].draw()
-    elif self_device == 'midi keyboard':
-
-        @window.event
-        def on_draw():
-            window.clear()
-            image.blit(0, 0)
-            label.draw()
-            label2.draw()
-            if message_label:
-                label3.draw()
-            for i in current_play:
-                plays[i.degree - 21].draw()
-elif mode == 'show':
-
-    @window.event
-    def on_draw():
-        window.clear()
-        image.blit(0, 0)
+mode_num = None  
+@window.event
+def on_draw():
+    window.clear()
+    image.blit(0, 0)
+    if first_time:
+        
+        global mode_num
+        label_mode1.draw()
+        if mode_num is None:
+            if keyboard.is_pressed('Z'):
+                mode_num = 0
+                label.text = 'loading sound samples, please wait...'
+                label.draw()
+            elif keyboard.is_pressed('X'):
+                mode_num = 1
+                label.text = 'loading sound samples, please wait...'
+                label.draw()
+            elif keyboard.is_pressed('C'):
+                mode_num = 2
+                label.text = 'loading midi notes...please wait'
+                label.draw()            
+                
+                
+        else:
+            if mode_num == 0:
+                init_self_pc()
+                label.text = 'sounds loading finished'
+                func = mode_self_pc
+            elif mode_num == 1:
+                init_self_midi()
+                label.text = 'sounds loading finished'
+                func = mode_self_midi
+            elif mode_num == 2:
+                init_show()
+                func = mode_show
+            not_first()                
+            pyglet.clock.schedule_interval(func, 1 / 120)            
+    else:
         label.draw()
         label2.draw()
         if message_label:
             label3.draw()
-        for i in playnotes:
-            plays[i.degree - 21].draw()
-
+        if mode_num == 0:
+            for i in currentchord.notes:
+                plays[i.degree - 21].draw()
+        elif mode_num == 1:
+            for i in current_play:
+                plays[i.degree - 21].draw()
+        else:
+            for i in playnotes:
+                plays[i.degree - 21].draw()        
 
 currentchord = chord([])
 playnotes = []
-
+def not_first():
+    global first_time
+    first_time = False
 
 def mode_self_pc(dt):
     global stillplay
@@ -115,6 +141,7 @@ def mode_self_pc(dt):
     global changed
     global lastshow
     global currentchord
+    global global_volume
     if config_enable:
         if configkey(volume_up):
             global_volume += volume_change_unit
@@ -335,7 +362,7 @@ def mode_show(dt):
             sys.exit(0)
 
 
-def initialize():
+def initialize(musicsheet, unit_time):
     playls = []
     start = 0
     for i in range(sheetlen):
@@ -353,37 +380,58 @@ def initialize():
         start += interval
     return playls
 
-
-if mode == 'self':
+def init_self_pc():
+    global wavdic
+    global last
+    global changed
+    if delay:
+        global stillplay
+    global lastshow
     pygame.mixer.set_num_channels(maxinum_channels)
-    if self_device == 'pc':
-        wavdic = load(notedic, sound_path, sound_format, global_volume)
-        last = []
-        changed = False
-        if delay:
-            stillplay = []
-        lastshow = None
-        func = mode_self_pc
-    elif self_device == 'midi keyboard':
-        notenames = os.listdir(sound_path)
-        notenames = [x[:x.index('.')] for x in notenames]
-        wavdic = load({i: i
-                       for i in notenames}, sound_path, sound_format,
-                      global_volume)
+    wavdic = load(notedic, sound_path, sound_format, global_volume)
+    last = []
+    changed = False
+    if delay:
+        stillplay = []
+    lastshow = None
 
-        pygame.midi.init()
-        device = pygame.midi.Input(midi_device_id)
-        current_play = []
-        last = current_play.copy()
-        delay_time = int(delay_time * 1000)
-        func = mode_self_midi
-elif mode == 'show':
+
+def init_self_midi():
+    global current_play
+    global delay_time
+    global wavdic
+    global device
+    global last
+    pygame.mixer.set_num_channels(maxinum_channels)
+    notenames = os.listdir(sound_path)
+    notenames = [x[:x.index('.')] for x in notenames]
+    wavdic = load({i: i
+                   for i in notenames}, sound_path, sound_format,
+                  global_volume)
+
+    pygame.midi.init()
+    device = pygame.midi.Input(midi_device_id)
+    current_play = []
+    last = current_play.copy()
+    delay_time = int(delay_time * 1000)
+    func = mode_self_midi
+
+def init_show():
+    global playls
+    global startplay
+    global lastshow
+    global finished
+    global show_delay_time
+    global sheetlen
+    global wholenotes
     if path is not None:
         if '.mid' in path:
-            path = path.replace('.mid', '')
-        bpm2, musicsheet = read(path, track_ind, track)
+            path2 = path.replace('.mid', '')
+        bpm2, musicsheet = read(path2, track_ind, track)
         if bpm is None:
-            bpm = bpm2
+            bpm_to_use = bpm2
+        else:
+            bpm_to_use = bpm
     else:
         musicsheet = eval(musicsheet)
     sheetlen = len(musicsheet)
@@ -403,13 +451,13 @@ elif mode == 'show':
         label.text = 'this track has no music notes'
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
-    unit_time = 60 / bpm
+    unit_time = 60 / bpm_to_use
     show_delay_time = int(show_delay_time * 1000)
 
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
     # 2 means it has stopped playing
-    playls = initialize()
+    playls = initialize(musicsheet, unit_time)
     startplay = time.time()
     lastshow = None
     finished = False
@@ -421,5 +469,4 @@ def update(dt):
 
 
 pyglet.clock.schedule_interval(update, 1 / 120)
-pyglet.clock.schedule_interval(func, 1 / 120)
 pyglet.app.run()
