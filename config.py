@@ -133,7 +133,7 @@ track = 1
 bpm = None
 
 # play_interval: play the parts of the midi in this interval (percentages)
-play_interval = 0,20
+play_interval = None
 
 # these are the init parameters of the mixer
 frequency = 44100
