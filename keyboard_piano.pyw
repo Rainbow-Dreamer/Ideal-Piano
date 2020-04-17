@@ -36,18 +36,16 @@ label3 = pyglet.text.Label('',
                            color=(0, 0, 0, 255),
                            anchor_x='center',
                            anchor_y='center')
+label_mode1 = pyglet.text.Label(
+    'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file',
+    font_name='Comic Sans MS',
+    font_size=15,
+    x=650,
+    y=250,
+    color=(0, 0, 0, 255),
+    anchor_x='center',
+    anchor_y='center')
 
-
-
-
-label_mode1 = pyglet.text.Label('press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file',
-                           font_name='Comic Sans MS',
-                           font_size=15,
-                           x=650,
-                           y=250,
-                           color=(0, 0, 0, 255),
-                           anchor_x='center',
-                           anchor_y='center')
 
 def load(dic, path, file_format, volume):
     wavedict = {
@@ -72,17 +70,20 @@ def switchs(q, name):
         globals()[name] = not globals()[name]
         configshow(f'{name} changes to {globals()[name]}')
 
+
 first_time = True
 message_label = False
 notedic = key_settings
 
-mode_num = None  
+mode_num = None
+
+
 @window.event
 def on_draw():
     window.clear()
     image.blit(0, 0)
     if first_time:
-        
+
         global mode_num
         label_mode1.draw()
         if mode_num is None:
@@ -97,9 +98,8 @@ def on_draw():
             elif keyboard.is_pressed('C'):
                 mode_num = 2
                 label.text = 'loading midi notes...please wait'
-                label.draw()            
-                
-                
+                label.draw()
+
         else:
             if mode_num == 0:
                 init_self_pc()
@@ -112,28 +112,33 @@ def on_draw():
             elif mode_num == 2:
                 init_show()
                 func = mode_show
-            not_first()                
-            pyglet.clock.schedule_interval(func, 1 / 120)            
+            not_first()
+            pyglet.clock.schedule_interval(func, 1 / 120)
     else:
         label.draw()
         label2.draw()
         if message_label:
             label3.draw()
         if mode_num == 0:
-            for i in currentchord.notes:
-                plays[i.degree - 21].draw()
+            if label2.text != '':
+                for i in currentchord.notes:
+                    plays[i.degree - 21].draw()
         elif mode_num == 1:
             for i in current_play:
                 plays[i.degree - 21].draw()
         else:
             for i in playnotes:
-                plays[i.degree - 21].draw()        
+                plays[i.degree - 21].draw()
+
 
 currentchord = chord([])
 playnotes = []
+
+
 def not_first():
     global first_time
     first_time = False
+
 
 def mode_self_pc(dt):
     global stillplay
@@ -380,6 +385,7 @@ def initialize(musicsheet, unit_time):
         start += interval
     return playls
 
+
 def init_self_pc():
     global wavdic
     global last
@@ -415,6 +421,7 @@ def init_self_midi():
     last = current_play.copy()
     delay_time = int(delay_time * 1000)
     func = mode_self_midi
+
 
 def init_show():
     global playls
