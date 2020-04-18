@@ -104,16 +104,34 @@ def on_draw():
             if mode_num == 0:
                 init_self_pc()
                 label.text = 'sounds loading finished'
+                label.draw()
                 func = mode_self_pc
+                not_first()
+                pyglet.clock.schedule_interval(func, 1 / 240)                
             elif mode_num == 1:
-                init_self_midi()
-                label.text = 'sounds loading finished'
-                func = mode_self_midi
+                try:
+                    init_self_midi()
+                    label.text = 'sounds loading finished'
+                    label.draw()
+                    func = mode_self_midi   
+                    not_first()
+                    pyglet.clock.schedule_interval(func, 1 / 240)                    
+                except:
+                    label.text = 'there is no midi input devices, please check'
+                    mode_num = 3
+                    label.draw()
+                    
             elif mode_num == 2:
                 init_show()
                 func = mode_show
-            not_first()
-            pyglet.clock.schedule_interval(func, 1 / 120)
+                not_first()
+                pyglet.clock.schedule_interval(func, 1 / 240)    
+            elif mode_num == 3:
+                time.sleep(2)
+                label.text = ''
+                label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+                mode_num = None
+            
     else:
         label.draw()
         label2.draw()
@@ -432,9 +450,7 @@ def init_show():
     global sheetlen
     global wholenotes
     if path is not None:
-        if '.mid' in path:
-            path2 = path.replace('.mid', '')
-        bpm2, musicsheet = read(path2, track_ind, track)
+        bpm2, musicsheet = read(path, track_ind, track)
         if bpm is None:
             bpm_to_use = bpm2
         else:
@@ -475,5 +491,5 @@ def update(dt):
     pass
 
 
-pyglet.clock.schedule_interval(update, 1 / 120)
+pyglet.clock.schedule_interval(update, 1 / 240)
 pyglet.app.run()

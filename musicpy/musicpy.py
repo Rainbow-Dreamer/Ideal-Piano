@@ -202,7 +202,7 @@ def play(chord1,
 
 def read(name, trackind=1, track=1):
     # read from a midi file and return a notes list
-    x = midi(f'{name}.mid')
+    x = midi(str(name))
     tracklist = list(enumerate(x.tracks))[trackind]
     t = tracklist[track]
     interval_unit = x.ticks_per_beat
