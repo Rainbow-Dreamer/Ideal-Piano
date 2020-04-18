@@ -107,31 +107,31 @@ def on_draw():
                 label.draw()
                 func = mode_self_pc
                 not_first()
-                pyglet.clock.schedule_interval(func, 1 / 120)                
+                pyglet.clock.schedule_interval(func, 1 / 120)
             elif mode_num == 1:
                 try:
                     init_self_midi()
                     label.text = 'sounds loading finished'
                     label.draw()
-                    func = mode_self_midi   
+                    func = mode_self_midi
                     not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 120)                    
+                    pyglet.clock.schedule_interval(func, 1 / 120)
                 except:
                     label.text = 'there is no midi input devices, please check'
                     mode_num = 3
                     label.draw()
-                    
+
             elif mode_num == 2:
                 init_show()
                 func = mode_show
                 not_first()
-                pyglet.clock.schedule_interval(func, 1 / 120)    
+                pyglet.clock.schedule_interval(func, 1 / 120)
             elif mode_num == 3:
                 time.sleep(2)
                 label.text = ''
                 label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
                 mode_num = None
-            
+
     else:
         label.draw()
         label2.draw()
@@ -450,6 +450,10 @@ def init_show():
         else:
             bpm_to_use = bpm
     else:
+        if bpm is None:
+            bpm_to_use = 120
+        else:
+            bpm_to_use = bpm
         musicsheet = eval(musicsheet)
     sheetlen = len(musicsheet)
     if play_interval is not None:
