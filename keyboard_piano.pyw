@@ -2,6 +2,7 @@ import pygame, keyboard, os, time, sys, pyglet
 from config import *
 from musicpy.musicpy import *
 import pygame.midi
+import browse
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = ['']
@@ -97,8 +98,7 @@ def on_draw():
                 label.draw()
             elif keyboard.is_pressed('C'):
                 mode_num = 2
-                label.text = 'loading midi notes...please wait'
-                label.draw()
+                
 
         else:
             if mode_num == 0:
@@ -123,6 +123,8 @@ def on_draw():
 
             elif mode_num == 2:
                 init_show()
+                label.text = 'loading midi notes...please wait'
+                label.draw()                
                 func = mode_show
                 not_first()
                 pyglet.clock.schedule_interval(func, 1 / 120)
@@ -443,6 +445,8 @@ def init_show():
     global wholenotes
     global musicsheet
     global unit_time
+    browse.setup()
+    path = browse.file_path
     if path is not None:
         bpm2, musicsheet = read(path, track_ind, track)
         if bpm is None:
