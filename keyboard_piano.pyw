@@ -107,7 +107,7 @@ def on_draw():
                 label.draw()
                 func = mode_self_pc
                 not_first()
-                pyglet.clock.schedule_interval(func, 1 / 240)                
+                pyglet.clock.schedule_interval(func, 1 / 120)                
             elif mode_num == 1:
                 try:
                     init_self_midi()
@@ -115,7 +115,7 @@ def on_draw():
                     label.draw()
                     func = mode_self_midi   
                     not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 240)                    
+                    pyglet.clock.schedule_interval(func, 1 / 120)                    
                 except:
                     label.text = 'there is no midi input devices, please check'
                     mode_num = 3
@@ -125,7 +125,7 @@ def on_draw():
                 init_show()
                 func = mode_show
                 not_first()
-                pyglet.clock.schedule_interval(func, 1 / 240)    
+                pyglet.clock.schedule_interval(func, 1 / 120)    
             elif mode_num == 3:
                 time.sleep(2)
                 label.text = ''
@@ -252,10 +252,8 @@ def mode_self_pc(dt):
                                        ignore_add_from=ignore_add_from,
                                        same_note_special=same_note_special,
                                        two_show_interval=two_show_interval)
-                    if 'cannot' in chordtype:
-                        label.text = f'note {", ".join([str(x) for x in currentchord])}'
-                    else:
-                        label2.text = str(chordtype)
+
+                    label2.text = str(chordtype)
             else:
                 lastshow = notels
                 label.text = str(notels)
@@ -283,10 +281,8 @@ def mode_self_midi(dt):
                                ignore_add_from=ignore_add_from,
                                same_note_special=same_note_special,
                                two_show_interval=two_show_interval)
-            if 'cannot' in chordtype:
-                label2.text = f'note {", ".join([str(x) for x in currentchord])}'
-            else:
-                label2.text = str(chordtype)
+
+            label2.text = str(chordtype)
         else:
             label.text = '[]'
             label2.text = ''
@@ -355,8 +351,7 @@ def mode_show(dt):
                                        ignore_add_from=ignore_add_from,
                                        same_note_special=same_note_special,
                                        two_show_interval=two_show_interval)
-                    if 'cannot' not in chordtype:
-                        label2.text = str(chordtype)
+                    label2.text = str(chordtype)
         if keyboard.is_pressed(pause_key):
             paused = True
             pause_start = time.time()
@@ -372,12 +367,9 @@ def mode_show(dt):
     if finished:
         if show_chord:
             label2.text = ''
-        label.text = str(
-            f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
-        )
+        label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
-            label.text = str('loading...please wait')
-            playls = initialize()
+            playls = initialize(musicsheet, unit_time)
             startplay = time.time()
             lastshow = None
             finished = False
@@ -449,6 +441,8 @@ def init_show():
     global show_delay_time
     global sheetlen
     global wholenotes
+    global musicsheet
+    global unit_time
     if path is not None:
         bpm2, musicsheet = read(path, track_ind, track)
         if bpm is None:
@@ -491,5 +485,5 @@ def update(dt):
     pass
 
 
-pyglet.clock.schedule_interval(update, 1 / 240)
+pyglet.clock.schedule_interval(update, 1 / 120)
 pyglet.app.run()

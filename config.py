@@ -123,7 +123,7 @@ show_key = False
 # or set the path of midi you want to play
 musicsheet = "(chd('C','maj7').set(4,1))*3"
 
-path = 'sundial dreams.mid'
+path = r'G:\fl studio files\aaa\mp3和midi文件\midi文件\sundial dreams.mid'
 
 # these are the number of tracks of the midi you want to play from
 track_ind = 2

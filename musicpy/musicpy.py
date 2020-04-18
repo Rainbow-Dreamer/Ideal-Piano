@@ -1084,7 +1084,7 @@ def detect(a,
                                            same_note_special, False,
                                            return_fromchord)
                     if result_change is None:
-                        return detect_split(a, N)
+                        return ''
                     else:
                         return result_change
                 else:
@@ -1126,7 +1126,7 @@ def detect(a,
                                        same_note_special, False,
                                        return_fromchord)
                 if result_change is None:
-                    return detect_split(a, N)
+                    return ''
                 else:
                     return result_change
             else:
