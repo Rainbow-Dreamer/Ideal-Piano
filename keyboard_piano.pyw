@@ -3,6 +3,7 @@ from config import *
 from musicpy.musicpy import *
 import pygame.midi
 import browse
+from pyglet.window import mouse
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = ['']
@@ -12,6 +13,10 @@ playing = pyglet.resource.image('playing.png')
 playing.width /= 1.2
 playing.height /= 1.2
 plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
+button_go_back_img = pyglet.resource.image('go_back.png')
+button_go_back_img.width /= 3
+button_go_back_img.height /= 3
+button_go_back =  pyglet.sprite.Sprite(button_go_back_img, x=50, y=550)
 window = pyglet.window.Window(int(image.width), int(image.height) - 150)
 label = pyglet.text.Label('',
                           font_name='Comic Sans MS',
@@ -71,21 +76,41 @@ def switchs(q, name):
         globals()[name] = not globals()[name]
         configshow(f'{name} changes to {globals()[name]}')
 
-
+mouse_pos = 0, 0    
+is_click = True
 first_time = True
 message_label = False
 notedic = key_settings
-
+is_click = False
 mode_num = None
+func = None
 
+def get_range(obj, img):
+    x, y = obj.x, obj.y
+    height, width = img.height, img.width
+    return [x, x + width], [y, y + height]
+range_x, range_y = get_range(button_go_back, button_go_back_img)
+def inside():
+    return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[0] <= mouse_pos[1] <= range_y[1]
 
+@window.event
+def on_mouse_motion(x, y, dx, dy):
+    global mouse_pos
+    mouse_pos = x, y
+@window.event    
+def on_mouse_press(x, y, button, modifiers):
+    global is_click
+    if inside() & button & mouse.LEFT and not first_time:
+        is_click = True
 @window.event
 def on_draw():
     window.clear()
     image.blit(0, 0)
+    button_go_back.draw()
     if first_time:
-
+        global is_click
         global mode_num
+        global func
         label_mode1.draw()
         if mode_num is None:
             if keyboard.is_pressed('Z'):
@@ -122,12 +147,19 @@ def on_draw():
                     label.draw()
 
             elif mode_num == 2:
-                init_show()
-                label.text = 'loading midi notes...please wait'
+                init_result = init_show()
+                if init_result == 'no':
+                    label.text = 'this track has no music notes'
+                    mode_num = None
+                elif init_result == 'back':
+                    label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+                    mode_num = None
+                else:
+                    func = mode_show
+                    not_first()
+                    pyglet.clock.schedule_interval(func, 1 / 120)                    
                 label.draw()                
-                func = mode_show
-                not_first()
-                pyglet.clock.schedule_interval(func, 1 / 120)
+                
             elif mode_num == 3:
                 time.sleep(2)
                 label.text = ''
@@ -135,20 +167,31 @@ def on_draw():
                 mode_num = None
 
     else:
+        
+        if is_click:
+            is_click = False
+            not_first()
+            label.text = ''
+            label2.text = ''
+            
+            pyglet.clock.unschedule(func)
+            label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+            mode_num = None
+        else:          
+            if mode_num == 0:
+                if label2.text != '':
+                    for i in currentchord.notes:
+                        plays[i.degree - 21].draw()
+            elif mode_num == 1:
+                for i in current_play:
+                    plays[i.degree - 21].draw()
+            else:
+                for i in playnotes:
+                    plays[i.degree - 21].draw()
         label.draw()
         label2.draw()
         if message_label:
-            label3.draw()
-        if mode_num == 0:
-            if label2.text != '':
-                for i in currentchord.notes:
-                    plays[i.degree - 21].draw()
-        elif mode_num == 1:
-            for i in current_play:
-                plays[i.degree - 21].draw()
-        else:
-            for i in playnotes:
-                plays[i.degree - 21].draw()
+            label3.draw() 
 
 
 currentchord = chord([])
@@ -157,7 +200,7 @@ playnotes = []
 
 def not_first():
     global first_time
-    first_time = False
+    first_time = not first_time
 
 
 def mode_self_pc(dt):
@@ -447,6 +490,9 @@ def init_show():
     global unit_time
     browse.setup()
     path = browse.file_path
+    if browse.action == 1:
+        browse.action = 0
+        return 'back'
     if path is not None:
         bpm2, musicsheet = read(path, track_ind, track)
         if bpm is None:
@@ -458,7 +504,10 @@ def init_show():
             bpm_to_use = 120
         else:
             bpm_to_use = bpm
-        musicsheet = eval(musicsheet)
+        try:
+            musicsheet = eval(musicsheet)
+        except:
+            return 'back'
     sheetlen = len(musicsheet)
     if play_interval is not None:
         play_start, play_stop = int(sheetlen *
@@ -473,7 +522,7 @@ def init_show():
                                 eval(show_modulation[1]))
 
     if sheetlen == 0:
-        label.text = 'this track has no music notes'
+        return 'no'
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
     unit_time = 60 / bpm_to_use

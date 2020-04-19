@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
  
 file_path = None 
+action = 0
 class Root(Tk):
     def __init__(self):
         super(Root, self).__init__()
@@ -12,6 +13,8 @@ class Root(Tk):
  
         self.labelFrame = ttk.LabelFrame(self, text = "midi files")
         self.labelFrame.grid(column = 0, row = 1, padx = 100, pady = 100)
+        self.button_a = ttk.Button(self.labelFrame, text = "Go Back",command = self.go_back)
+        self.button_a.grid(column = 1, row = 0)        
  
         self.make_button()
         try:
@@ -30,6 +33,10 @@ class Root(Tk):
         self.button.destroy()
         self.button2.destroy()
         self.make_button()
+    def go_back(self):
+        global action
+        action = 1
+        self.destroy()
  
     def fileDialog(self):
         global file_path
