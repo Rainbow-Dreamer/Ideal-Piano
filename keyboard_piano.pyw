@@ -45,7 +45,7 @@ button_self_midi = self_midi.MakeButton()
 play_midi = Button('play_midi.png', 50, 400)
 button_play_midi = play_midi.MakeButton()
 window = pyglet.window.Window(int(image.width), int(image.height) - 150)
-intro_text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+
 label = pyglet.text.Label('',
                           font_name='Comic Sans MS',
                           font_size=20,
@@ -70,14 +70,6 @@ label3 = pyglet.text.Label('',
                            color=(0, 0, 0, 255),
                            anchor_x='center',
                            anchor_y='center')
-label_mode1 = pyglet.text.Label(intro_text,
-                                font_name='Comic Sans MS',
-                                font_size=15,
-                                x=650,
-                                y=250,
-                                color=(0, 0, 0, 255),
-                                anchor_x='center',
-                                anchor_y='center')
 
 
 def load(dic, path, file_format, volume):
@@ -145,7 +137,6 @@ def on_draw():
         global is_click
         global mode_num
         global func
-        label_mode1.draw()
         button_play.draw()
         button_self_midi.draw()
         button_play_midi.draw()
@@ -195,11 +186,9 @@ def on_draw():
             elif mode_num == 3:
                 time.sleep(2)
                 label.text = ''
-                intro()
                 mode_num = None
             elif mode_num == 4:
                 label.text = ''
-                intro()
                 mode_num = None
                 reset_click_mode()
 
@@ -212,7 +201,6 @@ def on_draw():
             label2.text = ''
 
             pyglet.clock.unschedule(func)
-            intro()
             mode_num = None
         else:
             if mode_num == 0:
@@ -243,10 +231,6 @@ def reset_click_mode():
 def not_first():
     global first_time
     first_time = not first_time
-
-
-def intro():
-    label_mode1.text = intro_text
 
 
 def mode_self_pc(dt):
