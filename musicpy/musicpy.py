@@ -203,8 +203,14 @@ def play(chord1,
 def read(name, trackind=1, track=1):
     # read from a midi file and return a notes list
     x = midi(str(name))
-    tracklist = list(enumerate(x.tracks))[trackind]
-    t = tracklist[track]
+    try:
+        tracklist = list(enumerate(x.tracks))[trackind]
+    except:
+        return 'error'
+    try:
+        t = tracklist[track]
+    except:
+        return 'error'
     interval_unit = x.ticks_per_beat
     hason = []
     hasoff = []

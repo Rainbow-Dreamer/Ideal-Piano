@@ -16,8 +16,9 @@ plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
 button_go_back_img = pyglet.resource.image('go_back.png')
 button_go_back_img.width /= 3
 button_go_back_img.height /= 3
-button_go_back =  pyglet.sprite.Sprite(button_go_back_img, x=50, y=550)
+button_go_back = pyglet.sprite.Sprite(button_go_back_img, x=50, y=550)
 window = pyglet.window.Window(int(image.width), int(image.height) - 150)
+intro_text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
 label = pyglet.text.Label('',
                           font_name='Comic Sans MS',
                           font_size=20,
@@ -42,15 +43,14 @@ label3 = pyglet.text.Label('',
                            color=(0, 0, 0, 255),
                            anchor_x='center',
                            anchor_y='center')
-label_mode1 = pyglet.text.Label(
-    'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file',
-    font_name='Comic Sans MS',
-    font_size=15,
-    x=650,
-    y=250,
-    color=(0, 0, 0, 255),
-    anchor_x='center',
-    anchor_y='center')
+label_mode1 = pyglet.text.Label(intro_text,
+                                font_name='Comic Sans MS',
+                                font_size=15,
+                                x=650,
+                                y=250,
+                                color=(0, 0, 0, 255),
+                                anchor_x='center',
+                                anchor_y='center')
 
 
 def load(dic, path, file_format, volume):
@@ -76,7 +76,8 @@ def switchs(q, name):
         globals()[name] = not globals()[name]
         configshow(f'{name} changes to {globals()[name]}')
 
-mouse_pos = 0, 0    
+
+mouse_pos = 0, 0
 is_click = True
 first_time = True
 message_label = False
@@ -85,23 +86,34 @@ is_click = False
 mode_num = None
 func = None
 
+
 def get_range(obj, img):
     x, y = obj.x, obj.y
     height, width = img.height, img.width
     return [x, x + width], [y, y + height]
+
+
 range_x, range_y = get_range(button_go_back, button_go_back_img)
+
+
 def inside():
-    return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[0] <= mouse_pos[1] <= range_y[1]
+    return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[
+        0] <= mouse_pos[1] <= range_y[1]
+
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
     global mouse_pos
     mouse_pos = x, y
-@window.event    
+
+
+@window.event
 def on_mouse_press(x, y, button, modifiers):
     global is_click
     if inside() & button & mouse.LEFT and not first_time:
         is_click = True
+
+
 @window.event
 def on_draw():
     window.clear()
@@ -123,7 +135,6 @@ def on_draw():
                 label.draw()
             elif keyboard.is_pressed('C'):
                 mode_num = 2
-                
 
         else:
             if mode_num == 0:
@@ -150,34 +161,40 @@ def on_draw():
                 init_result = init_show()
                 if init_result == 'no':
                     label.text = 'this track has no music notes'
-                    mode_num = None
+                    mode_num = 3
                 elif init_result == 'back':
-                    label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
-                    mode_num = None
+                    mode_num = 4
+                elif init_result == 'error':
+                    label.text = 'track number is out of index'
+                    mode_num = 3
                 else:
                     func = mode_show
                     not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 120)                    
-                label.draw()                
-                
+                    pyglet.clock.schedule_interval(func, 1 / 120)
+                label.draw()
+
             elif mode_num == 3:
                 time.sleep(2)
                 label.text = ''
-                label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+                intro()
+                mode_num = None
+            elif mode_num == 4:
+                label.text = ''
+                intro()
                 mode_num = None
 
     else:
-        
+
         if is_click:
             is_click = False
             not_first()
             label.text = ''
             label2.text = ''
-            
+
             pyglet.clock.unschedule(func)
-            label_mode1.text = 'press Z to self playing on computer keyboard, X to self playing on a midi keyboard, C to play a midi file'
+            intro()
             mode_num = None
-        else:          
+        else:
             if mode_num == 0:
                 if label2.text != '':
                     for i in currentchord.notes:
@@ -191,7 +208,7 @@ def on_draw():
         label.draw()
         label2.draw()
         if message_label:
-            label3.draw() 
+            label3.draw()
 
 
 currentchord = chord([])
@@ -201,6 +218,10 @@ playnotes = []
 def not_first():
     global first_time
     first_time = not first_time
+
+
+def intro():
+    label_mode1.text = intro_text
 
 
 def mode_self_pc(dt):
@@ -494,22 +515,24 @@ def init_show():
         browse.action = 0
         return 'back'
     if path is not None:
-        bpm2, musicsheet = read(path, track_ind, track)
+        track = browse.track_get
+        track_ind = browse.track_ind_get
+        track = browse.track_get
+        play_interval = browse.interval
+        read_result = read(path, track_ind, track)
+        browse.file_path, browse.track_ind_get, browse.track_get = None, 1, 1
+        if read_result == 'error':
+            return 'error'
+        bpm2, musicsheet = read_result
         if bpm is None:
             bpm_to_use = bpm2
         else:
             bpm_to_use = bpm
     else:
-        if bpm is None:
-            bpm_to_use = 120
-        else:
-            bpm_to_use = bpm
-        try:
-            musicsheet = eval(musicsheet)
-        except:
-            return 'back'
+        return 'back'
     sheetlen = len(musicsheet)
     if play_interval is not None:
+        browse.interval = None
         play_start, play_stop = int(sheetlen *
                                     (play_interval[0] / 100)) + 1, int(
                                         sheetlen * (play_interval[1] / 100))
