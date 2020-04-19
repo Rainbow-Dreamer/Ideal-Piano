@@ -878,10 +878,10 @@ def detect_variation(a,
                              return_fromchord=True)
         if each_detect is not None:
             detect_msg, change_from_chord, chord_name_str = each_detect
-            change_msg = inversion_way(a, each_current, inv_num)
+            #change_msg = inversion_way(a, each_current, inv_num)
             #if 'sort' in detect_msg and 'sort' in change_msg:
-            return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
-            #return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
+            #return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
+            return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
     for each2 in range(1, N):
         each_current = a.inversion_highest(each2)
         each_detect = detect(each_current,
@@ -897,10 +897,10 @@ def detect_variation(a,
                              return_fromchord=True)
         if each_detect is not None:
             detect_msg, change_from_chord, chord_name_str = each_detect
-            change_msg = inversion_way(a, each_current, inv_num)
+            #change_msg = inversion_way(a, each_current, inv_num)
             #if 'sort' in detect_msg and 'sort' in change_msg:
-            return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
-            #return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
+            #return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
+            return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
 
 
 def detect_split(a, N=None):
