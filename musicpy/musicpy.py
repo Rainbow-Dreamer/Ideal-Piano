@@ -1109,10 +1109,12 @@ def detect(a,
             else:
                 current_invert = a.inversion_highest(possibles[0][1])
             invfrom_current_invert = inversion_way(a, current_invert, inv_num)
-            #if 'sort' in highest_msg and 'sort' in invfrom_current_invert:
             highest_msg = best[0][1]
-            #invfrom_current_invert = inversion_way(a, best[1], inv_num)
-            final_result = f'{highest_msg} {invfrom_current_invert}'
+            if 'sort' in highest_msg and 'sort' in invfrom_current_invert:
+                invfrom_current_invert = inversion_way(a, best[1], inv_num)
+                final_result = f'{best[2]} {invfrom_current_invert}'
+            else:
+                final_result = f'{highest_msg} {invfrom_current_invert}'
             return final_result if not return_fromchord else (final_result,
                                                               current_invert,
                                                               highest_msg)
