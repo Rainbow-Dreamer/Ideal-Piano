@@ -105,6 +105,12 @@ is_click = False
 mode_num = None
 func = None
 click_mode = None
+midi_device_load = False
+
+
+def has_load():
+    global midi_device_load
+    midi_device_load = True
 
 
 @window.event
@@ -161,18 +167,18 @@ def on_draw():
                 not_first()
                 pyglet.clock.schedule_interval(func, 1 / 120)
             elif mode_num == 1:
-                try:
-                    init_self_midi()
-                    label.text = 'sounds loading finished'
-                    label.draw()
-                    func = mode_self_midi
-                    not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 120)
-                except:
-                    label.text = 'there is no midi input devices, please check'
-                    mode_num = 3
-                    reset_click_mode()
-                    label.draw()
+                #try:
+                init_self_midi()
+                label.text = 'sounds loading finished'
+                label.draw()
+                func = mode_self_midi
+                not_first()
+                pyglet.clock.schedule_interval(func, 1 / 120)
+                #except:
+                #label.text = 'there is no midi input devices, please check'
+                #mode_num = 3
+                #reset_click_mode()
+                #label.draw()
 
             elif mode_num == 2:
                 init_result = init_show()
@@ -378,7 +384,7 @@ def mode_self_midi(dt):
                 current_play.append(current_note)
                 current_sound = wavdic[str(current_note)]
                 current_sound.set_volume(velocity / 127)
-                current_sound.play(maxtime=delay_time)
+                current_sound.play(maxtime=midi_delay_time)
 
 
 paused = False
@@ -489,23 +495,23 @@ def init_self_pc():
 
 def init_self_midi():
     global current_play
-    global delay_time
+    global midi_delay_time
     global wavdic
     global device
     global last
-    pygame.mixer.set_num_channels(maxinum_channels)
+    if not midi_device_load:
+        has_load()
+        pygame.mixer.set_num_channels(maxinum_channels)
+        pygame.midi.init()
+        device = pygame.midi.Input(midi_device_id)
+        midi_delay_time = int(delay_time * 1000)
     notenames = os.listdir(sound_path)
     notenames = [x[:x.index('.')] for x in notenames]
     wavdic = load({i: i
                    for i in notenames}, sound_path, sound_format,
                   global_volume)
-
-    pygame.midi.init()
-    device = pygame.midi.Input(midi_device_id)
     current_play = []
     last = current_play.copy()
-    delay_time = int(delay_time * 1000)
-    func = mode_self_midi
 
 
 def init_show():
