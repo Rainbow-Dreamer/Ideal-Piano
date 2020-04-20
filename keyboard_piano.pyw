@@ -168,18 +168,18 @@ def on_draw():
                 not_first()
                 pyglet.clock.schedule_interval(func, 1 / 120)
             elif mode_num == 1:
-                #try:
-                init_self_midi()
-                label.text = 'sounds loading finished'
-                label.draw()
-                func = mode_self_midi
-                not_first()
-                pyglet.clock.schedule_interval(func, 1 / 120)
-                #except:
-                #label.text = 'there is no midi input devices, please check'
-                #mode_num = 3
-                #reset_click_mode()
-                #label.draw()
+                try:
+                    init_self_midi()
+                    label.text = 'sounds loading finished'
+                    label.draw()
+                    func = mode_self_midi
+                    not_first()
+                    pyglet.clock.schedule_interval(func, 1 / 120)
+                except:
+                    label.text = 'there is no midi input devices, please check'
+                    mode_num = 3
+                    reset_click_mode()
+                    label.draw()
 
             elif mode_num == 2:
                 init_result = init_show()
