@@ -27,6 +27,7 @@ class Button:
             0] <= mouse_pos[1] <= range_y[1]
 
 
+show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = ['']
@@ -519,7 +520,6 @@ def init_show():
     global startplay
     global lastshow
     global finished
-    global show_delay_time
     global sheetlen
     global wholenotes
     global musicsheet
@@ -563,7 +563,6 @@ def init_show():
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
     unit_time = 60 / bpm_to_use
-    show_delay_time = int(show_delay_time * 1000)
 
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
