@@ -525,9 +525,14 @@ def init_show():
         return 'back'
     if path is not None:
         play_interval = browse.interval
-        bpm2, musicsheet = browse.read_result
-        sheetlen = browse.sheetlen
-        browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+        if browse.read_result is not None:
+            bpm2, musicsheet = browse.read_result
+            sheetlen = browse.sheetlen
+            browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+        else:
+            browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+            return 'back'
+
         if bpm is None:
             bpm_to_use = bpm2
         else:
