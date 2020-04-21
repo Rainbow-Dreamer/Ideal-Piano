@@ -50,6 +50,8 @@ class Root(Tk):
         before_value = str(eval(real_value))
         if before_value == 'None':
             before_value = ''
+        elif before_value == '':
+            before_value = "''"
         value_entry.insert(0, before_value)
         value_entry.grid()
         self.value_dict[real_value] = [value_entry, before_value, is_str]
