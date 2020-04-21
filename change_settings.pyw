@@ -2,7 +2,6 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 from musicpy.musicpy import read
-import time
 from config import *
 
 

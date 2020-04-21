@@ -141,7 +141,7 @@ channel = 1
 buffer = 1024
 maxinum_channels = 100
 
-global_volume = 0.5
+global_volume = 0.7
 
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds
