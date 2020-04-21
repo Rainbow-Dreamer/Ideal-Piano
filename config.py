@@ -102,7 +102,6 @@ reverse_key_settings = {j: i for i, j in key_settings.items()}
 # or play chords with self-configured playing chords keys settings ('chord')
 mode = 'show'
 self_device = 'pc'
-#self_device = 'midi keyboard'
 midi_device_id = 1
 
 # operation key settings for pause, unpause, repeat and so on
@@ -142,8 +141,7 @@ channel = 1
 buffer = 1024
 maxinum_channels = 100
 
-# global volume of playing, 1 is the maximum and 0 is the minimum
-global_volume = 1
+global_volume = 0.5
 
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds
