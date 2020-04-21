@@ -383,10 +383,47 @@ class chord:
     def down(self, unit=1, ind=None, ind2=None):
         return self.up(-unit, ind, ind2)
 
-    def drop(self, ind):
-        temp = copy(self)
-        if ind in range(1, len(self.notes) + 2):
-            temp.pop(ind)
+    def drop(self, ind, mode=0):
+        # if mode is 0, then drop notes by index,
+        # if mode is 1, then drop notes by the names of notes,
+        # if mode is 2, then drop notes by only name (ignoring pitch)
+
+        if mode == 0:
+            if type(ind) == list:
+                return self.drop([self[i] for i in ind], mode=1)
+            else:
+                return self.drop(self[ind], mode=1)
+        elif mode == 1:
+            temp = copy(self)
+            if type(ind) == list:
+                ind = [toNote(x) if type(x) != note else x for x in ind]
+                for each in ind:
+                    if each in temp.notes:
+                        current = temp.notes.index(each)
+                        del temp.notes[current]
+                        del temp.interval[current]
+            else:
+                if type(ind) != note:
+                    ind = toNote(ind)
+                if ind in temp.notes:
+                    current = temp.notes.index(ind)
+                    del temp.notes[current]
+                    del temp.interval[current]
+        elif mode == 2:
+            temp = copy(self)
+            if type(ind) == list:
+                for each in ind:
+                    self_notenames = temp.names()
+                    if each in self_notenames:
+                        current = self_notenames.index(each)
+                        del temp.notes[current]
+                        del temp.interval[current]
+            else:
+                self_notenames = temp.names()
+                if ind in self_notenames:
+                    current = self_notenames.index(ind)
+                    del temp.notes[current]
+                    del temp.interval[current]
         return temp
 
     omit = drop
@@ -413,7 +450,7 @@ class chord:
         if type(note1) == str:
             note1 = toNote(note1)
         if note1 in self:
-            del self[self.index(note1)]
+            self.notes.remove(note1)
 
     def append(self, value, interval=None):
         if type(value) == str:

@@ -515,6 +515,10 @@ def init_self_midi():
     last = current_play.copy()
 
 
+def browse_reset():
+    browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+
+
 def init_show():
     global playls
     global startplay
@@ -528,15 +532,16 @@ def init_show():
     path = browse.file_path
     if browse.action == 1:
         browse.action = 0
+        browse_reset()
         return 'back'
     if path is not None:
         play_interval = browse.interval
         if browse.read_result is not None:
             bpm2, musicsheet = browse.read_result
             sheetlen = browse.sheetlen
-            browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+            browse_reset()
         else:
-            browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+            browse_reset()
             return 'back'
 
         if bpm is None:
@@ -544,6 +549,7 @@ def init_show():
         else:
             bpm_to_use = bpm
     else:
+        browse_reset()
         return 'back'
     if play_interval is not None:
         browse.interval = None
@@ -559,7 +565,7 @@ def init_show():
                                 eval(show_modulation[1]))
 
     if sheetlen == 0:
-        return 'no'
+        return 'back'
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
     unit_time = 60 / bpm_to_use
