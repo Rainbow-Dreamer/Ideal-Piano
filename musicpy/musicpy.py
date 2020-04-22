@@ -1341,12 +1341,12 @@ def fugue(mode,
 
 def perm(n, k=None):
     # return all of the permutations of the elements in x
-    if k is None:
-        k = len(n)
     if isinstance(n, int):
         n = list(range(1, n + 1))
     if isinstance(n, str):
         n = list(n)
+    if k is None:
+        k = len(n)
     return eval(
         f'''[{f"[{', '.join([f'n[a{i}]' for i in range(k)])}]"} {''.join([f'for a{i} in range(len(n)) ' if i == 0 else f"for a{i} in range(len(n)) if a{i} not in [{', '.join([f'a{t}' for t in range(i)])}] " for i in range(k)])}]''',
         locals())
