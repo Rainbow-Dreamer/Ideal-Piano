@@ -1,7 +1,5 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter import filedialog
-from musicpy.musicpy import read
 from config import *
 
 
