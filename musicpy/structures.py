@@ -25,8 +25,8 @@ class note:
     def setvolume(self, vol):
         self.volume = vol
 
-    def set(self, num, duration, volume):
-        return note(self.name, num, duration, volume)
+    def set(self, duration=1, volume=100):
+        return note(self.name, self.num, duration, volume)
 
     def join(self, other, ind, interval):
         if type(other) == str:
