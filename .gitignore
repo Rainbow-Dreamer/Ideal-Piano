@@ -2,3 +2,5 @@
 *.pyc
 *.pyc
 *.pyc
+musicpy/__pycache__/musicpy.cpython-37.pyc
+musicpy/__pycache__/structures.cpython-37.pyc
