@@ -200,17 +200,34 @@ def play(chord1,
     os.startfile(f'{name}.mid')
 
 
-def read(name, trackind=1, track=1):
+def read(name, trackind=1, track=1, mode='find'):
     # read from a midi file and return a notes list
+
+    # if mode is set to 'find', then will automatically search for
+    # the first available midi track (has notes inside it)
     x = midi(str(name))
-    try:
-        tracklist = list(enumerate(x.tracks))[trackind]
-    except:
-        return 'error'
-    try:
-        t = tracklist[track]
-    except:
-        return 'error'
+    if mode == 'find':
+        whole_tracks = list(enumerate(x.tracks))
+        is_find = False
+        for each in whole_tracks:
+            for each_track in each:
+                if type(each_track) != int and any(x.type == 'note_on'
+                                                   for x in each_track):
+                    t = each_track
+                    is_find = True
+                    break
+            if is_find:
+                break
+
+    elif not mode:
+        try:
+            tracklist = list(enumerate(x.tracks))[trackind]
+        except:
+            return 'error'
+        try:
+            t = tracklist[track]
+        except:
+            return 'error'
     interval_unit = x.ticks_per_beat
     hason = []
     hasoff = []
@@ -377,10 +394,214 @@ MODIFY = 'modify'
 NEW = 'new'
 
 
-def detect_scale(chord1):
+def detect_scale(x):
     # receive a piece of music and analyze what modes it is using,
     # return a list of most likely and exact modes the music has.
+
+    # newly added on 2020/4/25, currently in development
+    whole_notes = x.names()
+    note_names = list(set(whole_notes))
+    note_names = [standard[i] for i in note_names]
+    note_names.sort()
+    note_names.append(note_names[0] + octave)
+    note_intervals = [
+        note_names[i] - note_names[i - 1] for i in range(1, len(note_names))
+    ]
+    result_scale_types = detectScale[tuple(note_intervals)]
+    if result_scale_types != 'not found':
+        result_scale_types = result_scale_types[0]
+        center_note = standard_reverse[note_names[0]]
+        result_scale = scale(center_note, result_scale_types)
+        if result_scale_types in modern_modes:
+            inds = modern_modes.index(result_scale_types) - 1
+            if inds != -1:
+                result_scale = result_scale.inversion(7 - inds)
+                result_scale.mode = 'major'
+                result_scale_types = 'major'
+        if result_scale_types == 'major':
+            FIFTH = result_scale[5].name
+            SIXTH = result_scale[6].name
+            melody_notes = split_melody(x, mode='notes')
+            melody_notes = [i.name for i in melody_notes]
+            fifth_num = melody_notes.count(FIFTH)
+            sixth_num = melody_notes.count(SIXTH)
+            if sixth_num > fifth_num:
+                result_scale = result_scale.inversion(6)
+                result_scale.mode = 'minor'
+
+            #first_chord_inds = find_continuous(x.interval, 0)
+            #if len(first_chord_inds) < 3:
+            #first_chord_inds = add_to_index(x.interval, 4)
+            #first_chord_notes = [x.notes[i] for i in first_chord_inds]
+            #first_chord_notes.sort(key=lambda y: y.degree)
+            #first_chord = chord(first_chord_notes).inoctave()
+            #first_chord_interval = intervalof(first_chord)
+            #if minor_third in first_chord_interval:
+            #result_scale = f'{standard_reverse[note_names[5]]} minor'
+            #last_chord_inds = find_last_chord(x)
+            #last_chord_inds = last_chord_inds.sortchord()
+            #last_chord_inds = chord(last_chord_inds).inoctave()
+            ##print(detect(last_chord_inds))
+            return f'{result_scale.start.name} {result_scale.mode}'
+    else:
+        appear_note_names = set(whole_notes)
+        most_note = max(appear_note_names, key=lambda y: whole_notes.count(y))
+        # take the most appeared notes as the center notes of the scale,
+        # first assume it is major scale, and then check if it is by
+        # counting the number of occurrences of 135 and 613.
+        result_scale = scale(most_note, 'major')
+        FIFTH = result_scale[5].name
+        SIXTH = result_scale[6].name
+        melody_notes = split_melody(x, mode='notes')
+        melody_notes = [i.name for i in melody_notes]
+        fifth_num = melody_notes.count(FIFTH)
+        sixth_num = melody_notes.count(SIXTH)
+        if sixth_num > fifth_num:
+            result_scale = result_scale.inversion(6)
+            result_scale.mode = 'minor'
+        return f'{result_scale.start.name} {result_scale.mode}'
+
+
+def split_melody(x, mode='index'):
+    # if mode == 'notes', return a list of main melody notes
+    # if mode == 'index', return a list of indexes of main melody notes
+    # if mode == 'hold', return a chord with main melody notes with original places
+    if mode == 'index':
+        temp = copy(x)
+        M = len(temp.notes)
+        for k in range(M):
+            temp.notes[k].number = k
+        result = split_melody(temp, mode='notes')
+        melody = [t.number for t in result]
+
+        return melody
+    elif mode == 'hold':
+        result = split_melody(x)
+        whole_interval = x.interval
+        whole_notes = x.notes
+        new_interval = []
+        N = len(result) - 1
+        for i in range(N):
+            new_interval.append(sum(whole_interval[result[i]:result[i + 1]]))
+        new_interval.append(sum(whole_interval[result[-1]:]))
+        return chord([whole_notes[j] for j in result], interval=new_interval)
+
+    elif mode == 'notes':
+        whole_notes = copy(x.notes)
+        play_together = find_all_continuous(x.interval, 0)
+        for each in play_together:
+            max_ind = max(each, key=lambda t: whole_notes[t].degree)
+            get_off = set(each) - {max_ind}
+            for each_ind in get_off:
+                whole_notes[each_ind] = None
+        whole_notes = [x for x in whole_notes if x is not None]
+        N = len(whole_notes) - 1
+        start = 0
+        if whole_notes[1].degree - whole_notes[0].degree >= octave:
+            start = 1
+        split_note_ind = None
+        i = start + 1
+        melody = [whole_notes[start]]
+        while i < N:
+            current_note = whole_notes[i]
+            next_note = whole_notes[i + 1]
+            has_melody = 1 if melody else 0
+            if has_melody:
+                newest_notes = melody[-1].degree
+                if current_note.degree - newest_notes > octave:
+                    del melody[-1]
+                    has_melody = 1 if melody else 0
+                    if has_melody:
+                        newest_notes = melody[-1].degree
+            if current_note.degree - next_note.degree > perfect_fifth:
+                if has_melody:
+                    if newest_notes - current_note.degree >= octave:
+                        i += 1
+                        continue
+                melody.append(current_note)
+                split_note_ind = i + 1
+                i += 2
+            else:
+                if has_melody:
+                    if newest_notes - current_note.degree < octave:
+                        melody.append(current_note)
+                        i += 1
+                        continue
+                if split_note_ind != None:
+                    if current_note.degree <= whole_notes[
+                            split_note_ind].degree:
+                        i += 1
+                        continue
+                i += 1
+
+        return melody
+
+
+def find_last_chord(x):
     pass
+
+
+def find_continuous(x, value, start=None, stop=None):
+    if start is None:
+        start = 0
+    if stop is None:
+        stop = len(x)
+    inds = []
+    appear = False
+    for i in range(start, stop):
+        if not appear:
+            if x[i] == value:
+                appear = True
+                inds.append(i)
+        else:
+            if x[i] == value:
+                inds.append(i)
+            else:
+                break
+    return inds
+
+
+def find_all_continuous(x, value, start=None, stop=None):
+    if start is None:
+        start = 0
+    if stop is None:
+        stop = len(x)
+    result = []
+    inds = []
+    appear = False
+    for i in range(start, stop):
+        if x[i] == value:
+            if appear:
+                inds.append(i)
+            else:
+                if inds:
+                    inds.append(inds[-1] + 1)
+                    result.append(inds)
+                appear = True
+                inds = [i]
+        else:
+            appear = False
+    if inds:
+        result.append(inds)
+    if result[-1][-1] >= len(x):
+        del result[-1][-1]
+    return result
+
+
+def add_to_index(x, value, start=None, stop=None):
+    if start is None:
+        start = 0
+    if stop is None:
+        stop = len(x)
+    inds = []
+    counter = 0
+    for i in range(start, stop):
+        counter += x[i]
+        if counter >= value:
+            break
+        else:
+            inds.append(i)
+    return inds
 
 
 def modulation(chord1, old_scale, new_scale):
@@ -525,13 +746,13 @@ def tochordsfile(path,
 #Touhou main melody
 #play((getchord_by_interval('D#5',[5,7,10,7,5],2,0.5)*3+getchord_by_interval('F5',[1,0,-4],2,0.5))*3,150)
 
-
 # some chord progressions
 # 2-3-4 progression (in terms of G major scale)
 # a = chd('A','m7')
 # play(a.period(0.5)*4 + a.up(2).period(0.5)*4 + chd(a[1].up(3), 'maj7').period(0.5)*4)
 # a = chd('A','m7').set(interval=0.5)
 # play(a*2 + a.up(2)*2 + chd(a[1].up(3), 'maj7').set(interval=0.5)*2 + chd(a[1].up(3), 'maj7', duration=5))
+
 
 def inversion_from(a, b, num=False, mode=0):
     N = len(b)
@@ -1165,8 +1386,10 @@ def detect(a,
 
 
 def intervalof(a, cummulative=True, translate=False):
-    if type(a) in [chord, scale]:
-        a = a.notes
+    if type(a) == scale:
+        a = a.getScale()
+    if type(a) != chord:
+        a = chord(a)
     return a.intervalof(cummulative, translate)
 
 
