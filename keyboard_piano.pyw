@@ -401,6 +401,7 @@ def mode_show(dt):
     global pause_start
     global message_label
     global playnotes
+    global get_off_melody
     if not paused:
         currentime = time.time() - startplay
         for k in range(sheetlen):
@@ -421,19 +422,36 @@ def mode_show(dt):
         time.sleep(delay_each_loop)
         if show_chord:
             playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
-            if len(playnotes) != 0:
+            if playnotes:
                 playnotes.sort(key=lambda x: x.degree)
                 if playnotes != lastshow:
                     lastshow = playnotes
                     label.text = str(playnotes)
-                    chordtype = detect(playnotes,
-                                       ignore_sort_from=ignore_sort_from,
-                                       change_from_first=change_from_first,
-                                       original_first=original_first,
-                                       ignore_add_from=ignore_add_from,
-                                       same_note_special=same_note_special,
-                                       two_show_interval=two_show_interval)
-                    label2.text = str(chordtype)
+                    if get_off_melody:
+                        playnotes = [
+                            x for x in playnotes
+                            if x.number not in melody_notes
+                        ]
+                        if playnotes:
+                            chordtype = detect(
+                                playnotes,
+                                ignore_sort_from=ignore_sort_from,
+                                change_from_first=change_from_first,
+                                original_first=original_first,
+                                ignore_add_from=ignore_add_from,
+                                same_note_special=same_note_special,
+                                two_show_interval=two_show_interval)
+                            label2.text = str(chordtype)
+                    else:
+                        chordtype = detect(playnotes,
+                                           ignore_sort_from=ignore_sort_from,
+                                           change_from_first=change_from_first,
+                                           original_first=original_first,
+                                           ignore_add_from=ignore_add_from,
+                                           same_note_special=same_note_special,
+                                           two_show_interval=two_show_interval)
+                        label2.text = str(chordtype)
+
         if keyboard.is_pressed(pause_key):
             paused = True
             pause_start = time.time()
@@ -516,7 +534,10 @@ def init_self_midi():
 
 
 def browse_reset():
-    browse.file_path, browse.track_ind_get, browse.track_get, browse.read_result, browse.sheelen = None, 1, 1, None, 0
+    browse.file_path, browse.track_get, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody = None, None, None, None, None, 0
+
+
+melody_notes = []
 
 
 def init_show():
@@ -528,6 +549,8 @@ def init_show():
     global wholenotes
     global musicsheet
     global unit_time
+    global get_off_melody
+    global melody_notes
     browse.setup()
     path = browse.file_path
     if browse.action == 1:
@@ -536,10 +559,12 @@ def init_show():
         return 'back'
     if path is not None:
         play_interval = browse.interval
-        if browse.read_result is not None:
+        if browse.read_result != 'error':
             bpm2, musicsheet = browse.read_result
+            if browse.set_bpm:
+                bpm2 = float(browse.set_bpm)
             sheetlen = browse.sheetlen
-            browse_reset()
+
         else:
             browse_reset()
             return 'back'
@@ -551,6 +576,14 @@ def init_show():
     else:
         browse_reset()
         return 'back'
+
+    get_off_melody = browse.off_melody
+    if get_off_melody:
+        for k in range(sheetlen):
+            musicsheet.notes[k].number = k
+        melody_notes = split_melody(musicsheet)
+
+    browse_reset()
     if play_interval is not None:
         browse.interval = None
 

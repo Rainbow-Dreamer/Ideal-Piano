@@ -6,11 +6,13 @@ import time
 
 file_path = None
 action = 0
-track_get = 1
-track_ind_get = 1
+track_get = None
+track_ind_get = None
 interval = None
 read_result = None
 sheetlen = None
+set_bpm = None
+off_melody = 0
 
 
 class Root(Tk):
@@ -55,6 +57,9 @@ class Root(Tk):
         self.interval_from.destroy()
         self.to_text.destroy()
         self.interval_to.destroy()
+        self.out_of_index.destroy()
+        self.check_bpm_text.destroy()
+        self.check_bpm.destroy()
         self.make_button()
 
     def go_back(self):
@@ -68,13 +73,16 @@ class Root(Tk):
         global interval
         global read_result
         global sheetlen
-        if self.out_of_index.grid_info():
-            self.out_of_index.grid_forget()
-        if self.no_notes1.grid_info():
-            self.no_notes1.grid_forget()
-        if self.no_notes2.grid_info():
-            self.no_notes2.grid_forget()
-
+        global set_bpm
+        global off_melody
+        if self.out_of_index.place_info():
+            self.out_of_index.place_forget()
+        if self.no_notes1.place_info():
+            self.no_notes1.place_forget()
+        if self.no_notes2.place_info():
+            self.no_notes2.place_forget()
+        set_bpm = self.check_bpm.get()
+        off_melody = self.if_melody.get()
         try:
             track_get = int(self.choose_track.get())
             track_ind_get = int(self.choose_track_ind.get())
@@ -86,22 +94,28 @@ class Root(Tk):
         except:
             pass
         try:
-            read_result = read(file_path, track_ind_get, track_get)
+            if track_ind_get is not None and track_get is not None:
+                read_mode = ''
+            else:
+                read_mode = 'find'
+            read_result = read(file_path, track_ind_get, track_get, read_mode)
+
         except:
             read_result = 'error'
+
         if read_result != 'error':
             sheetlen = len(read_result[1])
             if sheetlen == 0:
-                self.no_notes1.grid()
-                self.no_notes2.grid()
+                self.no_notes1.place(x=-50, y=150, width=200, height=20)
+                self.no_notes2.place(x=-50, y=170, width=200, height=20)
             else:
                 self.destroy()
         else:
-            self.out_of_index.grid()
+            self.out_of_index.place(x=-50, y=150, width=200, height=20)
 
     def make_error_labels(self):
         self.no_notes1 = ttk.Label(self.labelFrame, text='this track has')
-        self.no_notes2 = ttk.Label(self.labelFrame, text='mo music notes')
+        self.no_notes2 = ttk.Label(self.labelFrame, text='no music notes')
         self.out_of_index = ttk.Label(self.labelFrame,
                                       text='track number is out of index')
 
@@ -143,6 +157,16 @@ class Root(Tk):
             self.to_text.grid(row=6, column=2)
             self.interval_to = ttk.Entry(self.labelFrame, width=5)
             self.interval_to.grid(row=6, column=3)
+            self.check_bpm_text = ttk.Label(self.labelFrame, text='BPM')
+            self.check_bpm_text.grid(row=7, column=0)
+            self.check_bpm = ttk.Entry(self.labelFrame, width=5)
+            self.check_bpm.grid(row=7, column=1)
+            self.if_melody = IntVar()
+            self.main_melody = ttk.Checkbutton(
+                self.labelFrame,
+                text='main melody off when show chords',
+                variable=self.if_melody)
+            self.main_melody.place(x=-50, y=210, width=230, height=30)
             self.make_error_labels()
 
 
