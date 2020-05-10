@@ -107,6 +107,7 @@ mode_num = None
 func = None
 click_mode = None
 midi_device_load = False
+batch = pyglet.graphics.Batch()
 
 
 def has_load():
@@ -212,14 +213,11 @@ def on_draw():
         else:
             if mode_num == 0:
                 if label2.text != '':
-                    for i in currentchord.notes:
-                        plays[i.degree - 21].draw()
+                    batch.draw()
             elif mode_num == 1:
-                for i in current_play:
-                    plays[i.degree - 21].draw()
+                batch.draw()
             elif mode_num == 2:
-                for i in playnotes:
-                    plays[i.degree - 21].draw()
+                batch.draw()
         label.draw()
         label2.draw()
         if message_label:
@@ -312,7 +310,6 @@ def mode_self_pc(dt):
     last = current
     if changed:
         changed = False
-
         if delay:
             if delay_only_read_current:
                 notels = [notedic[t] for t in truecurrent]
@@ -320,9 +317,15 @@ def mode_self_pc(dt):
                 notels = [notedic[t] for t in stillplay_obj]
         else:
             notels = [notedic[t] for t in last]
+        if lastshow:
+            for t in lastshow:
+                plays[t.degree - 21].batch = None
+        if notels:
+            currentchord = chord(notels)
+            for k in currentchord:
+                plays[k.degree - 21].batch = batch
         if show_chord:
-            if len(notels) != 0:
-                currentchord = chord(notels)
+            if notels:
                 currentchord.notes.sort(key=lambda x: x.degree)
                 if currentchord != lastshow:
                     lastshow = currentchord
@@ -351,8 +354,12 @@ def mode_self_midi(dt):
     global last
     global current_play
     if last != current_play:
+        for k in last:
+            plays[k.degree - 21].batch = None
         last = current_play.copy()
         if current_play:
+            for each in current_play:
+                plays[each.degree - 21].batch = batch
             currentchord = chord(current_play)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
@@ -377,6 +384,7 @@ def mode_self_midi(dt):
         velocity = data[2]
         current_note = degree_to_note(note_number)
         if velocity == 0:
+            plays[note_number - 21].batch = None
             if current_note in current_play:
                 current_play.remove(current_note)
                 #wavdic[str(current_note)].stop()
@@ -425,6 +433,11 @@ def mode_show(dt):
             if playnotes:
                 playnotes.sort(key=lambda x: x.degree)
                 if playnotes != lastshow:
+                    if lastshow:
+                        for each in lastshow:
+                            plays[each.degree - 21].batch = None
+                    for i in playnotes:
+                        plays[i.degree - 21].batch = batch
                     lastshow = playnotes
                     label.text = str(playnotes)
                     if get_off_melody:
@@ -557,7 +570,7 @@ def init_show():
         browse.action = 0
         browse_reset()
         return 'back'
-    if path is not None:
+    if path and browse.read_result:
         play_interval = browse.interval
         if browse.read_result != 'error':
             bpm2, musicsheet = browse.read_result
