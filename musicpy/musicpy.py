@@ -1,6 +1,8 @@
 from midiutil import MIDIFile
 from copy import deepcopy as copy
-import os, math, random
+import os, math, random, sys
+os.chdir('musicpy')
+sys.path.append('.')
 from mido.midifiles.midifiles import MidiFile as midi
 from mido import Message
 import mido.midifiles.units as unit

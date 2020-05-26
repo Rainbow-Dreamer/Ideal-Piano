@@ -1,9 +1,14 @@
 import pygame, keyboard, os, time, sys, pyglet
-from config import *
+abs_path = os.path.dirname(os.path.abspath(__file__))
+os.chdir(abs_path)
+sys.path.append(abs_path)
+with open('config.py', encoding='utf-8') as f:
+    exec(f.read())
 from musicpy.musicpy import *
 import pygame.midi
 import browse
 from pyglet.window import mouse
+os.chdir(abs_path)
 
 
 class Button:
@@ -30,7 +35,7 @@ class Button:
 show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
-pyglet.resource.path = ['']
+pyglet.resource.path = [abs_path]
 pyglet.resource.reindex()
 image = pyglet.resource.image('piano1.png')
 playing = pyglet.resource.image('playing.png')
