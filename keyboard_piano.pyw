@@ -31,49 +31,63 @@ class Button:
         return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[
             0] <= mouse_pos[1] <= range_y[1]
 
-
+screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = [abs_path]
 pyglet.resource.reindex()
-image = pyglet.resource.image('piano1.png')
-playing = pyglet.resource.image('playing.png')
-playing.width /= 1.2
-playing.height /= 1.2
+background = pyglet.resource.image(background_image)
+if not background_size:
+    ratio_background = screen_width/background.width
+    background.width = screen_width
+    background.height *= ratio_background
+else:
+    background.width, background.height = background_size
+    
+image = pyglet.resource.image(piano_image)
+if not piano_size:
+    ratio = screen_width/image.width
+    image.width = screen_width
+    image.height *= ratio
+else:
+    image.width, image.height = piano_size
+playing = pyglet.resource.image(notes_image)
+playing.width /= notes_resize_num
+playing.height /= notes_resize_num
 plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
-go_back = Button('go_back.png', 50, 550)
+go_back = Button(go_back_image, *go_back_place)
 button_go_back = go_back.MakeButton()
-self_play = Button('play.png', 50, 500)
+self_play = Button(self_play_image, *self_play_place)
 button_play = self_play.MakeButton()
-self_midi = Button('midi_keyboard.png', 50, 450)
+self_midi = Button(self_midi_image, *self_midi_place)
 button_self_midi = self_midi.MakeButton()
-play_midi = Button('play_midi.png', 50, 400)
+play_midi = Button(play_midi_image, *play_midi_place)
 button_play_midi = play_midi.MakeButton()
-window = pyglet.window.Window(int(image.width), int(image.height) - 150)
+window = pyglet.window.Window(*screen_size)
 
 label = pyglet.text.Label('',
-                          font_name='Comic Sans MS',
-                          font_size=20,
-                          x=650,
-                          y=400,
-                          color=(0, 0, 0, 255),
+                          font_name=fonts,
+                          font_size=fonts_size,
+                          x=label1_place[0],
+                          y=label1_place[1],
+                          color=message_color,
                           anchor_x='center',
                           anchor_y='center')
 label2 = pyglet.text.Label('',
-                           font_name='Comic Sans MS',
-                           font_size=20,
-                           x=650,
-                           y=350,
-                           color=(0, 0, 0, 255),
+                           font_name=fonts,
+                           font_size=fonts_size,
+                           x=label2_place[0],
+                           y=label2_place[1],
+                           color=message_color,
                            anchor_x='center',
                            anchor_y='center')
 label3 = pyglet.text.Label('',
-                           font_name='Comic Sans MS',
-                           font_size=20,
-                           x=650,
-                           y=450,
-                           color=(0, 0, 0, 255),
+                           font_name=fonts,
+                           font_size=fonts_size,
+                           x=label3_place[0],
+                           y=label3_place[1],
+                           color=message_color,
                            anchor_x='center',
                            anchor_y='center')
 
@@ -144,6 +158,7 @@ def on_mouse_press(x, y, button, modifiers):
 @window.event
 def on_draw():
     window.clear()
+    background.blit(0, 0)
     image.blit(0, 0)
     button_go_back.draw()
     if first_time:

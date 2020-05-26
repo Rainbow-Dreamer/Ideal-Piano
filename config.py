@@ -1,6 +1,35 @@
 # the key settings for playing 88 notes (from A1 to C9)
 # (if you have sound files that beyond these range then you can
 # modify this dictionary to play them)
+
+screen_size = 1280, 650
+background_image = 'white.png'
+background_size = None
+piano_image = 'piano.png'
+piano_size = None
+message_color = (0, 0, 0, 255)
+fonts_size = 20
+label1_place = 650, 400
+label2_place = 650, 350
+label3_place = 650, 450
+fonts = 'Comic Sans MS'
+notes_image = 'playing.png'
+notes_resize_num = 1.2
+go_back_image = 'go_back.png'
+go_back_place = 50, 550
+self_play_image = 'play.png'
+self_play_place = 50, 500
+self_midi_image = 'midi_keyboard.png'
+self_midi_place = 50, 450
+play_midi_image = 'play_midi.png'
+play_midi_place = 50, 400
+
+
+
+
+
+
+
 key_settings = {
     'z': 'A#2',
     'x': 'B2',
@@ -141,7 +170,7 @@ channel = 1
 buffer = 1024
 maxinum_channels = 100
 
-global_volume = 0.5
+global_volume = 0.7
 
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds
