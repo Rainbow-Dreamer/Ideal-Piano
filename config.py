@@ -24,12 +24,6 @@ self_midi_place = 50, 450
 play_midi_image = 'play_midi.png'
 play_midi_place = 50, 400
 
-
-
-
-
-
-
 key_settings = {
     'z': 'A#2',
     'x': 'B2',
@@ -81,47 +75,46 @@ key_settings = {
     '-': 'A6',
     '=': 'A#6',
     'backspace': 'B6',
-    'esc': 'C7',
-    'f1': 'C#7',
-    'f2': 'D7',
-    'f3': 'D#7',
-    'f4': 'E7',
-    'f5': 'F7',
-    'f6': 'F#7',
-    'f7': 'G7',
-    'f8': 'G#7',
-    'f9': 'A7',
-    'f10': 'A#7',
-    'f11': 'B7',
-    'f12': 'C8',
-    'print screen': 'A#1',
-    'scroll lock': 'B1',
-    'insert': 'C2',
-    'home': 'C#2',
-    'page up': 'D2',
-    'delete': 'D#2',
-    'end': 'E2',
-    'page down': 'F2',
-    'up': 'F#2',
-    'left': 'G2',
-    'down': 'G#2',
-    'right': 'A2',
-    'num 0': 'C5',
-    'decimal': 'C#5',
-    'num 1': 'D5',
-    'num 2': 'D#5',
-    'num 3': 'E5',
-    'num 4': 'F5',
-    'num 5': 'F#5',
-    'num 6': 'G5',
-    'num 7': 'G#5',
-    'num 8': 'A5',
-    'num 9': 'A#5',
-    'num /': 'B5',
-    '*': 'C6',
-    'num -': 'C#6',
-    'plus': 'D6',
-    'enter2': 'D#6'
+    'f1': 'C7',
+    'f2': 'C#7',
+    'f3': 'D7',
+    'f4': 'D#7',
+    'f5': 'E7',
+    'f6': 'F7',
+    'f7': 'F#7',
+    'f8': 'G7',
+    'f9': 'G#7',
+    'f10': 'A7',
+    'f11': 'A#7',
+    'f12': 'B7',
+    'print screen': 'C8',
+    'scroll lock': 'A#1',
+    'insert': 'B1',
+    'home': 'C2',
+    'page up': 'C#2',
+    'delete': 'D2',
+    'end': 'D#2',
+    'page down': 'E2',
+    'up': 'F2',
+    'left': 'F#2',
+    'down': 'G2',
+    'right': 'G#2',
+    'num 0': 'A2',
+    'decimal': 'C5',
+    'num 1': 'C#5',
+    'num 2': 'D5',
+    'num 3': 'D#5',
+    'num 4': 'E5',
+    'num 5': 'F5',
+    'num 6': 'F#5',
+    'num 7': 'G5',
+    'num 8': 'G#5',
+    'num 9': 'A5',
+    'num /': 'A#5',
+    '*': 'B5',
+    'num -': 'C6',
+    'plus': 'C#6',
+    'enter2': 'D6'
 }
 
 reverse_key_settings = {j: i for i, j in key_settings.items()}
@@ -170,7 +163,7 @@ channel = 1
 buffer = 1024
 maxinum_channels = 100
 
-global_volume = 0.7
+global_volume = 0.3
 
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds

@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
-from config import *
+with open('config.py', encoding='utf-8') as f:
+    exec(f.read())
 
 
 def change(var, new, is_str=True):

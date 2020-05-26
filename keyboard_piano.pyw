@@ -31,6 +31,7 @@ class Button:
         return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[
             0] <= mouse_pos[1] <= range_y[1]
 
+
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
@@ -39,15 +40,15 @@ pyglet.resource.path = [abs_path]
 pyglet.resource.reindex()
 background = pyglet.resource.image(background_image)
 if not background_size:
-    ratio_background = screen_width/background.width
+    ratio_background = screen_width / background.width
     background.width = screen_width
     background.height *= ratio_background
 else:
     background.width, background.height = background_size
-    
+
 image = pyglet.resource.image(piano_image)
 if not piano_size:
-    ratio = screen_width/image.width
+    ratio = screen_width / image.width
     image.width = screen_width
     image.height *= ratio
 else:
@@ -145,6 +146,11 @@ def on_mouse_press(x, y, button, modifiers):
     global is_click
     global click_mode
     if go_back.inside() & button & mouse.LEFT and not first_time:
+        if mode_num in [0, 1, 2]:
+            global lastshow
+            global plays
+            for each in plays:
+                each.batch = None
         is_click = True
         click_mode = None
     if self_play.inside() & button & mouse.LEFT and first_time:
@@ -500,6 +506,8 @@ def mode_show(dt):
     if finished:
         if show_chord:
             label2.text = ''
+        for each in plays:
+            each.batch = None
         label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
             playls = initialize(musicsheet, unit_time)
