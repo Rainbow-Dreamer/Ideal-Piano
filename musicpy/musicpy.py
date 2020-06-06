@@ -1,6 +1,6 @@
 from midiutil import MIDIFile
 from copy import deepcopy as copy
-import os, math, random, sys
+import os, sys, math, random
 os.chdir('musicpy')
 sys.path.append('.')
 from mido.midifiles.midifiles import MidiFile as midi
@@ -199,7 +199,14 @@ def play(chord1,
                  time1=0,
                  track_num=1,
                  mode=modes)
-    os.startfile(f'{name}.mid')
+    result_file = f'{name}.mid'
+    if sys.platform.startswith('win'):
+        os.startfile(result_file)
+    elif sys.platform.startswith('linux'):
+        import subprocess
+        subprocess.Popen(result_file)
+    elif sys.platform == 'darwin':
+        os.system(result_file)
 
 
 def read(name, trackind=1, track=1, mode='find'):
@@ -1218,10 +1225,14 @@ def detect_variation(a,
                              return_fromchord=True)
         if each_detect is not None:
             detect_msg, change_from_chord, chord_name_str = each_detect
-            #change_msg = inversion_way(a, each_current, inv_num)
-            #if 'sort' in detect_msg and 'sort' in change_msg:
-            #return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
-            return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
+            inv_msg = inversion_way(a, each_current, inv_num)
+            result = f'{detect_msg} {inv_msg}'
+            if any(x in detect_msg
+                   for x in ['sort', '/']) and any(y in inv_msg
+                                                   for y in ['sort', '/']):
+                inv_msg = inversion_way(a, change_from_chord, inv_num)
+                result = f'{chord_name_str} {inv_msg}'
+            return result
     for each2 in range(1, N):
         each_current = a.inversion_highest(each2)
         each_detect = detect(each_current,
@@ -1237,10 +1248,14 @@ def detect_variation(a,
                              return_fromchord=True)
         if each_detect is not None:
             detect_msg, change_from_chord, chord_name_str = each_detect
-            #change_msg = inversion_way(a, each_current, inv_num)
-            #if 'sort' in detect_msg and 'sort' in change_msg:
-            #return f'{chord_name_str} {inversion_way(a, change_from_chord, inv_num)}'
-            return f'{detect_msg} {inversion_way(a, each_current, inv_num)}'
+            inv_msg = inversion_way(a, each_current, inv_num)
+            result = f'{detect_msg} {inv_msg}'
+            if any(x in detect_msg
+                   for x in ['sort', '/']) and any(y in inv_msg
+                                                   for y in ['sort', '/']):
+                inv_msg = inversion_way(a, change_from_chord, inv_num)
+                result = f'{chord_name_str} {inv_msg}'
+            return result
 
 
 def detect_split(a, N=None):
