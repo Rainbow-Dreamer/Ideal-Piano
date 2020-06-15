@@ -1,6 +1,6 @@
 from midiutil import MIDIFile
 from copy import deepcopy as copy
-import os, sys, math, random
+import os, sys, math, random, mido
 os.chdir('musicpy')
 sys.path.append('.')
 from mido.midifiles.midifiles import MidiFile as midi
@@ -190,7 +190,8 @@ def play(chord1,
          time1=0,
          track_num=1,
          name='temp',
-         modes='new2'):
+         modes='new2',
+         instrument=None):
     file = write(name,
                  chord1,
                  tempo,
@@ -198,7 +199,8 @@ def play(chord1,
                  channel=0,
                  time1=0,
                  track_num=1,
-                 mode=modes)
+                 mode=modes,
+                 instrument=instrument)
     result_file = f'{name}.mid'
     if sys.platform.startswith('win'):
         os.startfile(result_file)
@@ -305,7 +307,8 @@ def write(name_of_midi,
           channel=0,
           time1=0,
           track_num=1,
-          mode='new2'):
+          mode='new2',
+          instrument=None):
     if isinstance(chord1, note):
         chord1 = chord([chord1])
     if not isinstance(chord1, list):
@@ -329,7 +332,8 @@ def write(name_of_midi,
               channel,
               time1,
               track_num,
-              mode='m+')
+              mode='m+',
+              instrument=instrument)
 
     if mode == 'new':
         # write to a new midi file or overwrite an existing midi file
@@ -352,13 +356,17 @@ def write(name_of_midi,
             #else:
             #time1 += chordall.interval[i]+duration[i]
             #MyMIDI.addNote(track, channel, degrees[i], time1, duration[i], 0)
-
         with open(f'{name_of_midi}.mid', "wb") as output_file:
             MyMIDI.writeFile(output_file)
     elif mode in ['m+', 'm']:
         # modify existing midi files, m+: add at the end of the midi file,
         # m: add from the beginning of the midi file
         x = midi(f'{name_of_midi}.mid')
+        if instrument:
+            if instrument in instruments:
+                instrument_num = instruments[instrument] - 1
+                instrument_msg = mido.Message('program_change', program=instrument_num)
+                x.tracks[1].insert(0, instrument_msg)        
         tracklist = [x[1] for x in list(enumerate(x.tracks))][1:]
         track_modify = tracklist[track]
         interval_unit = x.ticks_per_beat
@@ -388,7 +396,7 @@ def write(name_of_midi,
                                 velocity=chordall[sorthas[n][1] + 1].volume,
                                 time=sorthas[n][0] - sorthas[n - 1][0]))
         elif mode == 'm':
-            write('tempmerge', chord1, tempo, track, channel, time1, track_num)
+            write('tempmerge', chord1, tempo, track, channel, time1, track_num, instrument=instrument)
             tempmid = midi('tempmerge.mid')
             newtrack = [y[1]
                         for y in list(enumerate(tempmid.tracks))][1:][track]
@@ -877,15 +885,17 @@ def sort_from(a, b, getorder=False):
 
 
 def omitfrom(a, b, showls=False):
-    if type(a) == chord:
-        a = a.names()
-    if type(b) == chord:
-        b = b.names()
-    omitnotes = list(set(b) - set(a))
+    a_notes = a.names()
+    b_notes = b.names()
+    omitnotes = list(set(b_notes) - set(a_notes))
     if showls:
-        return omitnotes
+        result = omitnotes
     else:
-        return f"omit {', '.join(omitnotes)}"
+        result = f"omit {', '.join(omitnotes)}"
+        order_omit = chord([x for x in b_notes if x in a_notes])
+        if order_omit.names() != a.names():
+            result += inversion_way(a, order_omit)
+    return result
 
 
 def changefrom(a, b, octave_a=False, octave_b=False, same_degree=True):
@@ -963,9 +973,9 @@ def inversion_way(a,
                     if chordtype is not None:
                         return f'{b[1].name}{chordtype} sort as {sort_msg}'
                     else:
-                        return f'sort as {sort_msg}'
+                        return f' sort as {sort_msg}'
                 else:
-                    return f'sort as {sort_msg}'
+                    return f' sort as {sort_msg}'
             else:
                 return f'a voicing of {b[1].name}{chordtype}'
     else:
@@ -1139,7 +1149,7 @@ def find_similarity(a,
                             if sort_message is None:
                                 return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
                             else:
-                                result = f'sort as {sort_message}'
+                                result = f' sort as {sort_message}'
                     else:
                         return 'not good'
 
@@ -1186,7 +1196,7 @@ def find_similarity(a,
                     if sort_message is None:
                         return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
                     else:
-                        result = f'sort as {sort_message}'
+                        result = f' sort as {sort_message}'
             else:
                 return 'not good'
         if fromchord_name:
@@ -1464,7 +1474,7 @@ def detect(a,
             if any(x in highest_msg
                    for x in ['sort', '/']) and any(y in invfrom_current_invert
                                                    for y in ['sort', '/']):
-                invfrom_current_invert = inversion_way(a, best[1], inv_num)
+                invfrom_current_invert = find_similarity(a, best[1], fromchord_name=False)
                 final_result = f'{best[2]} {invfrom_current_invert}'
             else:
                 final_result = f'{highest_msg} {invfrom_current_invert}'
