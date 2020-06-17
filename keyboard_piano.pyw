@@ -10,7 +10,6 @@ import browse
 from pyglet.window import mouse
 os.chdir(abs_path)
 
-
 class Button:
     def __init__(self, img, x, y):
         self.img = pyglet.resource.image(img)
