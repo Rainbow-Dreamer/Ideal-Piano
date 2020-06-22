@@ -6,7 +6,6 @@ import time
 
 file_path = None
 action = 0
-track_get = None
 track_ind_get = None
 interval = None
 read_result = None
@@ -51,8 +50,6 @@ class Root(Tk):
         self.no_notes2.destroy()
         self.choose_track_ind_text.destroy()
         self.choose_track_ind.destroy()
-        self.choose_track_text.destroy()
-        self.choose_track.destroy()
         self.from_text.destroy()
         self.interval_from.destroy()
         self.to_text.destroy()
@@ -68,7 +65,6 @@ class Root(Tk):
         self.destroy()
 
     def quit_normal(self):
-        global track_get
         global track_ind_get
         global interval
         global read_result
@@ -84,7 +80,6 @@ class Root(Tk):
         set_bpm = self.check_bpm.get()
         off_melody = self.if_melody.get()
         try:
-            track_get = int(self.choose_track.get())
             track_ind_get = int(self.choose_track_ind.get())
         except:
             pass
@@ -94,11 +89,11 @@ class Root(Tk):
         except:
             pass
         try:
-            if track_ind_get is not None and track_get is not None:
+            if track_ind_get is not None:
                 read_mode = ''
             else:
                 read_mode = 'find'
-            read_result = read(file_path, track_ind_get, track_get, read_mode)
+            read_result = read(file_path, track_ind_get, read_mode)
 
         except:
             read_result = 'error'
@@ -145,10 +140,6 @@ class Root(Tk):
             self.choose_track_ind_text.grid(row=4, column=0)
             self.choose_track_ind = ttk.Entry(self.labelFrame, width=5)
             self.choose_track_ind.grid(row=4, column=1)
-            self.choose_track_text = ttk.Label(self.labelFrame, text='track:')
-            self.choose_track_text.grid(row=5, column=0)
-            self.choose_track = ttk.Entry(self.labelFrame, width=5)
-            self.choose_track.grid(row=5, column=1)
             self.from_text = ttk.Label(self.labelFrame, text='from')
             self.from_text.grid(row=6, column=0)
             self.interval_from = ttk.Entry(self.labelFrame, width=5)

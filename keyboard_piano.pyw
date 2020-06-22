@@ -574,7 +574,7 @@ def init_self_midi():
 
 
 def browse_reset():
-    browse.file_path, browse.track_get, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody = None, None, None, None, None, 0
+    browse.file_path, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody = None, None, None, None, 0
 
 
 melody_notes = []

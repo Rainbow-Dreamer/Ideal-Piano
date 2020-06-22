@@ -7,7 +7,6 @@ from mido.midifiles.midifiles import MidiFile as midi
 from mido import Message
 import mido.midifiles.units as unit
 from mido.midifiles.tracks import merge_tracks as merge
-from mido.midifiles.midifiles import MidiFile
 from mido.midifiles.tracks import MidiTrack
 from mido.midifiles.meta import MetaMessage
 from difflib import SequenceMatcher
@@ -149,8 +148,7 @@ def getchord(start,
                 except:
                     return 'add(n) chord: n should be an integer'
             else:
-                print('could not detect the chord types')
-                return
+                return 'could not detect the chord types'
     for i in range(len(interval)):
         chordlist.append(degree_to_note(initial + interval[i]))
     if addition is not None:
@@ -189,9 +187,10 @@ def play(chord1,
          channel=0,
          time1=0,
          track_num=1,
-         name='temp',
+         name='temp.mid',
          modes='new2',
-         instrument=None):
+         instrument=None,
+         save_as_file=True):
     file = write(name,
                  chord1,
                  tempo,
@@ -200,51 +199,63 @@ def play(chord1,
                  time1=0,
                  track_num=1,
                  mode=modes,
-                 instrument=instrument)
-    result_file = f'{name}.mid'
-    if sys.platform.startswith('win'):
-        os.startfile(result_file)
-    elif sys.platform.startswith('linux'):
-        import subprocess
-        subprocess.Popen(result_file)
-    elif sys.platform == 'darwin':
-        os.system(result_file)
+                 instrument=instrument,
+                 save_as_file=save_as_file)
+    if save_as_file:
+        result_file = name
+        if sys.platform.startswith('win'):
+            os.startfile(result_file)
+        elif sys.platform.startswith('linux'):
+            import subprocess
+            subprocess.Popen(result_file)
+        elif sys.platform == 'darwin':
+            os.system(result_file)
+    else:
+        return file
 
 
-def read(name, trackind=1, track=1, mode='find'):
+def get_tracks(name):
+    x = midi(name)
+    return x.tracks
+
+
+def read(name, trackind=1, mode='find', is_file=False):
     # read from a midi file and return a notes list
 
     # if mode is set to 'find', then will automatically search for
     # the first available midi track (has notes inside it)
-    x = midi(str(name))
+    if is_file:
+        name.seek(0)
+        x = midi(file=name)
+        name.close()
+    else:
+        x = midi(name)
+    whole_tracks = x.tracks
+    t = None
     if mode == 'find':
-        whole_tracks = list(enumerate(x.tracks))
-        is_find = False
         for each in whole_tracks:
-            for each_track in each:
-                if type(each_track) != int and any(x.type == 'note_on'
-                                                   for x in each_track):
-                    t = each_track
-                    is_find = True
-                    break
-            if is_find:
+            if any(each_msg.type == 'note_on' for each_msg in each):
+                t = each
                 break
+    elif mode == 'all':
+        available_tracks = [each for each in whole_tracks if any(each_msg.type == 'note_on' for each_msg in each)]
+        return [midi_to_chord(x, j) for j in available_tracks]
+    else:
+        try:
+            t = whole_tracks[trackind]
+        except:
+            return 'error'
+    return midi_to_chord(x, t)
+    
 
-    elif not mode:
-        try:
-            tracklist = list(enumerate(x.tracks))[trackind]
-        except:
-            return 'error'
-        try:
-            t = tracklist[track]
-        except:
-            return 'error'
+def midi_to_chord(x, t):
     interval_unit = x.ticks_per_beat
     hason = []
     hasoff = []
     intervals = []
     notelist = []
-    for i in range(len(t)):
+    notes_len = len(t)
+    for i in range(notes_len):
         if t[i].type == 'note_on' and t[i].velocity != 0:
             if i not in hason and i not in hasoff:
                 hason.append(i)
@@ -252,7 +263,7 @@ def read(name, trackind=1, track=1, mode='find'):
                 find_end = False
                 time2 = 0
                 realtime = None
-                for k in range(i + 1, len(t) - 1):
+                for k in range(i + 1, notes_len - 1):
                     current_note = t[k]
                     time2 += current_note.time
                     if not find_interval:
@@ -275,14 +286,14 @@ def read(name, trackind=1, track=1, mode='find'):
                     intervals.append(
                         sum([t[x].time
                              for x in range(i,
-                                            len(t) - 1)]) / interval_unit)
+                                            notes_len - 1)]) / interval_unit)
                 if not find_end:
                     realtime = time2
                 duration1 = realtime / interval_unit
                 if duration1.is_integer():
                     duration1 = int(duration1)
                 #if not find_interval:
-                #intervals.append(sum([t[x].time for x in range(i,len(t)-1)])/interval_unit)
+                #intervals.append(sum([t[x].time for x in range(i,notes_len-1)])/interval_unit)
                 notelist.append(
                     degree_to_note(t[i].note,
                                    duration=duration1,
@@ -297,7 +308,7 @@ def read(name, trackind=1, track=1, mode='find'):
         for tr2 in tr1:
             if 'tempo' in tr2.__dict__:
                 tempo = tr2.tempo
-                return unit.tempo2bpm(tempo), result
+                return unit.tempo2bpm(tempo), result    
 
 
 def write(name_of_midi,
@@ -308,14 +319,16 @@ def write(name_of_midi,
           time1=0,
           track_num=1,
           mode='new2',
-          instrument=None):
+          instrument=None,
+          save_as_file=True,
+          midi_io=None):
     if isinstance(chord1, note):
         chord1 = chord([chord1])
     if not isinstance(chord1, list):
         chord1 = [chord1]
     chordall = concat(chord1)
     if mode == 'new2':
-        newmidi = MidiFile(ticks_per_beat=tempo * 4)
+        newmidi = midi(ticks_per_beat=tempo * 4)
         newtempo = unit.bpm2tempo(tempo)
 
         for g in range(track_num + 1):
@@ -324,8 +337,12 @@ def write(name_of_midi,
             MetaMessage('set_tempo', tempo=newtempo, time=0),
             MetaMessage('end_of_track', time=0)
         ])
-        newmidi.save(f'{name_of_midi}.mid')
-        write(name_of_midi,
+        if save_as_file:
+            newmidi.save(name_of_midi)
+            current_io = None
+        else:
+            current_io = newmidi
+        return write(name_of_midi,
               chord1,
               tempo,
               track,
@@ -333,7 +350,9 @@ def write(name_of_midi,
               time1,
               track_num,
               mode='m+',
-              instrument=instrument)
+              instrument=instrument,
+              save_as_file=save_as_file,
+              midi_io=current_io)
 
     if mode == 'new':
         # write to a new midi file or overwrite an existing midi file
@@ -356,18 +375,31 @@ def write(name_of_midi,
             #else:
             #time1 += chordall.interval[i]+duration[i]
             #MyMIDI.addNote(track, channel, degrees[i], time1, duration[i], 0)
-        with open(f'{name_of_midi}.mid', "wb") as output_file:
-            MyMIDI.writeFile(output_file)
+        if save_as_file:
+            with open(name_of_midi, "wb") as output_file:
+                MyMIDI.writeFile(output_file)
+        else:
+            from io import BytesIO
+            current_io = BytesIO()
+            MyMIDI.writeFile(current_io)
+            return current_io
     elif mode in ['m+', 'm']:
         # modify existing midi files, m+: add at the end of the midi file,
         # m: add from the beginning of the midi file
-        x = midi(f'{name_of_midi}.mid')
+        if save_as_file:
+            x = midi(name_of_midi)
+        else:
+            x = midi_io
         if instrument:
-            if instrument in instruments:
+            if type(instrument) == int:
+                instrument_num = instrument - 1
+                instrument_msg = mido.Message('program_change', program=instrument_num)
+                x.tracks[1].insert(0, instrument_msg)                    
+            elif instrument in instruments:
                 instrument_num = instruments[instrument] - 1
                 instrument_msg = mido.Message('program_change', program=instrument_num)
                 x.tracks[1].insert(0, instrument_msg)        
-        tracklist = [x[1] for x in list(enumerate(x.tracks))][1:]
+        tracklist = x.tracks[1:]
         track_modify = tracklist[track]
         interval_unit = x.ticks_per_beat
         if mode == 'm+':
@@ -396,14 +428,24 @@ def write(name_of_midi,
                                 velocity=chordall[sorthas[n][1] + 1].volume,
                                 time=sorthas[n][0] - sorthas[n - 1][0]))
         elif mode == 'm':
-            write('tempmerge', chord1, tempo, track, channel, time1, track_num, instrument=instrument)
-            tempmid = midi('tempmerge.mid')
-            newtrack = [y[1]
-                        for y in list(enumerate(tempmid.tracks))][1:][track]
+            file = write('tempmerge', chord1, tempo, track, channel, time1, track_num, instrument=instrument,save_as_file=save_as_file,
+              midi_io=current_io)
+            if save_as_file:
+                tempmid = midi('tempmerge.mid')
+            else:
+                tempmid = file
+            newtrack = tempmid.tracks[1:][track]
             aftertrack = merge([track_modify, newtrack])
             x.tracks[track + 1] = aftertrack
-            os.remove('tempmerge.mid')
-        x.save(f'{name_of_midi}.mid')
+            if save_as_file:
+                os.remove('tempmerge.mid')
+        if save_as_file:
+            x.save(name_of_midi)
+        else:
+            from io import BytesIO
+            result_io = BytesIO()
+            x.save(file=result_io)
+            return result_io
 
 
 #x = midi('so.mid')
