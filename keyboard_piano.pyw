@@ -1,4 +1,9 @@
-import pygame, keyboard, os, time, sys, pyglet
+import pygame
+import keyboard
+import os
+import time
+import sys
+import pyglet
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
 sys.path.append(abs_path)
@@ -9,6 +14,7 @@ import pygame.midi
 import browse
 from pyglet.window import mouse
 os.chdir(abs_path)
+
 
 class Button:
     def __init__(self, img, x, y):
@@ -412,7 +418,7 @@ def mode_self_midi(dt):
             plays[note_number - 21].batch = None
             if current_note in current_play:
                 current_play.remove(current_note)
-                #wavdic[str(current_note)].stop()
+                # wavdic[str(current_note)].stop()
         else:
             if current_note not in current_play:
                 current_play.append(current_note)
