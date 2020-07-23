@@ -157,7 +157,7 @@ class Root(Tk):
                 self.labelFrame,
                 text='main melody off when show chords',
                 variable=self.if_melody)
-            self.main_melody.place(x=-50, y=210, width=230, height=30)
+            self.main_melody.place(x=0, y=160, width=230, height=30)
             self.make_error_labels()
 
 

@@ -440,7 +440,6 @@ def mode_show(dt):
     global pause_start
     global message_label
     global playnotes
-    global get_off_melody
     if not paused:
         currentime = time.time() - startplay
         for k in range(sheetlen):
@@ -471,30 +470,14 @@ def mode_show(dt):
                         plays[i.degree - 21].batch = batch
                     lastshow = playnotes
                     label.text = str(playnotes)
-                    if get_off_melody:
-                        playnotes = [
-                            x for x in playnotes
-                            if x.number not in melody_notes
-                        ]
-                        if playnotes:
-                            chordtype = detect(
-                                playnotes,
-                                ignore_sort_from=ignore_sort_from,
-                                change_from_first=change_from_first,
-                                original_first=original_first,
-                                ignore_add_from=ignore_add_from,
-                                same_note_special=same_note_special,
-                                two_show_interval=two_show_interval)
-                            label2.text = str(chordtype)
-                    else:
-                        chordtype = detect(playnotes,
-                                           ignore_sort_from=ignore_sort_from,
-                                           change_from_first=change_from_first,
-                                           original_first=original_first,
-                                           ignore_add_from=ignore_add_from,
-                                           same_note_special=same_note_special,
-                                           two_show_interval=two_show_interval)
-                        label2.text = str(chordtype)
+                    chordtype = detect(playnotes,
+                                       ignore_sort_from=ignore_sort_from,
+                                       change_from_first=change_from_first,
+                                       original_first=original_first,
+                                       ignore_add_from=ignore_add_from,
+                                       same_note_special=same_note_special,
+                                       two_show_interval=two_show_interval)
+                    label2.text = str(chordtype)
 
         if keyboard.is_pressed(pause_key):
             paused = True
@@ -625,9 +608,8 @@ def init_show():
 
     get_off_melody = browse.off_melody
     if get_off_melody:
-        for k in range(sheetlen):
-            musicsheet.notes[k].number = k
-        melody_notes = split_melody(musicsheet)
+        musicsheet = split_chord(musicsheet, mode='hold')
+        sheetlen = len(musicsheet)
 
     browse_reset()
     if play_interval is not None:
@@ -635,6 +617,8 @@ def init_show():
 
         play_start, play_stop = int(sheetlen * (play_interval[0] / 100)), int(
             sheetlen * (play_interval[1] / 100))
+        if play_start == 0:
+            play_start = 1
         musicsheet = musicsheet[play_start:play_stop + 1]
         sheetlen = play_stop + 1 - play_start
     if show_change_pitch != None:
