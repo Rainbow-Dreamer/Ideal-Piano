@@ -43,6 +43,7 @@ pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = [abs_path]
 pyglet.resource.reindex()
+icon = pyglet.resource.image('piano.ico')
 background = pyglet.resource.image(background_image)
 if not background_size:
     ratio_background = screen_width / background.width
@@ -70,7 +71,8 @@ self_midi = Button(self_midi_image, *self_midi_place)
 button_self_midi = self_midi.MakeButton()
 play_midi = Button(play_midi_image, *play_midi_place)
 button_play_midi = play_midi.MakeButton()
-window = pyglet.window.Window(*screen_size)
+window = pyglet.window.Window(*screen_size, caption='Ideal Piano')
+window.set_icon(icon)
 
 label = pyglet.text.Label('',
                           font_name=fonts,
@@ -384,6 +386,13 @@ def mode_self_pc(dt):
 def mode_self_midi(dt):
     global last
     global current_play
+    global stillplay
+    current_time = time.time()
+    for each in stillplay:
+        if each not in current_play:
+            if current_time - each.count_time >= delay_time:
+                wavdic[str(each)].stop()
+                stillplay.remove(each)
     if last != current_play:
         for k in last:
             plays[k.degree - 21].batch = None
@@ -406,7 +415,7 @@ def mode_self_midi(dt):
         else:
             label.text = '[]'
             label2.text = ''
-    
+
     if device.poll():
         event = device.read(1)[0]
         data, timestamp = event
@@ -422,10 +431,12 @@ def mode_self_midi(dt):
             # # 144 is the status code of note on in midi
             if current_note not in current_play:
                 current_play.append(current_note)
+                stillplay.append(current_note)
                 if load_sound:
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
-                    current_sound.play(maxtime=midi_delay_time)
+                    current_note.count_time = current_time
+                    current_sound.play()
 
 
 paused = False
@@ -543,6 +554,7 @@ def init_self_pc():
 
 
 def init_self_midi():
+    global stillplay
     global current_play
     global midi_delay_time
     global wavdic
@@ -561,6 +573,7 @@ def init_self_midi():
                        for i in notenames}, sound_path, sound_format,
                       global_volume)
     current_play = []
+    stillplay = []
     last = current_play.copy()
 
 
