@@ -1,6 +1,4 @@
-# the key settings for playing 88 notes (from A1 to C9)
-# (if you have sound files that beyond these range then you can
-# modify this dictionary to play them)
+# basic screen settings
 
 screen_size = 1280, 650
 background_image = 'white.png'
@@ -23,6 +21,10 @@ self_midi_image = 'midi_keyboard.png'
 self_midi_place = 50, 450
 play_midi_image = 'play_midi.png'
 play_midi_place = 50, 400
+
+# the key settings for playing 88 notes (from A1 to C9)
+# (if you have sound files that beyond these range then you can
+# modify this dictionary to play them)
 
 key_settings = {
     'z': 'A#2',
