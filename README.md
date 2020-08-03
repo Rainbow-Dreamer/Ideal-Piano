@@ -28,9 +28,9 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 具体的操作流程请到"请先看我!.txt"这个文件里看。
 
 由于这个项目完全由本人一个人完成，本人的美工水平欠佳，因此只要不是对于美工很挑剔的话，Ideal Piano还是可以用的很顺畅的qwq
-以下是Ideal Piano的画面预览：
+以下是Ideal Piano的画    面预览：
 
 ![image](previews/1.png)
-                                       打开Ideal Piano的初始页面
+                                                    打开Ideal Piano的初始页面
 ![image](previews/2.png)
 
