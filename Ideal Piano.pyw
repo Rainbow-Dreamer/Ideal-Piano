@@ -388,11 +388,12 @@ def mode_self_midi(dt):
     global current_play
     global stillplay
     current_time = time.time()
-    for each in stillplay:
-        if each not in current_play:
-            if current_time - each.count_time >= delay_time:
-                wavdic[str(each)].stop()
-                stillplay.remove(each)
+    if load_sound:
+        for each in stillplay:
+            if each not in current_play:
+                if current_time - each.count_time >= delay_time:
+                    wavdic[str(each)].stop()
+                    stillplay.remove(each)
     if last != current_play:
         for k in last:
             plays[k.degree - 21].batch = None
@@ -421,7 +422,7 @@ def mode_self_midi(dt):
         data, timestamp = event
         status, note_number, velocity, note_off_velocity = data
         current_note = degree_to_note(note_number)
-        if status == 128 or velocity == 0:
+        if status == 128 or (status == 144 and velocity == 0):
             # 128 is the status code of note off in midi
             plays[note_number - 21].batch = None
             if current_note in current_play:
@@ -431,11 +432,11 @@ def mode_self_midi(dt):
             # # 144 is the status code of note on in midi
             if current_note not in current_play:
                 current_play.append(current_note)
-                stillplay.append(current_note)
                 if load_sound:
+                    stillplay.append(current_note)
+                    current_note.count_time = current_time                    
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
-                    current_note.count_time = current_time
                     current_sound.play()
 
 
