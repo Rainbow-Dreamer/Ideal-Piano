@@ -30,10 +30,10 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 由于这个项目完全由本人一个人完成，本人的美工水平欠佳，因此只要不是对于美工很挑剔的话，Ideal Piano还是可以用的很顺畅的qwq
 以下是Ideal Piano的画面预览：
 
-![image](previews/1.png)
+![Screenshot](previews/1.png)
 打开Ideal Piano的初始页面
-![image](previews/2.png)
+![Screenshot](previews/2.png)
 演奏时显示音符并且实时通过乐理逻辑分析判断当前演奏的音组成的和弦类型
-![image](previews/3.png)
+![Screenshot](previews/3.png)
 选择midi文件播放的窗口
 
