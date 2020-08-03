@@ -1,4 +1,0 @@
-notice:
-1. These examples are all playing in default key settings.
-2. You can change the sounds files, which means it is not limited to just piano sounds, and you can
-set file format as .wav, .mp3, .ogg or whatever you like, also you can set the sounds folder's path.
