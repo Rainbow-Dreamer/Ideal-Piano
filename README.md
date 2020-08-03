@@ -31,6 +31,6 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 以下是Ideal Piano的画面预览：
 
 ![image](previews/1.png)
-                                  打开Ideal Piano的初始页面
+打开Ideal Piano的初始页面
 ![image](previews/2.png)
 
