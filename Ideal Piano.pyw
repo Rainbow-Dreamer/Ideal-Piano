@@ -204,11 +204,17 @@ def on_draw():
             elif mode_num == 1:
                 try:
                     init_self_midi()
-                    label.text = 'sounds loading finished'
-                    label.draw()
-                    func = mode_self_midi
-                    not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 120)
+                    if not device:
+                        label.text = 'there is no midi input devices, please check'
+                        mode_num = 3
+                        reset_click_mode()
+                        label.draw()
+                    else:
+                        label.text = 'sounds loading finished'
+                        label.draw()
+                        func = mode_self_midi
+                        not_first()
+                        pyglet.clock.schedule_interval(func, 1 / 120)
                 except:
                     label.text = 'there is no midi input devices, please check'
                     mode_num = 3
@@ -225,7 +231,7 @@ def on_draw():
                     pyglet.clock.schedule_interval(func, 1 / 120)
 
             elif mode_num == 3:
-                time.sleep(2)
+                time.sleep(1)
                 label.text = ''
                 mode_num = None
             elif mode_num == 4:
@@ -427,14 +433,13 @@ def mode_self_midi(dt):
             plays[note_number - 21].batch = None
             if current_note in current_play:
                 current_play.remove(current_note)
-                # wavdic[str(current_note)].stop()
         elif status == 144:
-            # # 144 is the status code of note on in midi
+            # 144 is the status code of note on in midi
             if current_note not in current_play:
                 current_play.append(current_note)
                 if load_sound:
                     stillplay.append(current_note)
-                    current_note.count_time = current_time                    
+                    current_note.count_time = current_time
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
                     current_sound.play()
@@ -557,16 +562,15 @@ def init_self_pc():
 def init_self_midi():
     global stillplay
     global current_play
-    global midi_delay_time
     global wavdic
     global device
     global last
     if not midi_device_load:
+        device = None
         has_load()
         pygame.mixer.set_num_channels(maxinum_channels)
         pygame.midi.init()
         device = pygame.midi.Input(midi_device_id)
-        midi_delay_time = int(delay_time * 1000)
     notenames = os.listdir(sound_path)
     notenames = [x[:x.index('.')] for x in notenames]
     if load_sound:
