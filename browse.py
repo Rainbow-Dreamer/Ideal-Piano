@@ -47,7 +47,6 @@ class Root(Tk):
         self.button.destroy()
         self.button2.destroy()
         self.no_notes1.destroy()
-        self.no_notes2.destroy()
         self.choose_track_ind_text.destroy()
         self.choose_track_ind.destroy()
         self.from_text.destroy()
@@ -75,8 +74,6 @@ class Root(Tk):
             self.out_of_index.place_forget()
         if self.no_notes1.place_info():
             self.no_notes1.place_forget()
-        if self.no_notes2.place_info():
-            self.no_notes2.place_forget()
         set_bpm = self.check_bpm.get()
         off_melody = self.if_melody.get()
         try:
@@ -101,16 +98,15 @@ class Root(Tk):
         if read_result != 'error':
             sheetlen = len(read_result[1])
             if sheetlen == 0:
-                self.no_notes1.place(x=-50, y=150, width=200, height=20)
-                self.no_notes2.place(x=-50, y=170, width=200, height=20)
+                self.no_notes1.place(x=-50, y=160, width=200, height=20)
             else:
                 self.destroy()
         else:
-            self.out_of_index.place(x=-50, y=150, width=200, height=20)
+            self.out_of_index.place(x=-50, y=160, width=200, height=20)
 
     def make_error_labels(self):
-        self.no_notes1 = ttk.Label(self.labelFrame, text='this track has')
-        self.no_notes2 = ttk.Label(self.labelFrame, text='no music notes')
+        self.no_notes1 = ttk.Label(self.labelFrame,
+                                   text='this track has no music notes')
         self.out_of_index = ttk.Label(self.labelFrame,
                                       text='track number is out of index')
 
@@ -157,10 +153,16 @@ class Root(Tk):
                 self.labelFrame,
                 text='main melody off when show chords',
                 variable=self.if_melody)
-            self.main_melody.place(x=0, y=160, width=230, height=30)
+            self.main_melody.place(x=0, y=180, width=230, height=30)
             self.make_error_labels()
 
 
+appears = False
+
+
 def setup():
-    root = Root()
-    root.mainloop()
+    global appears
+    if not appears:
+        appears = True
+        root = Root()
+        root.mainloop()

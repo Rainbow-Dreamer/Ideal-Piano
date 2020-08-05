@@ -292,4 +292,19 @@ note_place = [
     (1231.5, 50), (1252.75, 50)
 ]
 
+# load sounds from the folders of sound paths when playing or not
 load_sound = True
+
+# names of intervals
+perfect_unison, minor_second, augmented_unison, major_second,\
+    diminished_third, minor_third, augmented_second, major_third,\
+    diminished_fourth, perfect_fourth, augmented_third, diminished_fifth,\
+    augmented_fourth, perfect_fifth, diminished_sixth, minor_sixth,\
+    augmented_fifth, major_sixth, diminished_seventh, minor_seventh,\
+    augmented_sixth, major_seventh, diminished_octave, perfect_octave,\
+    octave, augmented_seventh = 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,\
+    7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12
+
+# the parameters of the function split_melody
+melody_tol = minor_seventh
+chord_tol = major_sixth

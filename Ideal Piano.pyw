@@ -7,13 +7,13 @@ import pyglet
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
 sys.path.append(abs_path)
+from musicpy.musicpy import *
+os.chdir(abs_path)
 with open('config.py', encoding='utf-8') as f:
     exec(f.read())
-from musicpy.musicpy import *
 import pygame.midi
 import browse
 from pyglet.window import mouse
-os.chdir(abs_path)
 
 
 class Button:
@@ -160,6 +160,10 @@ def on_mouse_press(x, y, button, modifiers):
                 each.batch = None
         is_click = True
         click_mode = None
+        pyglet.clock.unschedule(func)
+        if mode_num == 2:
+            global playls
+            del playls
     if self_play.inside() & button & mouse.LEFT and first_time:
         click_mode = 0
     if self_midi.inside() & button & mouse.LEFT and first_time:
@@ -579,7 +583,7 @@ def init_self_midi():
 
 
 def browse_reset():
-    browse.file_path, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody = None, None, None, None, 0
+    browse.file_path, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody, browse.appears = None, None, None, None, 0, False
 
 
 melody_notes = []
@@ -624,7 +628,7 @@ def init_show():
 
     get_off_melody = browse.off_melody
     if get_off_melody:
-        musicsheet = split_chord(musicsheet, mode='hold')
+        musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol)
         sheetlen = len(musicsheet)
 
     browse_reset()
