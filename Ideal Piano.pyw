@@ -156,14 +156,15 @@ def on_mouse_press(x, y, button, modifiers):
         if mode_num in [0, 1, 2]:
             global lastshow
             global plays
+            pyglet.clock.unschedule(func)
+            if mode_num == 2:
+                global playls
+                del playls
             for each in plays:
                 each.batch = None
         is_click = True
         click_mode = None
-        pyglet.clock.unschedule(func)
-        if mode_num == 2:
-            global playls
-            del playls
+
     if self_play.inside() & button & mouse.LEFT and first_time:
         click_mode = 0
     if self_midi.inside() & button & mouse.LEFT and first_time:
@@ -254,12 +255,7 @@ def on_draw():
             pyglet.clock.unschedule(func)
             mode_num = None
         else:
-            if mode_num == 0:
-                if label2.text != '':
-                    batch.draw()
-            elif mode_num == 1:
-                batch.draw()
-            elif mode_num == 2:
+            if mode_num in [0, 1, 2]:
                 batch.draw()
         label.draw()
         label2.draw()
@@ -367,27 +363,23 @@ def mode_self_pc(dt):
             currentchord = chord(notels)
             for k in currentchord:
                 plays[k.degree - 21].batch = batch
-        if show_chord:
-            if notels:
-                currentchord.notes.sort(key=lambda x: x.degree)
-                if currentchord != lastshow:
-                    lastshow = currentchord
-                    label.text = str(currentchord.notes)
-                    chordtype = detect(currentchord, detect_mode, inv_num,
-                                       rootpitch, ignore_sort_from,
-                                       change_from_first, original_first,
-                                       ignore_add_from, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval)
+        if notels:
+            currentchord.notes.sort(key=lambda x: x.degree)
+            if currentchord != lastshow:
+                lastshow = currentchord
+                label.text = str(currentchord.notes)
+                chordtype = detect(currentchord, detect_mode, inv_num,
+                                   rootpitch, ignore_sort_from,
+                                   change_from_first, original_first,
+                                   ignore_add_from, same_note_special,
+                                   whole_detect, return_fromchord,
+                                   two_show_interval)
 
-                    label2.text = str(chordtype)
-            else:
-                lastshow = notels
-                label.text = str(notels)
-                label2.text = ''
+                label2.text = str(chordtype)
         else:
             lastshow = notels
             label.text = str(notels)
+            label2.text = ''
         if show_key:
             label.text = str(truecurrent)
 
@@ -477,25 +469,23 @@ def mode_show(dt):
                         if k == sheetlen - 1:
                             finished = True
         time.sleep(delay_each_loop)
-        if show_chord:
-            playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
-            if playnotes:
-                playnotes.sort(key=lambda x: x.degree)
-                if playnotes != lastshow:
-                    if lastshow:
-                        for each in lastshow:
-                            plays[each.degree - 21].batch = None
-                    for i in playnotes:
-                        plays[i.degree - 21].batch = batch
-                    lastshow = playnotes
-                    label.text = str(playnotes)
-                    chordtype = detect(playnotes, detect_mode, inv_num,
-                                       rootpitch, ignore_sort_from,
-                                       change_from_first, original_first,
-                                       ignore_add_from, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval)
-                    label2.text = str(chordtype)
+        playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
+        if playnotes:
+            playnotes.sort(key=lambda x: x.degree)
+            if playnotes != lastshow:
+                if lastshow:
+                    for each in lastshow:
+                        plays[each.degree - 21].batch = None
+                for i in playnotes:
+                    plays[i.degree - 21].batch = batch
+                lastshow = playnotes
+                label.text = str(playnotes)
+                chordtype = detect(playnotes, detect_mode, inv_num, rootpitch,
+                                   ignore_sort_from, change_from_first,
+                                   original_first, ignore_add_from,
+                                   same_note_special, whole_detect,
+                                   return_fromchord, two_show_interval)
+                label2.text = str(chordtype)
 
         if keyboard.is_pressed(pause_key):
             paused = True
@@ -510,8 +500,7 @@ def mode_show(dt):
             pause_time = pause_stop - pause_start
             startplay += pause_time
     if finished:
-        if show_chord:
-            label2.text = ''
+        label2.text = ''
         for each in plays:
             each.batch = None
         label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'

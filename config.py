@@ -135,10 +135,6 @@ unpause_key = 'enter'
 exit_key = 'esc'
 pause_key_clear_notes = False
 
-# show_chord set to True will show what chords you are playing on the screen,
-# including what the notes are and the chord's type
-show_chord = True
-
 # show_key set to True will show what keyboard keys you are pressing
 show_key = False
 
@@ -179,7 +175,7 @@ delay_time = 3
 # for pressing keys' sensitivity.
 touch_interval = 0.1
 
-# this parameter is set to True, if the show_chord is set to True,
+# if this parameter is set to True,
 # then it only reads the key you are actually pressing now,
 # not to include the sounds on delay but you are not pressing
 delay_only_read_current = True
@@ -197,7 +193,7 @@ show_delay_time = 1
 # better to set around 3 to 10 milliseconds (0.003 to 0.01 seconds)
 delay_each_loop = 0.003
 
-# these are the parameters for chord types detections (as you set show_chord to True)
+# these are the parameters for chord types detections
 # ignore_sort_from : avoid the detection result are sorting from another chord as much as possible
 # change_from_first: detection result is preferentially chosen as changed from another chord(flat or sharp some notes)
 # original_first: detection result is preferentially chosen as a variation of the original position of the chord(i.e. no inversion or any changes to the notes of the chord)
