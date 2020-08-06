@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 with open('config.py', encoding='utf-8') as f:
     exec(f.read())
 
@@ -33,6 +34,16 @@ class Root(Tk):
         self.save = ttk.Button(self, text="save", command=self.save_current)
         self.save.grid()
         self.saved_text = ttk.Label(text='saved')
+        self.change_sound_path_button = ttk.Button(
+            self, text='change', command=self.change_sound_path)
+        self.change_sound_path_button.place(x=450, y=170)
+
+    def change_sound_path(self):
+        file_path = filedialog.askdirectory(initialdir='.',
+                                            title="choose sound path")
+        sound_path_entry = self.value_dict['sound_path'][0]
+        sound_path_entry.delete(0, END)
+        sound_path_entry.insert(END, file_path + '/')
 
     def set_value(self,
                   value_name,
