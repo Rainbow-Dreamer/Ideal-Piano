@@ -158,11 +158,11 @@ def on_mouse_press(x, y, button, modifiers):
             if playls:
                 pyglet.clock.unschedule(func)
                 del playls
-
+                for each in plays:
+                    each.batch = None
         except:
             pass
         if mode_num in [0, 1, 2]:
-            global plays
             pyglet.clock.unschedule(func)
             for each in plays:
                 each.batch = None
