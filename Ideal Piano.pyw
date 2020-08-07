@@ -399,6 +399,8 @@ def mode_self_midi(dt):
                 if current_time - each.count_time >= delay_time:
                     wavdic[str(each)].stop()
                     stillplay.remove(each)
+            else:
+                each.count_time = current_time
     if last != current_play:
         for k in last:
             plays[k.degree - 21].batch = None
