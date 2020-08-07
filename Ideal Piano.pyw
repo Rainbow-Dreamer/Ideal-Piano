@@ -153,13 +153,17 @@ def on_mouse_press(x, y, button, modifiers):
     global is_click
     global click_mode
     if go_back.inside() & button & mouse.LEFT and not first_time:
+        try:
+            global playls
+            if playls:
+                pyglet.clock.unschedule(func)
+                del playls
+
+        except:
+            pass
         if mode_num in [0, 1, 2]:
-            global lastshow
             global plays
             pyglet.clock.unschedule(func)
-            if mode_num == 2:
-                global playls
-                del playls
             for each in plays:
                 each.batch = None
         is_click = True
@@ -255,7 +259,7 @@ def on_draw():
             pyglet.clock.unschedule(func)
             mode_num = None
         else:
-            if mode_num in [0, 1, 2]:
+            if batch:
                 batch.draw()
         label.draw()
         label2.draw()
