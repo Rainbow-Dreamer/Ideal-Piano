@@ -189,10 +189,6 @@ sound_path = 'sounds/'
 # when the mode is in 'show' mode, the delay time for the sounds
 show_delay_time = 1
 
-# this is the tiny time interval at each loop to load and play midi notes,
-# better to set around 3 to 10 milliseconds (0.003 to 0.01 seconds)
-delay_each_loop = 0.003
-
 # these are the parameters for chord types detections
 # ignore_sort_from : avoid the detection result are sorting from another chord as much as possible
 # change_from_first: detection result is preferentially chosen as changed from another chord(flat or sharp some notes)

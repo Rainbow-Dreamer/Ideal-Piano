@@ -474,7 +474,6 @@ def mode_show(dt):
                         playls[k][3] = 2
                         if k == sheetlen - 1:
                             finished = True
-        time.sleep(delay_each_loop)
         playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
         if playnotes:
             playnotes.sort(key=lambda x: x.degree)
