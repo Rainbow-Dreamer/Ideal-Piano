@@ -11,6 +11,7 @@ label1_place = 650, 400
 label2_place = 650, 350
 label3_place = 650, 450
 fonts = 'Comic Sans MS'
+bold = False
 notes_image = 'playing.png'
 notes_resize_num = 1.2
 go_back_image = 'go_back.png'
