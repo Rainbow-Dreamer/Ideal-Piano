@@ -566,6 +566,10 @@ def init_self_midi():
         pygame.mixer.set_num_channels(maxinum_channels)
         pygame.midi.init()
         device = pygame.midi.Input(midi_device_id)
+    else:
+        if device:
+            device.close()
+            device = pygame.midi.Input(midi_device_id)
     notenames = os.listdir(sound_path)
     notenames = [x[:x.index('.')] for x in notenames]
     if load_sound:
