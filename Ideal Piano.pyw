@@ -81,8 +81,8 @@ label = pyglet.text.Label('',
                           x=label1_place[0],
                           y=label1_place[1],
                           color=message_color,
-                          anchor_x='center',
-                          anchor_y='center')
+                          anchor_x=label_anchor_x,
+                          anchor_y=label_anchor_y)
 label2 = pyglet.text.Label('',
                            font_name=fonts,
                            font_size=fonts_size,
@@ -90,8 +90,8 @@ label2 = pyglet.text.Label('',
                            x=label2_place[0],
                            y=label2_place[1],
                            color=message_color,
-                           anchor_x='center',
-                           anchor_y='center')
+                           anchor_x=label_anchor_x,
+                           anchor_y=label_anchor_y)
 label3 = pyglet.text.Label('',
                            font_name=fonts,
                            font_size=fonts_size,
@@ -99,8 +99,8 @@ label3 = pyglet.text.Label('',
                            x=label3_place[0],
                            y=label3_place[1],
                            color=message_color,
-                           anchor_x='center',
-                           anchor_y='center')
+                           anchor_x=label_anchor_x,
+                           anchor_y=label_anchor_y)
 
 
 def load(dic, path, file_format, volume):
