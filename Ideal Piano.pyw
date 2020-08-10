@@ -43,6 +43,15 @@ show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = [abs_path]
+for each in [
+        'background_image', 'piano_image', 'notes_image', 'go_back_image',
+        'self_play_image', 'self_midi_image', 'play_midi_image'
+]:
+    each_value = eval(each)
+    each_path = os.path.dirname(each_value)
+    if each_path:
+        pyglet.resource.path.append(each_path.replace('/', '\\'))
+        exec(f"{each} = '{os.path.basename(each_value)}'")
 pyglet.resource.reindex()
 icon = pyglet.resource.image('piano.ico')
 background = pyglet.resource.image(background_image)
