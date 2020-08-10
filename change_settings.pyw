@@ -170,8 +170,8 @@ class Root(Tk):
         self.config_change(0)
 
     def show_saved(self):
-        self.saved_text.grid()
-        self.after(1000, self.saved_text.grid_forget)
+        self.saved_text.place(x=140, y=400)
+        self.after(1000, self.saved_text.place_forget)
 
     def save_current(self):
         changed = False

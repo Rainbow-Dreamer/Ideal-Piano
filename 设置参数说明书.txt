@@ -1,0 +1,267 @@
+﻿这里给大家说明一下配置文件config.py里的每个参数对应的含义，以便大家修改的时候更加明确。
+
+尽量涵盖目前所有的参数，不过会侧重比较重要的参数。
+
+screen_size  屏幕尺寸（宽度，高度）
+
+background_image  背景图片文件路径
+
+background_size  背景图片尺寸
+
+piano_image  钢琴图片文件路径
+
+piano_size  钢琴图片尺寸
+
+message_color  和弦显示的字体颜色，格式为(R, G, B, A)
+
+fonts_size  字体大小
+
+label1_place  显示当前演奏的音符名称的文字位置
+
+label2_place  显示和弦名称的文字位置
+
+label3_place  播放midi文件的状态文字位置
+
+label_anchor_x  文字的横向对齐方式
+
+label_anchor_y  文字的纵向对齐方式
+
+fonts = 字体名称
+
+bold = 是否加粗
+
+notes_image  音符点模式下音符点的图片路径
+
+notes_resize_num  音符点的缩放大小
+
+go_back_image  返回按钮的图片文件路径
+
+go_back_place 返回按钮的图片位置
+
+self_play_image  电脑键盘演奏按钮的图片文件路径
+
+self_play_place  电脑键盘演奏按钮的图片位置
+
+self_midi_image  midi键盘演奏按钮的图片文件路径
+
+self_midi_place  midi键盘演奏按钮的图片位置
+
+play_midi_image  播放midi文件按钮的图片文件路径
+
+play_midi_place  播放midi文件按钮的图片位置
+
+key_settings  电脑键盘对应88键的字典，请注意音源路径里的文件必须要全部包含你所设置到的键位
+
+reverse_key_settings  88键对应电脑键盘的字典
+
+mode  这个是我在写这个软件的UI之前用来设置是电脑键盘演奏，midi键盘演奏还是播放midi文件的，现在这个参数用不到了2333
+
+self_device  也是之前还没写UI时用来设置电脑键盘还是midi键盘的，现在用不到了
+
+midi_device_id  这个参数是接入midi设备后（比如midi键盘），midi设备所对应的id，一般来说只接入midi键盘，没开编曲软件
+
+占用的时候是1，有开编曲软件和loopMIDI的时候是2，没接入midi键盘只开了编曲软件和loopMIDI的时候是1
+
+以下几个都是播放midi文件是的电脑键盘快捷键设置
+
+pause_key  暂停的按键
+
+repeat_key  重复播放的按键
+
+unpause_key （暂停中）继续的按键
+
+exit_key  退出程序的按键
+
+pause_key_clear_notes 当暂停的时候是否清除掉当前演奏的所有音符的显示
+
+show_key 在电脑键盘演奏时是否显示电脑键盘的按键名称
+
+musicsheet 这个也是之前还没写UI时，播放midi文件的模式下，这个参数可以放musicpy语言的代码，程序会自动播放，现在
+
+这个参数也用不到了
+
+path 也是之前用来设置midi文件的路径的参数，现在有UI可以选择文件了，这个参数就没用了
+
+这两个是之前用来设置midi文件要播放的轨道位置
+
+track_ind 
+
+track
+
+bpm 以前用来设置曲速（BPM）的参数，现在我写了UI就没用了
+
+play_interval 以前用来设置播放曲子的某一部分，现在我写了UI就没用了
+
+#接下来几个是pygame的音频初始化参数，基本上不需要动，maxinum_channels越大，同时演奏多个音符时越不会出现问题
+
+frequency = 44100
+
+size = -16
+
+channel = 1
+
+buffer = 1024
+
+maxinum_channels = 100
+
+# 总音量大小，最大为1，最小为0
+
+global_volume = 0.6
+
+delay 是否在弹一个音放开之后给音一定的延迟
+
+delay_time 延迟的时间（秒）
+
+touch_interval 当连续演奏同一个音的时候，音的结束和重新播放的时间间隔，单位为秒
+
+delay_only_read_current 当音在延迟播放的时候（音没有被按着），
+
+和弦判断不包括这些还在延迟播放的音，只包括当前正在按着的音
+
+sound_format 音源的文件格式（文件后缀）
+
+sound_path 音源的文件路径
+
+show_delay_time 播放midi文件时音符的延迟时间
+
+这几个是和弦判断的乐理逻辑算法的参数，默认的设置适用程度最广泛，如果我要说明这些都是什么意思的话，
+
+那可能需要先理解我的算法，因此这一部分等以后我介绍这个算法的时候再说明
+
+detect_mode = 'chord'
+
+inv_num = False
+
+rootpitch = 5
+
+ignore_sort_from = False
+
+change_from_first = True
+
+original_first = True
+
+ignore_add_from = True
+
+same_note_special = False
+
+whole_detect = True
+
+return_fromchord = False
+
+two_show_interval = True
+
+show_change_pitch 播放midi文件时对整首曲子进行升调或者降调（正数n为升n个半音，负数n为降n个半音）
+
+show_modulation = [原来的音阶，转调的音阶] 播放midi文件时，对整首曲子进行转调
+
+config_enable 在电脑键盘演奏时是否开启功能键
+
+config_key 功能键的键位设置，功能键和其他按键搭配可以做到各种不同的功能
+
+volume_up 和功能键搭配的按键，让总音量升高
+
+volume_down 和功能键搭配的按键，让总音量降低
+
+volume_change_unit 总音量每次变化的音量
+
+change_delay 和功能键搭配的按键，改变是否延迟
+
+change_read_current 和功能键搭配的按键，改变是否只判断当前按着的和弦
+
+change_pause_key_clear_notes 和功能键搭配的按键，改变是否在暂停时清除当前演奏的音的显示
+
+note_place 音符点模式下，钢琴从左到右全部按键对应的位置
+
+load_sound 演奏时是否加载音源以及播放（在和宿主一起使用的时候要设置为False）
+
+这些是音程的名称以及对应的半音数
+
+perfect_unison = 0
+
+minor_second = 1
+
+augmented_unison = 1
+
+major_second = 2
+
+diminished_third = 2
+
+minor_third = 3
+
+augmented_second = 3
+
+major_third = 4
+
+diminished_fourth = 4
+
+perfect_fourth = 5
+
+augmented_third = 5
+
+diminished_fifth = 6
+
+augmented_fourth = 6
+
+perfect_fifth = 7
+
+diminished_sixth = 7
+
+minor_sixth = 8
+
+augmented_fifth = 8
+
+major_sixth = 9
+
+diminished_seventh = 9
+
+minor_seventh = 10
+
+augmented_sixth = 10
+
+major_seventh = 11
+
+diminished_octave = 11
+
+perfect_octave = 12
+
+octave = 12
+
+augmented_seventh = 12
+
+这些是我写的一首曲子分离主旋律的算法的参数
+
+melody_tol = minor_seventh
+
+chord_tol = major_sixth
+
+这些是音符条模式下的一些参数
+
+note_mode 选择音符显示模式，目前有音符点和音符条两种模式可以选择，
+
+分别对应的是'dots'和'bars'
+
+bar_width 音符条的宽度
+
+bar_height  音符条的长度
+
+bar_color 音符条的颜色
+
+bar_y 音符条出现的纵坐标
+
+bar_offset_x 音符条偏离音符点位置的横坐标的像素值
+
+bar_opacity 音符条的透明度，0到255，从完全透明到完全不透明
+
+opacity_change_by_velocity 透明度是否随着按键力度的变化而变化，
+
+按键力度越轻，音符条越透明，按键力度越重，音符条越不透明
+
+color_mode 音符条的颜色显示模式，目前有单色显示和随机颜色显示两种模式可以选择，
+
+分别对应'normal'和'rainbow'（实际上填不是normal的其他文字也可以）
+
+bar_steps 音符条每次上升移动的像素值
+
+bar_unit 在播放midi文件的时候，音符条计算相对长度时为单位的长度
+
+bar_hold_increase 在按住琴键时（或者按住电脑按键时），音符条每次拉长的像素值
