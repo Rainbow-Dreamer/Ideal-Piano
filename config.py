@@ -322,8 +322,7 @@ augmented_seventh = 12
 melody_tol = minor_seventh
 chord_tol = major_sixth
 
-# notes showing mode
-# note_mode = 'bars'
+# notes showing mode: choose one from 'dots' and 'bars'
 note_mode = 'bars'
 bar_width = 14
 bar_height = 20
@@ -332,7 +331,7 @@ bar_y = 80
 bar_offset_x = 9
 bar_opacity = 160
 opacity_change_by_velocity = True
-# color_mode = 'normal'
+# color mode: choose one from 'normal' and 'rainbow'
 color_mode = 'rainbow'
 bar_steps = 7
 bar_unit = 50
