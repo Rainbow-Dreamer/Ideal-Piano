@@ -1,6 +1,6 @@
 # basic screen settings
 
-screen_size = 1280, 650
+screen_size = (1280, 650)
 background_image = 'white.png'
 background_size = None
 piano_image = 'piano.png'
@@ -291,14 +291,32 @@ note_place = [
 load_sound = True
 
 # names of intervals
-perfect_unison, minor_second, augmented_unison, major_second,\
-    diminished_third, minor_third, augmented_second, major_third,\
-    diminished_fourth, perfect_fourth, augmented_third, diminished_fifth,\
-    augmented_fourth, perfect_fifth, diminished_sixth, minor_sixth,\
-    augmented_fifth, major_sixth, diminished_seventh, minor_seventh,\
-    augmented_sixth, major_seventh, diminished_octave, perfect_octave,\
-    octave, augmented_seventh = 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,\
-    7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12
+perfect_unison = 0
+minor_second = 1
+augmented_unison = 1
+major_second = 2
+diminished_third = 2
+minor_third = 3
+augmented_second = 3
+major_third = 4
+diminished_fourth = 4
+perfect_fourth = 5
+augmented_third = 5
+diminished_fifth = 6
+augmented_fourth = 6
+perfect_fifth = 7
+diminished_sixth = 7
+minor_sixth = 8
+augmented_fifth = 8
+major_sixth = 9
+diminished_seventh = 9
+minor_seventh = 10
+augmented_sixth = 10
+major_seventh = 11
+diminished_octave = 11
+perfect_octave = 12
+octave = 12
+augmented_seventh = 12
 
 # the parameters of the function split_melody
 melody_tol = minor_seventh
@@ -306,13 +324,13 @@ chord_tol = major_sixth
 
 # notes showing mode
 # note_mode = 'bars'
-note_mode = 'dots'
+note_mode = 'bars'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
 bar_y = 80
 bar_offset_x = 9
-bar_opacity = 255
+bar_opacity = 160
 opacity_change_by_velocity = True
 # color_mode = 'normal'
 color_mode = 'rainbow'

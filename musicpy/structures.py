@@ -217,6 +217,12 @@ class chord:
         return self.reverse()
 
     def __floordiv__(self, obj):
+        if type(obj) == str:
+            import musicpy         
+            obj = musicpy.trans(obj)
+        elif type(obj) == tuple:
+            import musicpy                  
+            obj = musicpy.trans(*obj)
         return self.add(obj, mode='after')
 
     def __or__(self, other):
@@ -1233,3 +1239,4 @@ def relative_note(a, b):
         return b.name + 'b'
     if diff == -2:
         return b.name + 'bb'
+

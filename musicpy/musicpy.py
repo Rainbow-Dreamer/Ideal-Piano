@@ -859,6 +859,10 @@ def trans(obj, pitch=5, duration=1, interval=None):
     return 'not a valid chord representation or chord types not in database'
 
 
+C = trans
+N = toNote
+
+
 def notels(a):
     return [notedict[i] for i in a]
 
@@ -1396,14 +1400,24 @@ def detect_variation(a,
 
 
 def detect_split(a, N=None):
-    splitind = N // 2
-    lower = detect(a.notes[:splitind])
-    upper = detect(a.notes[splitind:])
-    if type(upper) == list:
-        upper = upper[0]
-    if type(lower) == list:
-        lower = lower[0]
-    return f'[{upper}]/[{lower}]'
+    if N < 6:
+        splitind = 1
+        lower = a.notes[0].name
+        upper = detect(a.notes[splitind:]) 
+        if type(upper) == list:
+            upper = upper[0]        
+        return f'[{upper}]/{lower}'
+    else:
+        splitind = N // 2
+        lower = detect(a.notes[:splitind])
+        upper = detect(a.notes[splitind:])    
+        if type(lower) == list:
+            lower = lower[0]        
+        if type(upper) == list:
+            upper = upper[0]
+        return f'[{upper}]/[{lower}]'
+    
+    
 
 
 def interval_check(a, two_show_interval=True):
@@ -1578,7 +1592,7 @@ def detect(a,
                                            same_note_special, False,
                                            return_fromchord)
                     if result_change is None:
-                        return ''
+                        return detect_split(a, N)
                     else:
                         return result_change
                 else:
