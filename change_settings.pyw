@@ -23,7 +23,7 @@ def get_all_config_options(text):
 
 
 def change(var, new, is_str=True):
-    text = open('config.py').read()
+    text = open('config.py', encoding='utf-8').read()
     text_ls = list(text)
     var_len = len(var) + 1
     var_ind = text.index('\n' + var) + var_len
@@ -32,7 +32,7 @@ def change(var, new, is_str=True):
         text_ls[var_ind:var_ind + next_line] = f" = '{new}'"
     else:
         text_ls[var_ind:var_ind + next_line] = f" = {new}"
-    with open('config.py', 'w') as f:
+    with open('config.py', 'w', encoding='utf-8') as f:
         f.write(''.join(text_ls))
 
 
