@@ -14,6 +14,7 @@ with open('config.py', encoding='utf-8') as f:
 import pygame.midi
 import browse
 from pyglet.window import mouse
+from pyglet import shapes
 
 
 class Button:
@@ -62,7 +63,12 @@ else:
 playing = pyglet.resource.image(notes_image)
 playing.width /= notes_resize_num
 playing.height /= notes_resize_num
-plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
+batch = pyglet.graphics.Batch()
+if note_mode == 'dots':
+    plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
+elif note_mode == 'bars':
+    plays = []
+
 go_back = Button(go_back_image, *go_back_place)
 button_go_back = go_back.MakeButton()
 self_play = Button(self_play_image, *self_play_place)
@@ -137,7 +143,6 @@ mode_num = None
 func = None
 click_mode = None
 midi_device_load = False
-batch = pyglet.graphics.Batch()
 
 
 def has_load():
@@ -284,6 +289,9 @@ def not_first():
     first_time = not first_time
 
 
+still_hold_pc = []
+
+
 def mode_self_pc(dt):
     global stillplay
     global last
@@ -328,10 +336,38 @@ def mode_self_pc(dt):
                 wavdic[each].play()
                 stillplay.append([each, time.time(), True])
                 stillplay_obj.append(each)
+                if note_mode == 'bars':
+                    current_note = toNote(notedic[each])
+                    places = note_place[current_note.degree - 21]
+                    current_bar = shapes.Rectangle(
+                        x=places[0] + bar_offset_x,
+                        y=bar_y,
+                        width=bar_width,
+                        height=bar_height,
+                        color=bar_color if color_mode == 'normal' else
+                        (random.randint(0, 255), random.randint(0, 255),
+                         random.randint(0, 255)),
+                        batch=batch)
+                    current_bar.opacity = bar_opacity
+                    still_hold_pc.append([each, current_bar])
         else:
             if each not in last:
                 changed = True
                 wavdic[each].play()
+                if note_mode == 'bars':
+                    current_note = toNote(notedic[each])
+                    places = note_place[current_note.degree - 21]
+                    current_bar = shapes.Rectangle(
+                        x=places[0] + bar_offset_x,
+                        y=bar_y,
+                        width=bar_width,
+                        height=bar_height,
+                        color=bar_color if color_mode == 'normal' else
+                        (random.randint(0, 255), random.randint(0, 255),
+                         random.randint(0, 255)),
+                        batch=batch)
+                    current_bar.opacity = bar_opacity
+                    still_hold_pc.append([each, current_bar])
     for j in last:
         if j not in current:
 
@@ -354,6 +390,23 @@ def mode_self_pc(dt):
                 changed = True
                 wavdic[j].stop()
     last = current
+    if note_mode == 'bars':
+        i = 0
+        while i < len(plays):
+            each = plays[i]
+            each.y += bar_steps
+            if each.y >= screen_height:
+                each.batch = None
+                del plays[i]
+                continue
+            i += 1
+        for k in still_hold_pc:
+            current_hold_note, current_bar = k
+            if current_hold_note in truecurrent:
+                current_bar.height += bar_hold_increase
+            else:
+                plays.append(current_bar)
+                still_hold_pc.remove(k)
     if changed:
         changed = False
         if delay:
@@ -363,13 +416,16 @@ def mode_self_pc(dt):
                 notels = [notedic[t] for t in stillplay_obj]
         else:
             notels = [notedic[t] for t in last]
-        if lastshow:
-            for t in lastshow:
-                plays[t.degree - 21].batch = None
+        if note_mode == 'dots':
+            if lastshow:
+                for t in lastshow:
+                    plays[t.degree - 21].batch = None
         if notels:
             currentchord = chord(notels)
             for k in currentchord:
-                plays[k.degree - 21].batch = batch
+                if note_mode == 'dots':
+                    plays[k.degree - 21].batch = batch
+
         if notels:
             currentchord.notes.sort(key=lambda x: x.degree)
             if currentchord != lastshow:
@@ -391,6 +447,9 @@ def mode_self_pc(dt):
             label.text = str(truecurrent)
 
 
+still_hold = []
+
+
 def mode_self_midi(dt):
     global last
     global current_play
@@ -405,12 +464,15 @@ def mode_self_midi(dt):
             else:
                 each.count_time = current_time
     if last != current_play:
-        for k in last:
-            plays[k.degree - 21].batch = None
+        if note_mode == 'dots':
+            for k in last:
+                plays[k.degree - 21].batch = None
         last = current_play.copy()
         if current_play:
             for each in current_play:
-                plays[each.degree - 21].batch = batch
+                if note_mode == 'dots':
+                    plays[each.degree - 21].batch = batch
+
             currentchord = chord(current_play)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
@@ -432,11 +494,27 @@ def mode_self_midi(dt):
         current_note = degree_to_note(note_number)
         if status == 128 or (status == 144 and velocity == 0):
             # 128 is the status code of note off in midi
-            plays[note_number - 21].batch = None
+            if note_mode == 'dots':
+                plays[note_number - 21].batch = None
             if current_note in current_play:
                 current_play.remove(current_note)
         elif status == 144:
             # 144 is the status code of note on in midi
+            if note_mode == 'bars':
+                places = note_place[current_note.degree - 21]
+                current_bar = shapes.Rectangle(
+                    x=places[0] + bar_offset_x,
+                    y=bar_y,
+                    width=bar_width,
+                    height=bar_height,
+                    color=bar_color if color_mode == 'normal' else
+                    (random.randint(0, 255), random.randint(0, 255),
+                     random.randint(0, 255)),
+                    batch=batch)
+                current_bar.opacity = 255 * (
+                    velocity /
+                    127) if opacity_change_by_velocity else bar_opacity
+                still_hold.append([current_note, current_bar])
             if current_note not in current_play:
                 current_play.append(current_note)
                 if load_sound:
@@ -445,6 +523,23 @@ def mode_self_midi(dt):
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
                     current_sound.play()
+    if note_mode == 'bars':
+        i = 0
+        while i < len(plays):
+            each = plays[i]
+            each.y += bar_steps
+            if each.y >= screen_height:
+                each.batch = None
+                del plays[i]
+                continue
+            i += 1
+        for k in still_hold:
+            current_hold_note, current_bar = k
+            if current_hold_note in current_play:
+                current_bar.height += bar_hold_increase
+            else:
+                plays.append(current_bar)
+                still_hold.remove(k)
 
 
 paused = False
@@ -463,29 +558,46 @@ def mode_show(dt):
     if not paused:
         currentime = time.time() - startplay
         for k in range(sheetlen):
-
             nownote = playls[k]
-            situation = nownote[3]
+            current_sound, start_time, stop_time, situation, number, current_note = nownote
             if situation != 2:
                 if situation == 0:
-                    if currentime >= nownote[1]:
-                        nownote[0].play()
-                        playls[k][3] = 1
+                    if currentime >= start_time:
+                        current_sound.play()
+                        nownote[3] = 1
+                        if note_mode == 'bars':
+                            places = note_place[current_note.degree - 21]
+                            current_bar = shapes.Rectangle(
+                                x=places[0] + bar_offset_x,
+                                y=bar_y,
+                                width=bar_width,
+                                height=bar_unit * current_note.duration,
+                                color=bar_color if color_mode == 'normal' else
+                                (random.randint(0, 255),
+                                 random.randint(0, 255),
+                                 random.randint(0, 255)),
+                                batch=batch)
+                            current_bar.opacity = 255 * (
+                                current_note.volume / 127
+                            ) if opacity_change_by_velocity else bar_opacity
+                            plays.append(current_bar)
                 elif situation == 1:
-                    if currentime >= nownote[2]:
-                        nownote[0].fadeout(show_delay_time)
-                        playls[k][3] = 2
+                    if currentime >= stop_time:
+                        current_sound.fadeout(show_delay_time)
+                        nownote[3] = 2
                         if k == sheetlen - 1:
                             finished = True
         playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
         if playnotes:
             playnotes.sort(key=lambda x: x.degree)
             if playnotes != lastshow:
-                if lastshow:
-                    for each in lastshow:
-                        plays[each.degree - 21].batch = None
-                for i in playnotes:
-                    plays[i.degree - 21].batch = batch
+                if note_mode == 'dots':
+                    if lastshow:
+                        for each in lastshow:
+                            plays[each.degree - 21].batch = None
+                    for i in playnotes:
+                        plays[i.degree - 21].batch = batch
+
                 lastshow = playnotes
                 label.text = str(playnotes)
                 chordtype = detect(playnotes, detect_mode, inv_num, rootpitch,
@@ -500,6 +612,16 @@ def mode_show(dt):
             pause_start = time.time()
             message_label = True
             label3.text = f'paused, press {unpause_key} to unpause'
+        if note_mode == 'bars':
+            i = 0
+            while i < len(plays):
+                each = plays[i]
+                each.y += bar_steps
+                if each.y >= screen_height:
+                    each.batch = None
+                    del plays[i]
+                    continue
+                i += 1
     else:
         if keyboard.is_pressed(unpause_key):
             paused = False
@@ -535,7 +657,8 @@ def initialize(musicsheet, unit_time):
         note_volume = currentnote.volume / 127
         note_volume *= global_volume
         currentwav.set_volume(note_volume)
-        playls.append([currentwav, currentstart, currentstop, 0, i])
+        playls.append(
+            [currentwav, currentstart, currentstop, 0, i, currentnote])
         start += interval
     return playls
 

@@ -303,3 +303,19 @@ perfect_unison, minor_second, augmented_unison, major_second,\
 # the parameters of the function split_melody
 melody_tol = minor_seventh
 chord_tol = major_sixth
+
+# notes showing mode
+# note_mode = 'bars'
+note_mode = 'dots'
+bar_width = 14
+bar_height = 20
+bar_color = (124, 252, 0)
+bar_y = 80
+bar_offset_x = 9
+bar_opacity = 255
+opacity_change_by_velocity = True
+# color_mode = 'normal'
+color_mode = 'rainbow'
+bar_steps = 7
+bar_unit = 50
+bar_hold_increase = 5
