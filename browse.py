@@ -101,10 +101,10 @@ class Root(Tk):
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
                 first_track = all_tracks[0]
-                all_track_notes = first_track[1]
+                tempo, all_track_notes, first_track_start_time = first_track
                 for i in all_tracks[1:]:
-                    all_track_notes &= (i[1], i[2])
-                read_result = first_track[0], all_track_notes, first_track[2]
+                    all_track_notes &= (i[1], i[2]-first_track_start_time)
+                read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
             print(str(e))
