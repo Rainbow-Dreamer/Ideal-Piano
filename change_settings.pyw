@@ -26,7 +26,7 @@ def change(var, new, is_str=True):
     text = open('config.py', encoding='utf-8').read()
     text_ls = list(text)
     var_len = len(var) + 1
-    var_ind = text.index('\n' + var) + var_len
+    var_ind = text.index('\n' + var + ' ') + var_len
     next_line = text[var_ind:].index('\n')
     if is_str:
         text_ls[var_ind:var_ind + next_line] = f" = '{new}'"
