@@ -290,7 +290,7 @@ note_place = [
 ]
 
 # load sounds from the folders of sound paths when playing or not
-load_sound = False
+load_sound = True
 
 # detect chord types when the current notes change
 show_chord = True
