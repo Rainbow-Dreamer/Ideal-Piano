@@ -20,8 +20,8 @@ from pyglet import shapes
 class Button:
     def __init__(self, img, x, y):
         self.img = pyglet.resource.image(img)
-        self.img.width /= 3
-        self.img.height /= 3
+        self.img.width /= button_resize_num
+        self.img.height /= button_resize_num
         self.x = x
         self.y = y
 

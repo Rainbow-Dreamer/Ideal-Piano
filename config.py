@@ -17,13 +17,14 @@ bold = True
 notes_image = 'playing.png'
 notes_resize_num = 1.2
 go_back_image = 'go_back.png'
-go_back_place = (50, 550)
+go_back_place = 50, 550
 self_play_image = 'play.png'
-self_play_place = 50, 500
+self_play_place = 50, 480
 self_midi_image = 'midi_keyboard.png'
-self_midi_place = 50, 450
+self_midi_place = 50, 410
 play_midi_image = 'play_midi.png'
-play_midi_place = 50, 400
+play_midi_place = 50, 340
+button_resize_num = 2.3
 
 # the key settings for playing 88 notes (from A1 to C9)
 # (if you have sound files that beyond these range then you can
