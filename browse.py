@@ -56,6 +56,7 @@ class Root(Tk):
         self.out_of_index.destroy()
         self.check_bpm_text.destroy()
         self.check_bpm.destroy()
+        self.merge_all_tracks.destroy()
         self.make_button()
 
     def go_back(self):
@@ -70,12 +71,14 @@ class Root(Tk):
         global sheetlen
         global set_bpm
         global off_melody
+        global if_merge
         if self.out_of_index.place_info():
             self.out_of_index.place_forget()
         if self.no_notes1.place_info():
             self.no_notes1.place_forget()
         set_bpm = self.check_bpm.get()
         off_melody = self.if_melody.get()
+        if_merge = self.if_merge_all_tracks.get()
         try:
             track_ind_get = int(self.choose_track_ind.get())
         except:
@@ -90,9 +93,21 @@ class Root(Tk):
                 read_mode = ''
             else:
                 read_mode = 'find'
-            read_result = read(file_path, track_ind_get, read_mode)
+            if not if_merge:
+                read_result = read(file_path, track_ind_get, read_mode)
+            else:
+                all_tracks = read(file_path, track_ind_get, 'all')
+                start_time_ls = [j[2] for j in all_tracks]
+                first_track_ind = start_time_ls.index(min(start_time_ls))
+                all_tracks.insert(0, all_tracks.pop(first_track_ind))
+                first_track = all_tracks[0]
+                all_track_notes = first_track[1]
+                for i in all_tracks[1:]:
+                    all_track_notes &= (i[1], i[2])
+                read_result = first_track[0], all_track_notes, first_track[2]
 
-        except:
+        except Exception as e:
+            print(str(e))
             read_result = 'error'
 
         if read_result != 'error':
@@ -154,6 +169,12 @@ class Root(Tk):
                 text='main melody off when show chords',
                 variable=self.if_melody)
             self.main_melody.place(x=0, y=180, width=230, height=30)
+            self.if_merge_all_tracks = IntVar()
+            self.merge_all_tracks = ttk.Checkbutton(
+                self.labelFrame,
+                text='merge all tracks',
+                variable=self.if_merge_all_tracks)
+            self.merge_all_tracks.place(x=100, y=0, width=200, height=30)
             self.make_error_labels()
 
 

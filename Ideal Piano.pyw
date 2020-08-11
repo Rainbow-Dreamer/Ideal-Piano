@@ -644,7 +644,7 @@ def mode_show(dt):
             each.batch = None
         label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
-            playls = initialize(musicsheet, unit_time)
+            playls = initialize(musicsheet, unit_time, start_time)
             startplay = time.time()
             lastshow = None
             finished = False
@@ -652,9 +652,9 @@ def mode_show(dt):
             sys.exit(0)
 
 
-def initialize(musicsheet, unit_time):
+def initialize(musicsheet, unit_time, start_time):
     playls = []
-    start = 0
+    start = start_time
     for i in range(sheetlen):
         currentnote = musicsheet.notes[i]
         currentwav = pygame.mixer.Sound(
@@ -742,7 +742,7 @@ def init_show():
     if path and browse.read_result:
         play_interval = browse.interval
         if browse.read_result != 'error':
-            bpm2, musicsheet = browse.read_result
+            bpm2, musicsheet, start_time = browse.read_result
             if browse.set_bpm:
                 bpm2 = float(browse.set_bpm)
             sheetlen = browse.sheetlen
@@ -789,7 +789,7 @@ def init_show():
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
     # 2 means it has stopped playing
-    playls = initialize(musicsheet, unit_time)
+    playls = initialize(musicsheet, unit_time, start_time)
     startplay = time.time()
     lastshow = None
     finished = False
