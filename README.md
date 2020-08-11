@@ -54,3 +54,12 @@
 
 https://github.com/Rainbow-Dreamer/musicpy
 
+
+最近收到的反馈中有不少觉得原来的默认字体Comic Sans MS很不正式，因此我现在换成了Cambria这个字体，看起来正式了很多，我也把默认字体大小和按钮大小都调大了。
+
+现在的音符条模式下看起来是这样的：
+
+![image](previews/4.jpg)
+
+![image](previews/5.jpg)
+
