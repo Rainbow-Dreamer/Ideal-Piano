@@ -209,6 +209,7 @@ same_note_special = False
 whole_detect = True
 return_fromchord = False
 two_show_interval = True
+poly_chord_first = True
 
 # the operations on the midi you want to play
 # show_change_pitch : a positive number: will sharp all the notes in the midi by the number; a negative number: same except flat all the notes
@@ -289,7 +290,10 @@ note_place = [
 ]
 
 # load sounds from the folders of sound paths when playing or not
-load_sound = True
+load_sound = False
+
+# detect chord types when the current notes change
+show_chord = True
 
 # names of intervals
 perfect_unison = 0

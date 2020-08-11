@@ -150,6 +150,9 @@ return_fromchord = False
 
 two_show_interval = True
 
+poly_chord_first = False (这个参数设置为True的时候，
+会在和弦非常复杂的情况下提前当作复合和弦来进行乐理判断，和弦判断的速度会快很多)
+
 show_change_pitch 播放midi文件时对整首曲子进行升调或者降调（正数n为升n个半音，负数n为降n个半音）
 
 show_modulation = [原来的音阶，转调的音阶] 播放midi文件时，对整首曲子进行转调
@@ -173,6 +176,8 @@ change_pause_key_clear_notes 和功能键搭配的按键，改变是否在暂停
 note_place 音符点模式下，钢琴从左到右全部按键对应的位置
 
 load_sound 演奏时是否加载音源以及播放（在和宿主一起使用的时候要设置为False）
+
+show_chord 演奏时是否实时通过乐理逻辑分析判断和弦
 
 这些是音程的名称以及对应的半音数
 

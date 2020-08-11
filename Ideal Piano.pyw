@@ -440,14 +440,15 @@ def mode_self_pc(dt):
             if currentchord != lastshow:
                 lastshow = currentchord
                 label.text = str(currentchord.notes)
-                chordtype = detect(currentchord, detect_mode, inv_num,
-                                   rootpitch, ignore_sort_from,
-                                   change_from_first, original_first,
-                                   ignore_add_from, same_note_special,
-                                   whole_detect, return_fromchord,
-                                   two_show_interval)
-
-                label2.text = str(chordtype)
+                if show_chord:
+                    chordtype = detect(currentchord, detect_mode, inv_num,
+                                       rootpitch, ignore_sort_from,
+                                       change_from_first, original_first,
+                                       ignore_add_from, same_note_special,
+                                       whole_detect, return_fromchord,
+                                       two_show_interval, poly_chord_first)
+    
+                    label2.text = str(chordtype)
         else:
             lastshow = notels
             label.text = str(notels)
@@ -485,13 +486,15 @@ def mode_self_midi(dt):
             currentchord = chord(current_play)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
-            chordtype = detect(currentchord, detect_mode, inv_num, rootpitch,
-                               ignore_sort_from, change_from_first,
-                               original_first, ignore_add_from,
-                               same_note_special, whole_detect,
-                               return_fromchord, two_show_interval)
-
-            label2.text = str(chordtype)
+            if show_chord:
+                chordtype = detect(currentchord, detect_mode, inv_num, rootpitch,
+                                   ignore_sort_from, change_from_first,
+                                   original_first, ignore_add_from,
+                                   same_note_special, whole_detect,
+                                   return_fromchord, two_show_interval,
+                                   poly_chord_first)
+    
+                label2.text = str(chordtype)
         else:
             label.text = '[]'
             label2.text = ''
@@ -609,12 +612,14 @@ def mode_show(dt):
 
                 lastshow = playnotes
                 label.text = str(playnotes)
-                chordtype = detect(playnotes, detect_mode, inv_num, rootpitch,
-                                   ignore_sort_from, change_from_first,
-                                   original_first, ignore_add_from,
-                                   same_note_special, whole_detect,
-                                   return_fromchord, two_show_interval)
-                label2.text = str(chordtype)
+                if show_chord:
+                    chordtype = detect(playnotes, detect_mode, inv_num, rootpitch,
+                                       ignore_sort_from, change_from_first,
+                                       original_first, ignore_add_from,
+                                       same_note_special, whole_detect,
+                                       return_fromchord, two_show_interval,
+                                       poly_chord_first)
+                    label2.text = str(chordtype)
 
         if keyboard.is_pressed(pause_key):
             paused = True
