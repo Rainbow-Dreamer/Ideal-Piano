@@ -61,7 +61,9 @@ https://github.com/Rainbow-Dreamer/musicpy
 
 ![image](previews/4.jpg)
 
-
+音符条模式下随机颜色显示，默认字体为Cambria，默认字体大小调大
 
 ![image](previews/5.jpg)
+
+按钮的大小调大
 
