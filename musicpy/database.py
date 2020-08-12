@@ -86,6 +86,8 @@ standard2 = {
 
 standard_dict = {'Bb': 'A#', 'Eb': 'D#', 'Ab': 'G#', 'Db': 'C#', 'Gb': 'F#'}
 
+reverse_standard_dict = {j : i for i, j in standard_dict.items()}
+
 scaleTypes = match({
     ('major', ): [2, 2, 1, 2, 2, 2, 1],
     ('minor', ): [2, 1, 2, 2, 1, 2, 2],
@@ -109,13 +111,12 @@ chordTypes = match({
     ('minor', 'm', 'minorthird', 'min'): ((3, 7), ),
     ('maj7', 'M7', 'major7th', 'majorseventh'): ((4, 7, 11), ),
     ('m7', 'min7', 'minor7th', 'minorseventh'): ((3, 7, 10), ),
-    #('7', 'seven', 'seventh', 'dominant seventh', 'dom7', 'dominant7', 'germansixth')
-    ('7', 'dom7', 'dominant7', 'germansixth'):
+    ('7', 'seven', 'seventh', 'dominant seventh', 'dom7', 'dominant7', 'germansixth'):
     ((4, 7, 10), ),
     ('minormajor7', 'minor major 7', 'mM7'): ((3, 7, 11), ),
     ('dim', 'dim3', '-'): ((3, 6), ),
     ('dim7', '-7'): ((3, 6, 9), ),
-    ('half-diminished7', 'ø7', 'ø', 'half-diminished', 'm7b5'):
+    ('half-diminished7', 'ø7', 'ø', 'half-diminished', 'half-dim', 'o7', 'o', 'm7b5'):
     ((3, 6, 10), ),
     ('aug', 'augmented', '+', 'aug3', '+3'): ((4, 8), ),
     ('aug7', 'augmented7', '+7'): ((4, 8, 10), ),

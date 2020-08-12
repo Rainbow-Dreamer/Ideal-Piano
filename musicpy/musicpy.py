@@ -223,7 +223,7 @@ def get_tracks(name):
     return x.tracks
 
 
-def read(name, trackind=1, mode='find', is_file=False):
+def read(name, trackind=1, mode='find', is_file=False, merge=False):
     # read from a midi file and return a notes list
 
     # if mode is set to 'find', then will automatically search for
@@ -246,7 +246,18 @@ def read(name, trackind=1, mode='find', is_file=False):
             each for each in whole_tracks
             if any(each_msg.type == 'note_on' for each_msg in each)
         ]
-        return [midi_to_chord(x, j) for j in available_tracks]
+        all_tracks = [midi_to_chord(x, j) for j in available_tracks]
+        if merge:
+            start_time_ls = [j[2] for j in all_tracks]
+            first_track_ind = start_time_ls.index(min(start_time_ls))
+            all_tracks.insert(0, all_tracks.pop(first_track_ind))
+            first_track = all_tracks[0]
+            tempo, all_track_notes, first_track_start_time = first_track
+            for i in all_tracks[1:]:
+                all_track_notes &= (i[1], i[2]-first_track_start_time)
+            return tempo, all_track_notes, first_track_start_time  
+        else:
+            return all_tracks
     else:
         try:
             t = whole_tracks[trackind]
@@ -809,6 +820,7 @@ def exp(form, obj_name='x', mode='tail'):
 
 
 def trans(obj, pitch=5, duration=1, interval=None):
+    obj = obj.replace(' ', '')
     if obj in standard:
         return chd(obj,
                    'M',
@@ -872,8 +884,17 @@ def trans(obj, pitch=5, duration=1, interval=None):
     return 'not a valid chord representation or chord types not in database'
 
 
+
+def toScale(obj, pitch=5):
+    inds = obj.index(' ')
+    tonic, scale_name = obj[:inds], obj[inds+1:]
+    return scale(note(tonic, pitch), scale_name)
+    
+
+
 C = trans
 N = toNote
+S = toScale
 
 
 def notels(a):
@@ -1271,7 +1292,19 @@ def find_similarity(a,
                 return result if not getgoodchord else (
                     result, chordfrom, f'{chordfrom[1].name}{first[1]}')
             else:
-                if contains(a, chordfrom):
+                if samenote_set(a, chordfrom):
+                    result = inversion_from(a, chordfrom, mode=1)
+                    types = 'inversion'
+                    if result is None:
+                        sort_message = sort_from(a,
+                                                 chordfrom,
+                                                 getorder=True)
+                        types = 'inversion'
+                        if sort_message is None:
+                            return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
+                        else:
+                            result = f'sort as {sort_message}'                
+                elif contains(a, chordfrom):
                     result = omitfrom(a, chordfrom)
                     types = 'omit'
                 elif len(a) == len(chordfrom):
@@ -1281,20 +1314,7 @@ def find_similarity(a,
                     result = addfrom(a, chordfrom)
                     types = 'add'
                 if result == '':
-                    if samenote_set(a, chordfrom):
-                        result = inversion_from(a, chordfrom, mode=1)
-                        types = 'inversion'
-                        if result is None:
-                            sort_message = sort_from(a,
-                                                     chordfrom,
-                                                     getorder=True)
-                            types = 'inversion'
-                            if sort_message is None:
-                                return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
-                            else:
-                                result = f'sort as {sort_message}'
-                    else:
-                        return 'not good'
+                    return 'not good'
 
                 if fromchord_name:
                     from_chord_names = f'{rootnote.name}{first[1]}'
@@ -1325,23 +1345,22 @@ def find_similarity(a,
         if only_ratio or listall:
             return SequenceMatcher(None, a.names(), b.names()).ratio()
         chordfrom = b
-        if contains(a, chordfrom):
+        if samenote_set(a, chordfrom):
+            result = inversion_from(a, chordfrom, mode=1)
+            if result is None:
+                sort_message = sort_from(a, chordfrom, getorder=True)
+                if sort_message is None:
+                    return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
+                else:
+                    result = f'sort as {sort_message}'        
+        elif contains(a, chordfrom):
             result = omitfrom(a, chordfrom)
         elif len(a) == len(chordfrom):
             result = changefrom(a, chordfrom)
         elif (not ignore_add_from) and contains(chordfrom, a):
             result = addfrom(a, chordfrom)
         if result == '':
-            if samenote_set(a, chordfrom):
-                result = inversion_from(a, chordfrom, mode=1)
-                if result is None:
-                    sort_message = sort_from(a, chordfrom, getorder=True)
-                    if sort_message is None:
-                        return f'a voicing of the chord {rootnote.name}{chordfrom_type}'
-                    else:
-                        result = f'sort as {sort_message}'
-            else:
-                return 'not good'
+            return 'not good'
         bname = None
         if fromchord_name:
             if provide_name != None:
@@ -1568,7 +1587,7 @@ def detect(a,
         # if original_msg != 'not good':
         # return original_msg
         if poly_chord_first and N > 3:
-            return detect_split(a, N)        
+            return detect_split(a, N)
         inversion_final = True
         possibles = [(find_similarity(a.inversion(j),
                                       result_ratio=True,
@@ -1885,11 +1904,13 @@ def perm(n, k=None):
         locals())
 
 
-def negative_harmony(key, a=None, get_map_dict=False, sort=False):
+def negative_harmony(key, a=None, get_map_dict=False, sort=True):
     notes_dict = [
         'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'
     ] * 2
     key_tonic = key[1].name
+    if key_tonic in standard_dict:
+        key_tonic = standard_dict[key_tonic]
     inds = notes_dict.index(key_tonic) + 1
     right_half = notes_dict[inds:inds + 6]
     left_half = notes_dict[inds + 6:inds + 12]
@@ -1908,6 +1929,8 @@ def negative_harmony(key, a=None, get_map_dict=False, sort=False):
             notes = temp.notes
             for each in range(len(notes)):
                 current = notes[each]
+                if current.name in standard_dict:
+                    current.name = standard_dict[current.name]                
                 notes[each] = note(map_dict[current.name], current.num)
             if sort:
                 temp.notes.sort(key=lambda s: s.degree)
