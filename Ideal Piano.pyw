@@ -101,6 +101,19 @@ label3 = pyglet.text.Label('',
                            anchor_y=label_anchor_y)
 
 
+def get_off_sort(a):
+    each_chord = a.split('/')
+    for i in range(len(each_chord)):
+        current = each_chord[i]
+        if 'sort as' in current:
+            current = current[:current.index('sort as')-1]
+            if current[0] == '[':
+                current += ']'
+            each_chord[i] = current
+    return '/'.join(each_chord)
+            
+
+
 def load(dic, path, file_format, volume):
     wavedict = {
         i: pygame.mixer.Sound(f'{path}{dic[i]}.{file_format}')
@@ -431,7 +444,7 @@ def mode_self_pc(dt):
                                        whole_detect, return_fromchord,
                                        two_show_interval, poly_chord_first)
     
-                    label2.text = str(chordtype)
+                    label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
         else:
             lastshow = notels
             label.text = str(notels)
@@ -477,7 +490,7 @@ def mode_self_midi(dt):
                                    return_fromchord, two_show_interval,
                                    poly_chord_first)
     
-                label2.text = str(chordtype)
+                label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
         else:
             label.text = '[]'
             label2.text = ''
@@ -602,7 +615,7 @@ def mode_show(dt):
                                        same_note_special, whole_detect,
                                        return_fromchord, two_show_interval,
                                        poly_chord_first)
-                    label2.text = str(chordtype)
+                    label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
 
         if keyboard.is_pressed(pause_key):
             paused = True
