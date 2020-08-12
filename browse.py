@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
-from musicpy.musicpy import read
 import time
 
 file_path = None
@@ -96,7 +95,7 @@ class Root(Tk):
             if not if_merge:
                 read_result = read(file_path, track_ind_get, read_mode)
             else:
-                all_tracks = read(file_path, track_ind_get, 'all')
+                all_tracks = read(file_path, track_ind_get, 'all', get_off_drums=get_off_drums)
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))

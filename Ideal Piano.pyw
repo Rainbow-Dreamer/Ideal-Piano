@@ -1,20 +1,3 @@
-import pygame
-import keyboard
-import os
-import time
-import sys
-import pyglet
-abs_path = os.path.dirname(os.path.abspath(__file__))
-os.chdir(abs_path)
-sys.path.append(abs_path)
-from musicpy.musicpy import *
-os.chdir(abs_path)
-with open('config.py', encoding='utf-8') as f:
-    exec(f.read())
-import pygame.midi
-import browse
-from pyglet.window import mouse
-from pyglet import shapes
 
 
 class Button:
@@ -721,7 +704,13 @@ def init_self_midi():
 
 
 def browse_reset():
-    browse.file_path, browse.track_ind_get, browse.read_result, browse.set_bpm, browse.off_melody, browse.appears = None, None, None, None, 0, False
+    global file_path
+    global track_ind_get
+    global read_result
+    global set_bpm
+    global off_melody
+    global appears
+    file_path, track_ind_get, read_result, set_bpm, off_melody, appears = None, None, None, None, 0, False
 
 
 melody_notes = []
@@ -738,19 +727,21 @@ def init_show():
     global unit_time
     global get_off_melody
     global melody_notes
-    browse.setup()
-    path = browse.file_path
-    if browse.action == 1:
-        browse.action = 0
+    global action
+    setup()
+    path = file_path
+    if action == 1:
+        action = 0
         browse_reset()
         return 'back'
-    if path and browse.read_result:
-        play_interval = browse.interval
-        if browse.read_result != 'error':
-            bpm2, musicsheet, start_time = browse.read_result
-            if browse.set_bpm:
-                bpm2 = float(browse.set_bpm)
-            sheetlen = browse.sheetlen
+    if path and read_result:
+        global interval
+        play_interval = interval
+        if read_result != 'error':
+            bpm2, musicsheet, start_time = read_result
+            if set_bpm:
+                bpm2 = float(set_bpm)
+            sheetlen = sheetlen
 
         else:
             browse_reset()
@@ -764,14 +755,14 @@ def init_show():
         browse_reset()
         return 'back'
 
-    get_off_melody = browse.off_melody
+    get_off_melody = off_melody
     if get_off_melody:
         musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol)
         sheetlen = len(musicsheet)
 
     browse_reset()
     if play_interval is not None:
-        browse.interval = None
+        interval = None
 
         play_start, play_stop = int(sheetlen * (play_interval[0] / 100)), int(
             sheetlen * (play_interval[1] / 100))

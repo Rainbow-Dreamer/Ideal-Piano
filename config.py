@@ -341,3 +341,7 @@ color_mode = 'rainbow'
 bar_steps = 7
 bar_unit = 50
 bar_hold_increase = 5
+
+# when play midi files, if you choose to merge all tracks, get_off_drums
+# set to True will not merge the drum tracks if your midi file has
+get_off_drums = True
