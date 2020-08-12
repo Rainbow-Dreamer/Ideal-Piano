@@ -38,4 +38,10 @@ midi端口的音源的轨道里的音符到midi out的钢琴窗里，然后静�
 听到之前没有静音时的音源的轨道的声音，并且也可以传数据到loopmidi了，也因此Ideal Piano也可以实时收到midi信号了。
 在此真的想说loopmidi是真的好用qwq（虽然有些情况下需要绕点弯，但是还是实现了很多东西）
 
+
+4. 如果要在mac上使用Ideal Piano，由于本人没有mac电脑，所以无法做mac的可执行应用程序，
+所以可以先安装python（最好是最新版本），然后在cmd里写上pip install pygame，回车，
+打开"Ideal Piano start program.pyw"这个文件就可以使用了。如果有遇到问题请马上联系我。
+
+
 如果有遇到任何问题需要帮助或者有任何使用反馈的请加我的qq号2180502841跟我说，感谢大家的支持~
