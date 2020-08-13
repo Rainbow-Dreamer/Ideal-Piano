@@ -325,8 +325,7 @@ def mode_self_pc(dt):
     current = [i for i in current if i in wavdic]
     if delay:
         stillplay_obj = [x[0] for x in stillplay]
-        if delay_only_read_current or show_key:
-            truecurrent = current.copy()
+        truecurrent = current.copy()
     for each in current:
         if delay:
             if each in stillplay_obj:
