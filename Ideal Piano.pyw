@@ -478,7 +478,7 @@ def mode_self_midi(dt):
                 if note_mode == 'dots':
                     plays[each.degree - 21].batch = batch
 
-            currentchord = chord(current_play)
+            currentchord = chord(current_play) if delay_only_read_current else chord(stillplay)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
             if show_chord:
@@ -491,8 +491,9 @@ def mode_self_midi(dt):
     
                 label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
         else:
-            label.text = '[]'
-            label2.text = ''
+            if delay_only_read_current:
+                label.text = '[]'
+                label2.text = ''
 
     if device.poll():
         event = device.read(1)[0]
