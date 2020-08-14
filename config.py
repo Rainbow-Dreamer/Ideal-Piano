@@ -25,6 +25,7 @@ self_midi_place = 50, 410
 play_midi_image = 'play_midi.png'
 play_midi_place = 50, 340
 button_resize_num = 2.3
+fps = 120
 
 # the key settings for playing 88 notes (from A1 to C9)
 # (if you have sound files that beyond these range then you can
@@ -328,7 +329,7 @@ melody_tol = minor_seventh
 chord_tol = major_sixth
 
 # notes showing mode: choose one from 'dots' and 'bars'
-note_mode = 'bars'
+note_mode = 'bars drop'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
@@ -341,6 +342,9 @@ color_mode = 'rainbow'
 bar_steps = 7
 bar_unit = 50
 bar_hold_increase = 5
+bars_drop_interval = 2
+bars_drop_place = 150
+adjust_ratio = 55
 
 # when play midi files, if you choose to merge all tracks, get_off_drums
 # set to True will not merge the drum tracks if your midi file has

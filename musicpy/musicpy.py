@@ -248,9 +248,9 @@ def read(name, trackind=1, mode='find', is_file=False, merge=False, get_off_drum
         ]
         if get_off_drums:
             for each in available_tracks:
-                if each[1].channel == 9:
+                if any(hasattr(j, 'channel') and j.channel == 9 for j in each):
                     available_tracks.remove(each)
-                    break        
+                    break             
         all_tracks = [midi_to_chord(x, j) for j in available_tracks]
         if merge:
             start_time_ls = [j[2] for j in all_tracks]

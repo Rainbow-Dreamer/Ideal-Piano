@@ -58,7 +58,7 @@ playing.height /= notes_resize_num
 batch = pyglet.graphics.Batch()
 if note_mode == 'dots':
     plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
-elif note_mode == 'bars':
+elif note_mode == 'bars' or note_mode == 'bars drop':
     plays = []
 
 go_back = Button(go_back_image, *go_back_place)
@@ -149,7 +149,6 @@ func = None
 click_mode = None
 midi_device_load = False
 
-
 def has_load():
     global midi_device_load
     midi_device_load = True
@@ -181,6 +180,11 @@ def on_mouse_press(x, y, button, modifiers):
                 each.batch = None
         is_click = True
         click_mode = None
+        if note_mode == 'bars' or note_mode == 'bars drop':
+            plays.clear()  
+            still_hold.clear()
+            if note_mode == 'bars drop':
+                bars_drop_time.clear()
 
     if self_play.inside() & button & mouse.LEFT and first_time:
         click_mode = 0
@@ -222,7 +226,7 @@ def on_draw():
                 label.draw()
                 func = mode_self_pc
                 not_first()
-                pyglet.clock.schedule_interval(func, 1 / 120)
+                pyglet.clock.schedule_interval(func, 1 / fps)
             elif mode_num == 1:
                 try:
                     init_self_midi()
@@ -236,7 +240,7 @@ def on_draw():
                         label.draw()
                         func = mode_self_midi
                         not_first()
-                        pyglet.clock.schedule_interval(func, 1 / 120)
+                        pyglet.clock.schedule_interval(func, 1 / fps)
                 except:
                     label.text = 'there is no midi input devices, please check'
                     mode_num = 3
@@ -250,7 +254,7 @@ def on_draw():
                 else:
                     func = mode_show
                     not_first()
-                    pyglet.clock.schedule_interval(func, 1 / 120)
+                    pyglet.clock.schedule_interval(func, 1 / fps)
 
             elif mode_num == 3:
                 time.sleep(1)
@@ -340,7 +344,7 @@ def mode_self_pc(dt):
                 wavdic[each].play()
                 stillplay.append([each, time.time(), True])
                 stillplay_obj.append(each)
-                if note_mode == 'bars':
+                if note_mode == 'bars' or note_mode == 'bars drop':
                     current_note = toNote(notedic[each])
                     places = note_place[current_note.degree - 21]
                     current_bar = shapes.Rectangle(
@@ -358,7 +362,7 @@ def mode_self_pc(dt):
             if each not in last:
                 changed = True
                 wavdic[each].play()
-                if note_mode == 'bars':
+                if note_mode == 'bars' or note_mode == 'bars drop':
                     current_note = toNote(notedic[each])
                     places = note_place[current_note.degree - 21]
                     current_bar = shapes.Rectangle(
@@ -394,7 +398,7 @@ def mode_self_pc(dt):
                 changed = True
                 wavdic[j].stop()
     last = current
-    if note_mode == 'bars':
+    if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
         while i < len(plays):
             each = plays[i]
@@ -508,7 +512,7 @@ def mode_self_midi(dt):
                 current_play.remove(current_note)
         elif status == 144:
             # 144 is the status code of note on in midi
-            if note_mode == 'bars':
+            if note_mode == 'bars' or note_mode == 'bars drop':
                 places = note_place[current_note.degree - 21]
                 current_bar = shapes.Rectangle(
                     x=places[0] + bar_offset_x,
@@ -531,7 +535,7 @@ def mode_self_midi(dt):
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
                     current_sound.play()
-    if note_mode == 'bars':
+    if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
         while i < len(plays):
             each = plays[i]
@@ -565,6 +569,31 @@ def mode_show(dt):
     global playnotes
     if not paused:
         currentime = time.time() - startplay
+        if note_mode == 'bars drop':
+            if bars_drop_time:
+                j = 0
+                while j < len(bars_drop_time):
+                    next_bar_drop = bars_drop_time[j]
+                    if currentime >= next_bar_drop[0]:
+                        current_note = next_bar_drop[1]
+                        places = note_place[current_note.degree - 21]
+                        current_bar = shapes.Rectangle(
+                            x=places[0] + bar_offset_x,
+                            y=screen_height,
+                            width=bar_width,
+                            height=bar_unit * current_note.duration,
+                            color=bar_color if color_mode == 'normal' else
+                            (random.randint(0, 255),
+                             random.randint(0, 255),
+                             random.randint(0, 255)),
+                            batch=batch)
+                        current_bar.opacity = 255 * (
+                            current_note.volume / 127
+                        ) if opacity_change_by_velocity else bar_opacity
+                        plays.append(current_bar)
+                        del bars_drop_time[j]
+                        continue
+                    j += 1
         for k in range(sheetlen):
             nownote = playls[k]
             current_sound, start_time, stop_time, situation, number, current_note = nownote
@@ -632,6 +661,27 @@ def mode_show(dt):
                     del plays[i]
                     continue
                 i += 1
+        elif note_mode == 'bars drop':  
+            for k in still_hold:
+                k.height -= bar_steps
+                if k.height <= 0:
+                    k.batch = None
+                    still_hold.remove(k)  
+            
+            i = 0
+            while i < len(plays):
+                each = plays[i]
+                each.y -= bar_steps
+                if each.y <= bars_drop_place:
+                    still_hold.append(each)
+                    del plays[i]
+                    continue
+                i += 1  
+            
+            
+            
+                 
+            
     else:
         if keyboard.is_pressed(unpause_key):
             paused = False
@@ -645,17 +695,33 @@ def mode_show(dt):
             each.batch = None
         label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
-            playls = initialize(musicsheet, unit_time, start_time)
+            label.text = 'reloading, please wait...'
+            if note_mode == 'bars' or note_mode == 'bars drop':
+                plays.clear()  
+                still_hold.clear()
+                if note_mode == 'bars drop':
+                    bars_drop_time.clear()            
+            del playls
+            playls = initialize(musicsheet, unit_time, musicsheet.start_time)
             startplay = time.time()
             lastshow = None
+            playnotes.clear()
             finished = False
         if keyboard.is_pressed(exit_key):
             sys.exit(0)
 
-
+if note_mode == 'bars drop':
+    bars_drop_time = []
+    distances = screen_height - bars_drop_place
+    bar_steps = (distances / bars_drop_interval) / adjust_ratio
+else:
+    bars_drop_interval = 0
+    
+    
+    
 def initialize(musicsheet, unit_time, start_time):
     playls = []
-    start = start_time
+    start = start_time + bars_drop_interval
     for i in range(sheetlen):
         currentnote = musicsheet.notes[i]
         currentwav = pygame.mixer.Sound(
@@ -669,6 +735,8 @@ def initialize(musicsheet, unit_time, start_time):
         currentwav.set_volume(note_volume)
         playls.append(
             [currentwav, currentstart, currentstop, 0, i, currentnote])
+        if note_mode == 'bars drop':
+            bars_drop_time.append((currentstart - bars_drop_interval, currentnote))
         start += interval
     return playls
 
@@ -727,7 +795,6 @@ def browse_reset():
 
 
 melody_notes = []
-
 
 def init_show():
     global playls
@@ -798,6 +865,7 @@ def init_show():
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
     # 2 means it has stopped playing
+    musicsheet.start_time = start_time
     playls = initialize(musicsheet, unit_time, start_time)
     startplay = time.time()
     lastshow = None
@@ -809,5 +877,5 @@ def update(dt):
     pass
 
 
-pyglet.clock.schedule_interval(update, 1 / 120)
+pyglet.clock.schedule_interval(update, 1 / fps)
 pyglet.app.run()
