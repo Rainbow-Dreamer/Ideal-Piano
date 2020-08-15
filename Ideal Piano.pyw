@@ -1,5 +1,3 @@
-
-
 class Button:
     def __init__(self, img, x, y):
         self.img = pyglet.resource.image(img)
@@ -106,12 +104,11 @@ def get_off_sort(a):
     for i in range(len(each_chord)):
         current = each_chord[i]
         if 'sort as' in current:
-            current = current[:current.index('sort as')-1]
+            current = current[:current.index('sort as') - 1]
             if current[0] == '[':
                 current += ']'
             each_chord[i] = current
     return '/'.join(each_chord)
-            
 
 
 def load(dic, path, file_format, volume):
@@ -149,6 +146,7 @@ func = None
 click_mode = None
 midi_device_load = False
 
+
 def has_load():
     global midi_device_load
     midi_device_load = True
@@ -181,7 +179,7 @@ def on_mouse_press(x, y, button, modifiers):
         is_click = True
         click_mode = None
         if note_mode == 'bars' or note_mode == 'bars drop':
-            plays.clear()  
+            plays.clear()
             still_hold.clear()
             if note_mode == 'bars drop':
                 bars_drop_time.clear()
@@ -446,8 +444,10 @@ def mode_self_pc(dt):
                                        ignore_add_from, same_note_special,
                                        whole_detect, return_fromchord,
                                        two_show_interval, poly_chord_first)
-    
-                    label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
+
+                    label2.text = str(
+                        chordtype) if not sort_invisible else get_off_sort(
+                            str(chordtype))
         else:
             lastshow = notels
             label.text = str(notels)
@@ -482,18 +482,21 @@ def mode_self_midi(dt):
                 if note_mode == 'dots':
                     plays[each.degree - 21].batch = batch
 
-            currentchord = chord(current_play) if delay_only_read_current else chord(stillplay)
+            currentchord = chord(
+                current_play) if delay_only_read_current else chord(stillplay)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
             if show_chord:
-                chordtype = detect(currentchord, detect_mode, inv_num, rootpitch,
-                                   ignore_sort_from, change_from_first,
-                                   original_first, ignore_add_from,
-                                   same_note_special, whole_detect,
-                                   return_fromchord, two_show_interval,
-                                   poly_chord_first)
-    
-                label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
+                chordtype = detect(currentchord, detect_mode, inv_num,
+                                   rootpitch, ignore_sort_from,
+                                   change_from_first, original_first,
+                                   ignore_add_from, same_note_special,
+                                   whole_detect, return_fromchord,
+                                   two_show_interval, poly_chord_first)
+
+                label2.text = str(
+                    chordtype) if not sort_invisible else get_off_sort(
+                        str(chordtype))
         else:
             if delay_only_read_current:
                 label.text = '[]'
@@ -583,13 +586,12 @@ def mode_show(dt):
                             width=bar_width,
                             height=bar_unit * current_note.duration,
                             color=bar_color if color_mode == 'normal' else
-                            (random.randint(0, 255),
-                             random.randint(0, 255),
+                            (random.randint(0, 255), random.randint(0, 255),
                              random.randint(0, 255)),
                             batch=batch)
                         current_bar.opacity = 255 * (
-                            current_note.volume / 127
-                        ) if opacity_change_by_velocity else bar_opacity
+                            current_note.volume /
+                            127) if opacity_change_by_velocity else bar_opacity
                         plays.append(current_bar)
                         del bars_drop_time[j]
                         continue
@@ -638,13 +640,15 @@ def mode_show(dt):
                 lastshow = playnotes
                 label.text = str(playnotes)
                 if show_chord:
-                    chordtype = detect(playnotes, detect_mode, inv_num, rootpitch,
-                                       ignore_sort_from, change_from_first,
-                                       original_first, ignore_add_from,
-                                       same_note_special, whole_detect,
-                                       return_fromchord, two_show_interval,
-                                       poly_chord_first)
-                    label2.text = str(chordtype) if not sort_invisible else get_off_sort(str(chordtype))
+                    chordtype = detect(playnotes, detect_mode, inv_num,
+                                       rootpitch, ignore_sort_from,
+                                       change_from_first, original_first,
+                                       ignore_add_from, same_note_special,
+                                       whole_detect, return_fromchord,
+                                       two_show_interval, poly_chord_first)
+                    label2.text = str(
+                        chordtype) if not sort_invisible else get_off_sort(
+                            str(chordtype))
 
         if keyboard.is_pressed(pause_key):
             paused = True
@@ -661,13 +665,13 @@ def mode_show(dt):
                     del plays[i]
                     continue
                 i += 1
-        elif note_mode == 'bars drop':  
+        elif note_mode == 'bars drop':
             for k in still_hold:
                 k.height -= bar_steps
                 if k.height <= 0:
                     k.batch = None
-                    still_hold.remove(k)  
-            
+                    still_hold.remove(k)
+
             i = 0
             while i < len(plays):
                 each = plays[i]
@@ -676,12 +680,8 @@ def mode_show(dt):
                     still_hold.append(each)
                     del plays[i]
                     continue
-                i += 1  
-            
-            
-            
-                 
-            
+                i += 1
+
     else:
         if keyboard.is_pressed(unpause_key):
             paused = False
@@ -697,10 +697,10 @@ def mode_show(dt):
         if keyboard.is_pressed(repeat_key):
             label.text = 'reloading, please wait...'
             if note_mode == 'bars' or note_mode == 'bars drop':
-                plays.clear()  
+                plays.clear()
                 still_hold.clear()
                 if note_mode == 'bars drop':
-                    bars_drop_time.clear()            
+                    bars_drop_time.clear()
             del playls
             playls = initialize(musicsheet, unit_time, musicsheet.start_time)
             startplay = time.time()
@@ -710,15 +710,15 @@ def mode_show(dt):
         if keyboard.is_pressed(exit_key):
             sys.exit(0)
 
+
 if note_mode == 'bars drop':
     bars_drop_time = []
     distances = screen_height - bars_drop_place
     bar_steps = (distances / bars_drop_interval) / adjust_ratio
 else:
     bars_drop_interval = 0
-    
-    
-    
+
+
 def initialize(musicsheet, unit_time, start_time):
     playls = []
     start = start_time + bars_drop_interval
@@ -736,7 +736,8 @@ def initialize(musicsheet, unit_time, start_time):
         playls.append(
             [currentwav, currentstart, currentstop, 0, i, currentnote])
         if note_mode == 'bars drop':
-            bars_drop_time.append((currentstart - bars_drop_interval, currentnote))
+            bars_drop_time.append(
+                (currentstart - bars_drop_interval, currentnote))
         start += interval
     return playls
 
@@ -795,6 +796,7 @@ def browse_reset():
 
 
 melody_notes = []
+
 
 def init_show():
     global playls

@@ -95,14 +95,17 @@ class Root(Tk):
             if not if_merge:
                 read_result = read(file_path, track_ind_get, read_mode)
             else:
-                all_tracks = read(file_path, track_ind_get, 'all', get_off_drums=get_off_drums)
+                all_tracks = read(file_path,
+                                  track_ind_get,
+                                  'all',
+                                  get_off_drums=get_off_drums)
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
                 first_track = all_tracks[0]
                 tempo, all_track_notes, first_track_start_time = first_track
                 for i in all_tracks[1:]:
-                    all_track_notes &= (i[1], i[2]-first_track_start_time)
+                    all_track_notes &= (i[1], i[2] - first_track_start_time)
                 read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
