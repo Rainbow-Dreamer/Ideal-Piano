@@ -176,6 +176,9 @@ def on_mouse_press(x, y, button, modifiers):
             pyglet.clock.unschedule(func)
             for each in plays:
                 each.batch = None
+            if mode_num == 2:
+                if play_midi_file:
+                    pygame.mixer.music.stop()
         is_click = True
         click_mode = None
         if note_mode == 'bars' or note_mode == 'bars drop':
@@ -602,7 +605,13 @@ def mode_show(dt):
             if situation != 2:
                 if situation == 0:
                     if currentime >= start_time:
-                        current_sound.play()
+                        if play_midi_file:
+                            global midi_start_play
+                            if not midi_start_play:
+                                pygame.mixer.music.play()
+                                midi_start_play = True 
+                        else:
+                            current_sound.play()
                         nownote[3] = 1
                         if note_mode == 'bars':
                             places = note_place[current_note.degree - 21]
@@ -622,7 +631,8 @@ def mode_show(dt):
                             plays.append(current_bar)
                 elif situation == 1:
                     if currentime >= stop_time:
-                        current_sound.fadeout(show_delay_time)
+                        if not play_midi_file:
+                            current_sound.fadeout(show_delay_time)
                         nownote[3] = 2
                         if k == sheetlen - 1:
                             finished = True
@@ -719,26 +729,75 @@ else:
     bars_drop_interval = 0
 
 
+
+
 def initialize(musicsheet, unit_time, start_time):
+    global play_midi_file
+    global midi_start_play
+    play_midi_file = False
     playls = []
     start = start_time + bars_drop_interval
-    for i in range(sheetlen):
-        currentnote = musicsheet.notes[i]
-        currentwav = pygame.mixer.Sound(
-            f'{sound_path}{currentnote}.{sound_format}')
-        duration = unit_time * currentnote.duration
-        interval = unit_time * musicsheet.interval[i]
-        currentstart = start
-        currentstop = start + duration
-        note_volume = currentnote.volume / 127
-        note_volume *= global_volume
-        currentwav.set_volume(note_volume)
-        playls.append(
-            [currentwav, currentstart, currentstop, 0, i, currentnote])
-        if note_mode == 'bars drop':
-            bars_drop_time.append(
-                (currentstart - bars_drop_interval, currentnote))
-        start += interval
+    if play_as_midi:
+        play_midi_file = True
+        midi_start_play = False        
+        if not if_merge:
+            import musicpy.musicpy
+            musicpy.musicpy.write('temp.mid', musicsheet, int(60/unit_time))
+            pygame.mixer.music.load('temp.mid')
+            os.remove('temp.mid')
+            os.chdir(abs_path)
+        else:
+            pygame.mixer.music.load(path)
+        for i in range(sheetlen):
+            currentnote = musicsheet.notes[i]
+            duration = unit_time * currentnote.duration
+            interval = unit_time * musicsheet.interval[i]
+            currentstart = start
+            currentstop = start + duration
+            playls.append(
+                [0, currentstart, currentstop, 0, i, currentnote])            
+            if note_mode == 'bars drop':
+                bars_drop_time.append(
+                    (currentstart - bars_drop_interval, currentnote))
+            start += interval  
+    else:
+        try:
+            for i in range(sheetlen):
+                currentnote = musicsheet.notes[i]
+                currentwav = pygame.mixer.Sound(
+                    f'{sound_path}{currentnote}.{sound_format}')
+                duration = unit_time * currentnote.duration
+                interval = unit_time * musicsheet.interval[i]
+                currentstart = start
+                currentstop = start + duration
+                note_volume = currentnote.volume / 127
+                note_volume *= global_volume
+                currentwav.set_volume(note_volume)
+                playls.append(
+                    [currentwav, currentstart, currentstop, 0, i, currentnote])
+                if note_mode == 'bars drop':
+                    bars_drop_time.append(
+                        (currentstart - bars_drop_interval, currentnote))
+                start += interval
+        except:
+            pygame.mixer.music.load(path)
+            play_midi_file = True
+            midi_start_play = False
+            playls.clear()
+            bars_drop_time.clear()
+            start = start_time + bars_drop_interval        
+            for i in range(sheetlen):
+                currentnote = musicsheet.notes[i]
+                duration = unit_time * currentnote.duration
+                interval = unit_time * musicsheet.interval[i]
+                currentstart = start
+                currentstop = start + duration
+                playls.append(
+                    [0, currentstart, currentstop, 0, i, currentnote])            
+                if note_mode == 'bars drop':
+                    bars_drop_time.append(
+                        (currentstart - bars_drop_interval, currentnote))
+                start += interval        
     return playls
 
 
@@ -810,6 +869,7 @@ def init_show():
     global get_off_melody
     global melody_notes
     global action
+    global path
     setup()
     path = file_path
     if action == 1:

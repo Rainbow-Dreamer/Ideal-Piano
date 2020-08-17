@@ -352,3 +352,5 @@ get_off_drums = True
 
 
 sort_invisible = False
+
+play_as_midi = False
