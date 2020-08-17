@@ -573,9 +573,14 @@ def mode_show(dt):
     global pause_start
     global message_label
     global playnotes
+    global midi_start_play
     if not paused:
         currentime = time.time() - startplay
         if note_mode == 'bars drop':
+            if play_midi_file and not midi_start_play:
+                if currentime >= bars_drop_interval:
+                    pygame.mixer.music.play()
+                    midi_start_play = True                      
             if bars_drop_time:
                 j = 0
                 while j < len(bars_drop_time):
@@ -599,18 +604,17 @@ def mode_show(dt):
                         del bars_drop_time[j]
                         continue
                     j += 1
+        else:
+            if play_midi_file and not midi_start_play:
+                pygame.mixer.music.play()
+                midi_start_play = True               
         for k in range(sheetlen):
             nownote = playls[k]
             current_sound, start_time, stop_time, situation, number, current_note = nownote
             if situation != 2:
                 if situation == 0:
                     if currentime >= start_time:
-                        if play_midi_file:
-                            global midi_start_play
-                            if not midi_start_play:
-                                pygame.mixer.music.play()
-                                midi_start_play = True 
-                        else:
+                        if not play_midi_file:
                             current_sound.play()
                         nownote[3] = 1
                         if note_mode == 'bars':
@@ -736,13 +740,13 @@ def initialize(musicsheet, unit_time, start_time):
     global midi_start_play
     play_midi_file = False
     playls = []
-    start = start_time + bars_drop_interval
+    start = start_time * unit_time + bars_drop_interval
     if play_as_midi:
         play_midi_file = True
         midi_start_play = False        
         if not if_merge:
             import musicpy.musicpy
-            musicpy.musicpy.write('temp.mid', musicsheet, int(60/unit_time))
+            musicpy.musicpy.write('temp.mid', musicsheet, int(60/unit_time), time1=musicsheet.start_time)
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
             os.chdir(abs_path)

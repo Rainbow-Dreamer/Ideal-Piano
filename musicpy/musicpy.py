@@ -290,7 +290,7 @@ def midi_to_chord(x, t):
             if i not in hason and i not in hasoff:
                 if not find_first_note:
                     find_first_note = True
-                    start_time = current_msg.time / interval_unit
+                    start_time = sum(t[j].time for j in range(i+1)) / interval_unit
                     if start_time.is_integer():
                         start_time = int(start_time)
                 hason.append(i)
@@ -1749,6 +1749,8 @@ def random_composing(
     right_hand_velocity=80,
     left_hand_meter=4,
     right_hand_meter=4,
+    choose_intervals=[0.25,0.5,1,1.5,2,4],
+    choose_durations = [0.25,0.5,1,1.5,2,4]
 ):
     # Composing a piece of music randomly from a given mode (here means scale),
     # difficulty, number of start notes (or given notes) and an approximate length.
@@ -1835,8 +1837,8 @@ def random_composing(
             firstmelody.volume = right_hand_velocity
             newmelody = [firstmelody]
             length_of_chord = sum(newchord.interval)
-            intervals = [random.choice([0.5, 1])]
-            firstmelody.duration = intervals[0]  # random.choice([0.5,1])
+            intervals = [random.choice(choose_intervals)]
+            firstmelody.duration = random.choice(choose_durations)# intervals[0]  # random.choice([0.5,1])
             while sum(intervals) <= length_of_chord:
                 if focused:
                     now_focus = random.choices(
@@ -1857,9 +1859,9 @@ def random_composing(
                     else:
                         currentmelody = random.choice(chordinner)
                 currentmelody.volume = right_hand_velocity
-                newinter = 0.5  # random.choice([0.5,1])
+                newinter = random.choice(choose_intervals) #0.5  # random.choice([0.5,1])
                 intervals.append(newinter)
-                currentmelody.duration = newinter  # random.choice([0.5,1])
+                currentmelody.duration = random.choice(choose_durations) # newinter  # random.choice([0.5,1])
                 newmelody.append(currentmelody)
 
             distance = [

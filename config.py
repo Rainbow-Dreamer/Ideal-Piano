@@ -328,8 +328,8 @@ augmented_seventh = 12
 melody_tol = minor_seventh
 chord_tol = major_sixth
 
-# notes showing mode: choose one from 'dots' and 'bars'
-note_mode = 'bars drop'
+# notes showing mode: choose one from 'dots' and 'bars' and 'bars drop'
+note_mode = 'dots'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
