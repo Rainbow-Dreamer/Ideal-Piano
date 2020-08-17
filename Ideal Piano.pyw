@@ -788,7 +788,8 @@ def initialize(musicsheet, unit_time, start_time):
             play_midi_file = True
             midi_start_play = False
             playls.clear()
-            bars_drop_time.clear()
+            if note_mode == 'bars drop':
+                bars_drop_time.clear()
             start = start_time + bars_drop_interval        
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
