@@ -335,15 +335,20 @@ def midi_to_chord(x, t):
                                    volume=t[i].velocity))
 
     result = chord(notelist, interval=intervals)
-    for tr in x.tracks:
-        if 'tempo' in tr[0].__dict__:
-            tempo = tr[0].tempo
-            return unit.tempo2bpm(tempo), result, start_time
-    for tr1 in x.tracks:
-        for tr2 in tr1:
-            if 'tempo' in tr2.__dict__:
-                tempo = tr2.tempo
-                return unit.tempo2bpm(tempo), result, start_time
+    find_tempo = False
+    for msg in x.tracks[0]:
+        if hasattr(msg, 'tempo'):
+            tempo = msg.tempo
+            find_tempo = True
+    if find_tempo:
+        bpm = unit.tempo2bpm(tempo)
+    else:
+        for each_track in x.tracks[1:]:
+            for msg in each_track:
+                if hasattr(msg, 'tempo'):
+                    tempo = msg.tempo
+        bpm = unit.tempo2bpm(tempo)
+    return bpm, result, start_time
 
 
 def write(name_of_midi,

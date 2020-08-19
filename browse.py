@@ -176,7 +176,7 @@ class Root(Tk):
                 self.labelFrame,
                 text='merge all tracks',
                 variable=self.if_merge_all_tracks)
-            self.merge_all_tracks.place(x=100, y=0, width=200, height=30)
+            self.merge_all_tracks.place(x=100, y=0, width=125, height=30)
             self.make_error_labels()
 
 
