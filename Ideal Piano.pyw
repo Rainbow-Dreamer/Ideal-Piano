@@ -580,7 +580,7 @@ def mode_show(dt):
             if play_midi_file and not midi_start_play:
                 if currentime >= bars_drop_interval:
                     pygame.mixer.music.play()
-                    midi_start_play = True                      
+                    midi_start_play = True
             if bars_drop_time:
                 j = 0
                 while j < len(bars_drop_time):
@@ -607,7 +607,7 @@ def mode_show(dt):
         else:
             if play_midi_file and not midi_start_play:
                 pygame.mixer.music.play()
-                midi_start_play = True               
+                midi_start_play = True
         for k in range(sheetlen):
             nownote = playls[k]
             current_sound, start_time, stop_time, situation, number, current_note = nownote
@@ -733,8 +733,6 @@ else:
     bars_drop_interval = 0
 
 
-
-
 def initialize(musicsheet, unit_time, start_time):
     global play_midi_file
     global midi_start_play
@@ -743,10 +741,13 @@ def initialize(musicsheet, unit_time, start_time):
     start = start_time * unit_time + bars_drop_interval
     if play_as_midi:
         play_midi_file = True
-        midi_start_play = False        
+        midi_start_play = False
         if not if_merge:
             import musicpy.musicpy
-            musicpy.musicpy.write('temp.mid', musicsheet, int(60/unit_time), time1=musicsheet.start_time)
+            musicpy.musicpy.write('temp.mid',
+                                  musicsheet,
+                                  int(60 / unit_time),
+                                  time1=musicsheet.start_time)
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
             os.chdir(abs_path)
@@ -758,12 +759,11 @@ def initialize(musicsheet, unit_time, start_time):
             interval = unit_time * musicsheet.interval[i]
             currentstart = start
             currentstop = start + duration
-            playls.append(
-                [0, currentstart, currentstop, 0, i, currentnote])            
+            playls.append([0, currentstart, currentstop, 0, i, currentnote])
             if note_mode == 'bars drop':
                 bars_drop_time.append(
                     (currentstart - bars_drop_interval, currentnote))
-            start += interval  
+            start += interval
     else:
         try:
             for i in range(sheetlen):
@@ -790,7 +790,7 @@ def initialize(musicsheet, unit_time, start_time):
             playls.clear()
             if note_mode == 'bars drop':
                 bars_drop_time.clear()
-            start = start_time + bars_drop_interval        
+            start = start_time + bars_drop_interval
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
                 duration = unit_time * currentnote.duration
@@ -798,11 +798,11 @@ def initialize(musicsheet, unit_time, start_time):
                 currentstart = start
                 currentstop = start + duration
                 playls.append(
-                    [0, currentstart, currentstop, 0, i, currentnote])            
+                    [0, currentstart, currentstop, 0, i, currentnote])
                 if note_mode == 'bars drop':
                     bars_drop_time.append(
                         (currentstart - bars_drop_interval, currentnote))
-                start += interval        
+                start += interval
     return playls
 
 

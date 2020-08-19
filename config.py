@@ -350,7 +350,6 @@ adjust_ratio = 55
 # set to True will not merge the drum tracks if your midi file has
 get_off_drums = True
 
-
 sort_invisible = False
 
 play_as_midi = False
