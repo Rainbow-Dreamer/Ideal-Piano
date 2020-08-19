@@ -95,6 +95,17 @@ class Root(Tk):
         self.down_button.place(x=250, y=480)
         self.search_inds_list = []
         self.value_dict = {i: str(eval(i)) for i in self.all_config_options}
+        self.choose_bool1 = ttk.Button(
+            self, text='True', command=lambda: self.insert_bool('True'))
+        self.choose_bool2 = ttk.Button(
+            self, text='False', command=lambda: self.insert_bool('False'))
+        self.choose_bool1.place(x=120, y=270)
+        self.choose_bool2.place(x=220, y=270)
+
+    def insert_bool(self, content):
+        self.config_contents.delete('1.0', END)
+        self.config_contents.insert(END, content)
+        self.config_change(0)
 
     def config_change(self, e):
         try:
