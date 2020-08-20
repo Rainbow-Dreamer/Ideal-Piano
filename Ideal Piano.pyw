@@ -42,21 +42,36 @@ if not background_size:
     background.height *= ratio_background
 else:
     background.width, background.height = background_size
-
-image = pyglet.resource.image(piano_image)
-if not piano_size:
-    ratio = screen_width / image.width
-    image.width = screen_width
-    image.height *= ratio
-else:
-    image.width, image.height = piano_size
+if not draw_piano_keys:
+    bar_offset_x = 9
+    image = pyglet.resource.image(piano_image)
+    if not piano_size:
+        ratio = screen_width / image.width
+        image.width = screen_width
+        image.height *= ratio
+    else:
+        image.width, image.height = piano_size
 playing = pyglet.resource.image(notes_image)
 playing.width /= notes_resize_num
 playing.height /= notes_resize_num
 batch = pyglet.graphics.Batch()
+piano_bg = pyglet.graphics.OrderedGroup(0)
+piano_key = pyglet.graphics.OrderedGroup(1)
+play_highlight = pyglet.graphics.OrderedGroup(2)
 if note_mode == 'dots':
-    plays = [pyglet.sprite.Sprite(playing, x=j[0], y=j[1]) for j in note_place]
-elif note_mode == 'bars' or note_mode == 'bars drop':
+    if not draw_piano_keys:
+        plays = [
+            pyglet.sprite.Sprite(playing,
+                                 x=j[0] + 3,
+                                 y=j[1],
+                                 group=play_highlight) for j in note_place
+        ]
+    else:
+        plays = [
+            pyglet.sprite.Sprite(playing, x=j[0], y=j[1], group=play_highlight)
+            for j in note_place
+        ]
+else:
     plays = []
 
 go_back = Button(go_back_image, *go_back_place)
@@ -145,6 +160,59 @@ mode_num = None
 func = None
 click_mode = None
 midi_device_load = False
+piano_height = white_key_y + white_key_height
+piano_keys = []
+initial_colors = []
+if draw_piano_keys:
+    piano_background = pyglet.resource.image(piano_background_image)
+    if not piano_size:
+        ratio = screen_width / piano_background.width
+        piano_background.width = screen_width
+        piano_background.height *= ratio
+    else:
+        piano_background.width, piano_background.height = piano_size
+    piano_background_show = pyglet.sprite.Sprite(piano_background,
+                                                 x=0,
+                                                 y=0,
+                                                 batch=batch,
+                                                 group=piano_bg)
+    for i in range(white_keys_number):
+        current_piano_key = shapes.Rectangle(x=white_key_start_x +
+                                             white_key_interval * i,
+                                             y=white_key_y,
+                                             width=white_key_width,
+                                             height=white_key_height,
+                                             color=white_key_color,
+                                             batch=batch,
+                                             group=piano_key)
+        piano_keys.append(current_piano_key)
+        initial_colors.append((current_piano_key.x, white_key_color))
+    first_black_key = shapes.Rectangle(x=black_key_first_x,
+                                       y=black_key_y,
+                                       width=black_key_width,
+                                       height=black_key_height,
+                                       color=black_key_color,
+                                       batch=batch,
+                                       group=piano_key)
+    piano_keys.append(first_black_key)
+    initial_colors.append((first_black_key.x, black_key_color))
+    for j in range(7):
+        current_start = black_key_start_x + black_key_interval * 7 * j
+        current_piano_keys_set = [
+            shapes.Rectangle(x=current_start + black_key_interval * k,
+                             y=black_key_y,
+                             width=black_key_width,
+                             height=black_key_height,
+                             color=black_key_color,
+                             batch=batch,
+                             group=piano_key) for k in range(6) if k != 2
+        ]
+        piano_keys += current_piano_keys_set
+        initial_colors += [(t.x, black_key_color)
+                           for t in current_piano_keys_set]
+    piano_keys.sort(key=lambda s: s.x)
+    initial_colors.sort(key=lambda s: s[0])
+    initial_colors = [t[1] for t in initial_colors]
 
 
 def has_load():
@@ -186,6 +254,9 @@ def on_mouse_press(x, y, button, modifiers):
             still_hold.clear()
             if note_mode == 'bars drop':
                 bars_drop_time.clear()
+        if draw_piano_keys:
+            for k in range(len(piano_keys)):
+                piano_keys[k].color = initial_colors[k]
 
     if self_play.inside() & button & mouse.LEFT and first_time:
         click_mode = 0
@@ -199,7 +270,10 @@ def on_mouse_press(x, y, button, modifiers):
 def on_draw():
     window.clear()
     background.blit(0, 0)
-    image.blit(0, 0)
+    if not draw_piano_keys:
+        image.blit(0, 0)
+    if batch:
+        batch.draw()
     button_go_back.draw()
     if first_time:
         global is_click
@@ -276,9 +350,6 @@ def on_draw():
 
             pyglet.clock.unschedule(func)
             mode_num = None
-        else:
-            if batch:
-                batch.draw()
         label.draw()
         label2.draw()
         if message_label:
@@ -356,9 +427,17 @@ def mode_self_pc(dt):
                         color=bar_color if color_mode == 'normal' else
                         (random.randint(0, 255), random.randint(0, 255),
                          random.randint(0, 255)),
-                        batch=batch)
+                        batch=batch,
+                        group=play_highlight)
                     current_bar.opacity = bar_opacity
                     still_hold_pc.append([each, current_bar])
+                if draw_piano_keys:
+                    current_note = toNote(notedic[each])
+                    piano_keys[
+                        current_note.degree -
+                        21].color = bar_color if color_mode == 'normal' else (
+                            random.randint(0, 255), random.randint(0, 255),
+                            random.randint(0, 255))
         else:
             if each not in last:
                 changed = True
@@ -374,9 +453,17 @@ def mode_self_pc(dt):
                         color=bar_color if color_mode == 'normal' else
                         (random.randint(0, 255), random.randint(0, 255),
                          random.randint(0, 255)),
-                        batch=batch)
+                        batch=batch,
+                        group=play_highlight)
                     current_bar.opacity = bar_opacity
                     still_hold_pc.append([each, current_bar])
+                if draw_piano_keys:
+                    current_note = toNote(notedic[each])
+                    piano_keys[
+                        current_note.degree -
+                        21].color = bar_color if color_mode == 'normal' else (
+                            random.randint(0, 255), random.randint(0, 255),
+                            random.randint(0, 255))
     for j in last:
         if j not in current:
 
@@ -429,11 +516,22 @@ def mode_self_pc(dt):
             if lastshow:
                 for t in lastshow:
                     plays[t.degree - 21].batch = None
+        if draw_piano_keys:
+            if lastshow:
+                for t in lastshow:
+                    piano_keys[t.degree - 21].color = initial_colors[t.degree -
+                                                                     21]
         if notels:
             currentchord = chord(notels)
             for k in currentchord:
                 if note_mode == 'dots':
                     plays[k.degree - 21].batch = batch
+                if draw_piano_keys:
+                    piano_keys[
+                        k.degree -
+                        21].color = bar_color if color_mode == 'normal' else (
+                            random.randint(0, 255), random.randint(0, 255),
+                            random.randint(0, 255))
 
         if notels:
             currentchord.notes.sort(key=lambda x: x.degree)
@@ -514,6 +612,9 @@ def mode_self_midi(dt):
             # 128 is the status code of note off in midi
             if note_mode == 'dots':
                 plays[note_number - 21].batch = None
+            if draw_piano_keys:
+                piano_keys[note_number -
+                           21].color = initial_colors[note_number - 21]
             if current_note in current_play:
                 current_play.remove(current_note)
         elif status == 144:
@@ -528,11 +629,18 @@ def mode_self_midi(dt):
                     color=bar_color if color_mode == 'normal' else
                     (random.randint(0, 255), random.randint(0, 255),
                      random.randint(0, 255)),
-                    batch=batch)
+                    batch=batch,
+                    group=play_highlight)
                 current_bar.opacity = 255 * (
                     velocity /
                     127) if opacity_change_by_velocity else bar_opacity
                 still_hold.append([current_note, current_bar])
+            if draw_piano_keys:
+                piano_keys[
+                    current_note.degree -
+                    21].color = bar_color if color_mode == 'normal' else (
+                        random.randint(0, 255), random.randint(0, 255),
+                        random.randint(0, 255))
             if current_note not in current_play:
                 current_play.append(current_note)
                 if load_sound:
@@ -596,10 +704,13 @@ def mode_show(dt):
                             color=bar_color if color_mode == 'normal' else
                             (random.randint(0, 255), random.randint(0, 255),
                              random.randint(0, 255)),
-                            batch=batch)
+                            batch=batch,
+                            group=piano_bg)
                         current_bar.opacity = 255 * (
                             current_note.volume /
                             127) if opacity_change_by_velocity else bar_opacity
+                        current_bar.num = current_note.degree - 21
+                        current_bar.hit_key = False
                         plays.append(current_bar)
                         del bars_drop_time[j]
                         continue
@@ -628,7 +739,8 @@ def mode_show(dt):
                                 (random.randint(0, 255),
                                  random.randint(0, 255),
                                  random.randint(0, 255)),
-                                batch=batch)
+                                batch=batch,
+                                group=play_highlight)
                             current_bar.opacity = 255 * (
                                 current_note.volume / 127
                             ) if opacity_change_by_velocity else bar_opacity
@@ -650,6 +762,18 @@ def mode_show(dt):
                             plays[each.degree - 21].batch = None
                     for i in playnotes:
                         plays[i.degree - 21].batch = batch
+                elif draw_piano_keys and note_mode != 'bars drop':
+                    if lastshow:
+                        for each in lastshow:
+                            piano_keys[each.degree -
+                                       21].color = initial_colors[each.degree -
+                                                                  21]
+                    for i in playnotes:
+                        piano_keys[
+                            i.degree -
+                            21].color = bar_color if color_mode == 'normal' else (
+                                random.randint(0, 255), random.randint(0, 255),
+                                random.randint(0, 255))
 
                 lastshow = playnotes
                 label.text = str(playnotes)
@@ -680,18 +804,18 @@ def mode_show(dt):
                     continue
                 i += 1
         elif note_mode == 'bars drop':
-            for k in still_hold:
-                k.height -= bar_steps
-                if k.height <= 0:
-                    k.batch = None
-                    still_hold.remove(k)
-
             i = 0
             while i < len(plays):
                 each = plays[i]
                 each.y -= bar_steps
-                if each.y <= bars_drop_place:
-                    still_hold.append(each)
+                if not each.hit_key and each.y <= bars_drop_place:
+                    each.hit_key = True
+                    if draw_piano_keys:
+                        piano_keys[each.num].color = each.color
+                if each.height + each.y <= piano_height:
+                    each.batch = None
+                    if draw_piano_keys:
+                        piano_keys[each.num].color = initial_colors[each.num]
                     del plays[i]
                     continue
                 i += 1
@@ -712,9 +836,11 @@ def mode_show(dt):
             label.text = 'reloading, please wait...'
             if note_mode == 'bars' or note_mode == 'bars drop':
                 plays.clear()
-                still_hold.clear()
                 if note_mode == 'bars drop':
                     bars_drop_time.clear()
+            if draw_piano_keys:
+                for k in range(len(piano_keys)):
+                    piano_keys[k].color = initial_colors[k]
             del playls
             playls = initialize(musicsheet, unit_time, musicsheet.start_time)
             startplay = time.time()
