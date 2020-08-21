@@ -8,8 +8,8 @@ piano_size = None
 message_color = (0, 0, 0, 255)
 fonts_size = 23
 label1_place = (300, 400)
-label2_place = 300, 350
-label3_place = 300, 450
+label2_place = (300, 350)
+label3_place = (300, 450)
 label_anchor_x = 'left'
 label_anchor_y = 'center'
 fonts = 'Cambria'
@@ -366,14 +366,16 @@ play_as_midi = False
 
 draw_piano_keys = True
 
-white_key_width, white_key_height = 22, 138
+white_key_width  = 22
+white_key_height = 138
 white_key_interval = 24.6
 white_key_y = 35
 white_keys_number = 52
 white_key_start_x = 0
 white_key_color = (255, 255, 255)
 
-black_key_width, black_key_height = 16, 90
+black_key_width = 16
+black_key_height = 90
 black_key_y = 83
 black_key_first_x = 15
 black_key_start_x = 64
