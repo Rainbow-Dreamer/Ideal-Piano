@@ -354,7 +354,7 @@ bar_unit = 50
 bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 176
-adjust_ratio = 52
+adjust_ratio = 55
 
 # when play midi files, if you choose to merge all tracks, get_off_drums
 # set to True will not merge the drum tracks if your midi file has

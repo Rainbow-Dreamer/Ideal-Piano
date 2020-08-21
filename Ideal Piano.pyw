@@ -55,9 +55,10 @@ playing = pyglet.resource.image(notes_image)
 playing.width /= notes_resize_num
 playing.height /= notes_resize_num
 batch = pyglet.graphics.Batch()
-piano_bg = pyglet.graphics.OrderedGroup(0)
-piano_key = pyglet.graphics.OrderedGroup(1)
-play_highlight = pyglet.graphics.OrderedGroup(2)
+bottom_group = pyglet.graphics.OrderedGroup(0)
+piano_bg = pyglet.graphics.OrderedGroup(1)
+piano_key = pyglet.graphics.OrderedGroup(2)
+play_highlight = pyglet.graphics.OrderedGroup(3)
 if note_mode == 'dots':
     if not draw_piano_keys:
         plays = [
@@ -705,7 +706,7 @@ def mode_show(dt):
                             (random.randint(0, 255), random.randint(0, 255),
                              random.randint(0, 255)),
                             batch=batch,
-                            group=piano_bg)
+                            group=bottom_group)
                         current_bar.opacity = 255 * (
                             current_note.volume /
                             127) if opacity_change_by_velocity else bar_opacity
