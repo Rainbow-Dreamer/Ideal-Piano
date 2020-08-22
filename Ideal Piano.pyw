@@ -26,7 +26,7 @@ pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = [abs_path]
 for each in [
         'background_image', 'piano_image', 'notes_image', 'go_back_image',
-        'self_play_image', 'self_midi_image', 'play_midi_image'
+        'self_play_image', 'self_midi_image', 'play_midi_image', 'piano_background_image'
 ]:
     each_value = eval(each)
     each_path = os.path.dirname(each_value)
