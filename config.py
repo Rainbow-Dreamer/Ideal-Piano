@@ -171,7 +171,7 @@ global_volume = 0.6
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds
 delay = True
-delay_time = 6
+delay_time = 3
 
 # touch interval is when the sound is still on delay, if you re-press
 # the key for the same key for that sound, the time interval between

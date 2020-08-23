@@ -560,20 +560,47 @@ def mode_self_pc(dt):
 
 still_hold = []
 
+def piano_key_reset(dt, each):
+    piano_keys[each.degree - 21].color = initial_colors[each.degree - 21]    
+
 
 def mode_self_midi(dt):
     global last
     global current_play
     global stillplay
+    global delay_only_read_current
     current_time = time.time()
-    if load_sound:
-        for each in stillplay:
-            if each not in current_play:
-                if current_time - each.count_time >= delay_time:
+    for each in stillplay:
+        if each not in current_play:
+            if current_time - each.count_time >= delay_time:
+                if load_sound:
                     wavdic[str(each)].stop()
-                    stillplay.remove(each)
-            else:
-                each.count_time = current_time
+                stillplay.remove(each)
+                if not delay_only_read_current:
+                    if draw_piano_keys:
+                        piano_keys[each.degree -
+                                   21].color = initial_colors[each.degree - 21]
+                    if stillplay:
+                        currentchord = chord(stillplay)
+                        currentchord.notes.sort(key=lambda x: x.degree)
+                        label.text = str(currentchord.notes)
+                        if show_chord:
+                            chordtype = detect(currentchord, detect_mode, inv_num,
+                                               rootpitch, ignore_sort_from,
+                                               change_from_first, original_first,
+                                               ignore_add_from, same_note_special,
+                                               whole_detect, return_fromchord,
+                                               two_show_interval, poly_chord_first)
+                            label2.text = str(
+                                chordtype) if not sort_invisible else get_off_sort(
+                                    str(chordtype))  
+                    else:
+                        label.text = '[]'
+                        label2.text = ''                        
+                    
+                
+        else:
+            each.count_time = current_time
     if last != current_play:
         if note_mode == 'dots':
             for k in last:
@@ -608,12 +635,13 @@ def mode_self_midi(dt):
         event = device.read(1)[0]
         data, timestamp = event
         status, note_number, velocity, note_off_velocity = data
+        print(data, flush=True)
         current_note = degree_to_note(note_number)
         if status == 128 or (status == 144 and velocity == 0):
             # 128 is the status code of note off in midi
             if note_mode == 'dots':
                 plays[note_number - 21].batch = None
-            if draw_piano_keys:
+            if draw_piano_keys and delay_only_read_current:
                 piano_keys[note_number -
                            21].color = initial_colors[note_number - 21]
             if current_note in current_play:
@@ -644,12 +672,28 @@ def mode_self_midi(dt):
                         random.randint(0, 255))
             if current_note not in current_play:
                 current_play.append(current_note)
-                if load_sound:
+                if current_note not in stillplay:
                     stillplay.append(current_note)
-                    current_note.count_time = current_time
+                current_note.count_time = current_time
+                if load_sound:
                     current_sound = wavdic[str(current_note)]
                     current_sound.set_volume(velocity / 127)
                     current_sound.play()
+        elif status == 176 and note_number == 64:
+            if velocity >= 64:
+                if draw_piano_keys:
+                    for each in stillplay:
+                        piano_keys[each.degree -
+                                   21].color = initial_colors[each.degree - 21]   
+                delay_only_read_current = False
+            else:
+                if not delay_only_read_current:
+                    if draw_piano_keys:
+                        for each in stillplay:
+                            pyglet.clock.schedule_once(piano_key_reset, delay_time - (current_time - each.count_time), each)
+                delay_only_read_current = True
+        
+            
     if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
         while i < len(plays):
