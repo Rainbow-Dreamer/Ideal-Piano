@@ -688,7 +688,8 @@ def mode_self_midi(dt):
                     if draw_piano_keys:
                         for each in stillplay:
                             piano_keys[each.degree -
-                                       21].color = initial_colors[each.degree - 21]
+                                       21].color = initial_colors[each.degree -
+                                                                  21]
                 delay_only_read_current = False
             else:
                 if not delay_only_read_current:
