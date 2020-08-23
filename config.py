@@ -366,7 +366,7 @@ play_as_midi = False
 
 draw_piano_keys = True
 
-white_key_width  = 22
+white_key_width = 22
 white_key_height = 138
 white_key_interval = 24.6
 white_key_y = 35

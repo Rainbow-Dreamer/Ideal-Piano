@@ -26,7 +26,8 @@ pygame.mixer.init(frequency, size, channel, buffer)
 pyglet.resource.path = [abs_path]
 for each in [
         'background_image', 'piano_image', 'notes_image', 'go_back_image',
-        'self_play_image', 'self_midi_image', 'play_midi_image', 'piano_background_image'
+        'self_play_image', 'self_midi_image', 'play_midi_image',
+        'piano_background_image'
 ]:
     each_value = eval(each)
     each_path = os.path.dirname(each_value)
@@ -560,8 +561,9 @@ def mode_self_pc(dt):
 
 still_hold = []
 
+
 def piano_key_reset(dt, each):
-    piano_keys[each.degree - 21].color = initial_colors[each.degree - 21]    
+    piano_keys[each.degree - 21].color = initial_colors[each.degree - 21]
 
 
 def mode_self_midi(dt):
@@ -585,20 +587,21 @@ def mode_self_midi(dt):
                         currentchord.notes.sort(key=lambda x: x.degree)
                         label.text = str(currentchord.notes)
                         if show_chord:
-                            chordtype = detect(currentchord, detect_mode, inv_num,
-                                               rootpitch, ignore_sort_from,
-                                               change_from_first, original_first,
-                                               ignore_add_from, same_note_special,
-                                               whole_detect, return_fromchord,
-                                               two_show_interval, poly_chord_first)
+                            chordtype = detect(
+                                currentchord, detect_mode, inv_num, rootpitch,
+                                ignore_sort_from, change_from_first,
+                                original_first, ignore_add_from,
+                                same_note_special, whole_detect,
+                                return_fromchord, two_show_interval,
+                                poly_chord_first)
                             label2.text = str(
-                                chordtype) if not sort_invisible else get_off_sort(
-                                    str(chordtype))  
+                                chordtype
+                            ) if not sort_invisible else get_off_sort(
+                                str(chordtype))
                     else:
                         label.text = '[]'
-                        label2.text = ''                        
-                    
-                
+                        label2.text = ''
+
         else:
             each.count_time = current_time
     if last != current_play:
@@ -684,16 +687,18 @@ def mode_self_midi(dt):
                 if draw_piano_keys:
                     for each in stillplay:
                         piano_keys[each.degree -
-                                   21].color = initial_colors[each.degree - 21]   
+                                   21].color = initial_colors[each.degree - 21]
                 delay_only_read_current = False
             else:
                 if not delay_only_read_current:
                     if draw_piano_keys:
                         for each in stillplay:
-                            pyglet.clock.schedule_once(piano_key_reset, delay_time - (current_time - each.count_time), each)
+                            pyglet.clock.schedule_once(
+                                piano_key_reset,
+                                delay_time - (current_time - each.count_time),
+                                each)
                 delay_only_read_current = True
-        
-            
+
     if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
         while i < len(plays):
