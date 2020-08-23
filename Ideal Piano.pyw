@@ -638,7 +638,6 @@ def mode_self_midi(dt):
         event = device.read(1)[0]
         data, timestamp = event
         status, note_number, velocity, note_off_velocity = data
-        print(data, flush=True)
         current_note = degree_to_note(note_number)
         if status == 128 or (status == 144 and velocity == 0):
             # 128 is the status code of note off in midi
