@@ -12,7 +12,7 @@ from tkinter import filedialog
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
 sys.path.append(abs_path)
-with open('musicpy/musicpy.py', encoding='utf-8') as f:
+with open('musicpy/__init__.py', encoding='utf-8') as f:
     exec(f.read())
 os.chdir(abs_path)
 with open('config.py', encoding='utf-8') as f:
