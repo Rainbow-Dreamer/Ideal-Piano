@@ -60,10 +60,10 @@ if not draw_piano_keys:
     else:
         image.width, image.height = piano_size
     image_show = pyglet.sprite.Sprite(image,
-                                  x=0,
-                                  y=0,
-                                  batch=batch,
-                                  group=piano_bg)
+                                      x=0,
+                                      y=0,
+                                      batch=batch,
+                                      group=piano_bg)
 playing = pyglet.resource.image(notes_image)
 playing.width /= notes_resize_num
 playing.height /= notes_resize_num
