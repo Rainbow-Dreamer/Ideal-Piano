@@ -223,6 +223,8 @@ if draw_piano_keys:
     piano_keys.sort(key=lambda s: s.x)
     initial_colors.sort(key=lambda s: s[0])
     initial_colors = [t[1] for t in initial_colors]
+    note_place = [(each.x, each.y) for each in piano_keys]
+    bar_offset_x = 0
 
 
 def has_load():
