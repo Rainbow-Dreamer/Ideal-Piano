@@ -206,20 +206,20 @@ if draw_piano_keys:
                                        group=piano_key)
     piano_keys.append(first_black_key)
     initial_colors.append((first_black_key.x, black_key_color))
-    for j in range(7):
-        current_start = black_key_start_x + black_key_interval * 7 * j
-        current_piano_keys_set = [
-            shapes.Rectangle(x=current_start + black_key_interval * k,
-                             y=black_key_y,
-                             width=black_key_width,
-                             height=black_key_height,
-                             color=black_key_color,
-                             batch=batch,
-                             group=piano_key) for k in range(6) if k != 2
-        ]
-        piano_keys += current_piano_keys_set
-        initial_colors += [(t.x, black_key_color)
-                           for t in current_piano_keys_set]
+    current_start = black_key_start_x
+    for j in range(black_keys_set_num):
+        for k in black_keys_set:
+            current_start += k
+            piano_keys.append(
+                shapes.Rectangle(x=current_start,
+                                 y=black_key_y,
+                                 width=black_key_width,
+                                 height=black_key_height,
+                                 color=black_key_color,
+                                 batch=batch,
+                                 group=piano_key))
+            initial_colors.append((current_start, black_key_color))
+        current_start += black_keys_set_interval
     piano_keys.sort(key=lambda s: s.x)
     initial_colors.sort(key=lambda s: s[0])
     initial_colors = [t[1] for t in initial_colors]
