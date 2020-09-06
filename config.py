@@ -211,6 +211,7 @@ whole_detect = True
 return_fromchord = False
 two_show_interval = True
 poly_chord_first = False
+root_position_return_first = True
 
 # the operations on the midi you want to play
 # show_change_pitch : a positive number: will sharp all the notes in the midi by the number; a negative number: same except flat all the notes

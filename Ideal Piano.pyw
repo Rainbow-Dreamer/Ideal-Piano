@@ -556,7 +556,8 @@ def mode_self_pc(dt):
                                        change_from_first, original_first,
                                        ignore_add_from, same_note_special,
                                        whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first)
+                                       two_show_interval, poly_chord_first,
+                                       root_position_return_first)
 
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
@@ -603,7 +604,7 @@ def mode_self_midi(dt):
                                 original_first, ignore_add_from,
                                 same_note_special, whole_detect,
                                 return_fromchord, two_show_interval,
-                                poly_chord_first)
+                                poly_chord_first, root_position_return_first)
                             label2.text = str(
                                 chordtype
                             ) if not sort_invisible else get_off_sort(
@@ -634,7 +635,8 @@ def mode_self_midi(dt):
                                    change_from_first, original_first,
                                    ignore_add_from, same_note_special,
                                    whole_detect, return_fromchord,
-                                   two_show_interval, poly_chord_first)
+                                   two_show_interval, poly_chord_first,
+                                   root_position_return_first)
 
                 label2.text = str(
                     chordtype) if not sort_invisible else get_off_sort(
@@ -835,7 +837,8 @@ def mode_show(dt):
                                        change_from_first, original_first,
                                        ignore_add_from, same_note_special,
                                        whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first)
+                                       two_show_interval, poly_chord_first,
+                                       root_position_return_first)
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
                             str(chordtype))
