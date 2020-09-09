@@ -1,6 +1,6 @@
 # basic screen settings
 
-screen_size = (1300, 650)
+screen_size = (1280, 650)
 background_image = 'white.png'
 background_size = None
 piano_image = 'piano.png'
@@ -369,21 +369,21 @@ draw_piano_keys = True
 
 white_key_width = 23
 white_key_height = 138
-white_key_interval = 25
+white_key_interval = 24.6
 white_key_y = 35
 white_keys_number = 52
 white_key_start_x = 0
 white_key_color = (255, 255, 255)
 
-black_key_width = 15
+black_key_width = 14.341
 black_key_height = 90
 black_key_y = 83
-black_key_first_x = 20
-black_key_start_x = 64.467
+black_key_first_x = 18
+black_key_start_x = 64
 black_key_color = (0, 0, 0)
 
-black_keys_set = [0, 30, 43.85, 28.75, 28.55]
-black_keys_set_interval = 43.75
+black_keys_set = [0, 28.682, 46, 25, 27]
+black_keys_set_interval = 45.5
 black_keys_set_num = 7
 
 piano_background_image = 'piano_background.png'
