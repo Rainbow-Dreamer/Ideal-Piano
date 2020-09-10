@@ -378,11 +378,11 @@ white_key_color = (255, 255, 255)
 black_key_width = 15
 black_key_height = 90
 black_key_y = 85
-black_key_first_x = 20
+black_key_first_x = 18
 black_key_start_x = 64.467
 black_key_color = (0, 0, 0)
 
-black_keys_set = [0, 30, 43.85, 28.75, 28.55]
+black_keys_set = [0, 30, 43.85, 28.67, 28.48]
 black_keys_set_interval = 43.75
 black_keys_set_num = 7
 
