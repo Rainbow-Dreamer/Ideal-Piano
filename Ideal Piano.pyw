@@ -551,13 +551,12 @@ def mode_self_pc(dt):
                 lastshow = currentchord
                 label.text = str(currentchord.notes)
                 if show_chord:
-                    chordtype = detect(currentchord, detect_mode, inv_num,
-                                       rootpitch, ignore_sort_from,
-                                       change_from_first, original_first,
-                                       ignore_add_from, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first,
-                                       root_position_return_first)
+                    chordtype = detect(
+                        currentchord, detect_mode, inv_num, rootpitch,
+                        ignore_sort_from, change_from_first, original_first,
+                        ignore_add_from, same_note_special, whole_detect,
+                        return_fromchord, two_show_interval, poly_chord_first,
+                        root_position_return_first, alter_notes_show_degree)
 
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
@@ -604,7 +603,8 @@ def mode_self_midi(dt):
                                 original_first, ignore_add_from,
                                 same_note_special, whole_detect,
                                 return_fromchord, two_show_interval,
-                                poly_chord_first, root_position_return_first)
+                                poly_chord_first, root_position_return_first,
+                                alter_notes_show_degree)
                             label2.text = str(
                                 chordtype
                             ) if not sort_invisible else get_off_sort(
@@ -630,13 +630,12 @@ def mode_self_midi(dt):
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
             if show_chord:
-                chordtype = detect(currentchord, detect_mode, inv_num,
-                                   rootpitch, ignore_sort_from,
-                                   change_from_first, original_first,
-                                   ignore_add_from, same_note_special,
-                                   whole_detect, return_fromchord,
-                                   two_show_interval, poly_chord_first,
-                                   root_position_return_first)
+                chordtype = detect(
+                    currentchord, detect_mode, inv_num, rootpitch,
+                    ignore_sort_from, change_from_first, original_first,
+                    ignore_add_from, same_note_special, whole_detect,
+                    return_fromchord, two_show_interval, poly_chord_first,
+                    root_position_return_first, alter_notes_show_degree)
 
                 label2.text = str(
                     chordtype) if not sort_invisible else get_off_sort(
@@ -832,13 +831,12 @@ def mode_show(dt):
                 lastshow = playnotes
                 label.text = str(playnotes)
                 if show_chord:
-                    chordtype = detect(playnotes, detect_mode, inv_num,
-                                       rootpitch, ignore_sort_from,
-                                       change_from_first, original_first,
-                                       ignore_add_from, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first,
-                                       root_position_return_first)
+                    chordtype = detect(
+                        playnotes, detect_mode, inv_num, rootpitch,
+                        ignore_sort_from, change_from_first, original_first,
+                        ignore_add_from, same_note_special, whole_detect,
+                        return_fromchord, two_show_interval, poly_chord_first,
+                        root_position_return_first, alter_notes_show_degree)
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
                             str(chordtype))
@@ -1088,7 +1086,9 @@ def init_show():
 
     get_off_melody = off_melody
     if get_off_melody:
-        musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol)
+        musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol,
+                                 get_off_overlap_notes, average_degree_length,
+                                 melody_degree_tol)
         sheetlen = len(musicsheet)
 
     browse_reset()

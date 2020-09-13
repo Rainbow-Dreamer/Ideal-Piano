@@ -212,6 +212,7 @@ return_fromchord = False
 two_show_interval = True
 poly_chord_first = False
 root_position_return_first = True
+alter_notes_show_degree = True
 
 # the operations on the midi you want to play
 # show_change_pitch : a positive number: will sharp all the notes in the midi by the number; a negative number: same except flat all the notes
@@ -337,6 +338,9 @@ augmented_seventh = 12
 # the parameters of the function split_melody
 melody_tol = minor_seventh
 chord_tol = major_sixth
+get_off_overlap_notes = False
+average_degree_length = 8
+melody_degree_tol = 'B4'
 
 # notes showing mode: choose one from 'dots' and 'bars' and 'bars drop',
 # or you can set as other names, and turn on the draw piano keys mode
