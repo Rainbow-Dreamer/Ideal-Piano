@@ -350,6 +350,7 @@ bar_height = 20
 bar_color = (124, 252, 0)
 bar_y = 174
 bar_offset_x = 6
+dots_offset_x = 10
 bar_opacity = 160
 opacity_change_by_velocity = True
 # color mode: choose one from 'normal' and 'rainbow'
@@ -391,3 +392,7 @@ black_keys_set_interval = 43.75
 black_keys_set_num = 7
 
 piano_background_image = 'piano_background.png'
+
+show_music_analysis = True
+music_analysis_file = 'musical analysis.txt'
+music_analysis_place = 300, 500

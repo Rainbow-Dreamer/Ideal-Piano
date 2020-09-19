@@ -72,14 +72,16 @@ if note_mode == 'dots':
     if not draw_piano_keys:
         plays = [
             pyglet.sprite.Sprite(playing,
-                                 x=j[0] + 3,
+                                 x=j[0] + dots_offset_x,
                                  y=j[1],
                                  group=play_highlight) for j in note_place
         ]
     else:
         plays = [
-            pyglet.sprite.Sprite(playing, x=j[0], y=j[1], group=play_highlight)
-            for j in note_place
+            pyglet.sprite.Sprite(playing,
+                                 x=j[0] + dots_offset_x,
+                                 y=j[1],
+                                 group=play_highlight) for j in note_place
         ]
 else:
     plays = []
@@ -122,6 +124,16 @@ label3 = pyglet.text.Label('',
                            color=message_color,
                            anchor_x=label_anchor_x,
                            anchor_y=label_anchor_y)
+if show_music_analysis:
+    music_analysis_label = pyglet.text.Label('',
+                                             font_name=fonts,
+                                             font_size=fonts_size,
+                                             bold=bold,
+                                             x=music_analysis_place[0],
+                                             y=music_analysis_place[1],
+                                             color=message_color,
+                                             anchor_x=label_anchor_x,
+                                             anchor_y=label_anchor_y)
 
 
 def get_off_sort(a):
@@ -259,6 +271,8 @@ def on_mouse_press(x, y, button, modifiers):
             if mode_num == 2:
                 if play_midi_file:
                     pygame.mixer.music.stop()
+                if show_music_analysis:
+                    music_analysis_label.text = ''
         is_click = True
         click_mode = None
         if note_mode == 'bars' or note_mode == 'bars drop':
@@ -366,6 +380,8 @@ def on_draw():
         label2.draw()
         if message_label:
             label3.draw()
+        if show_music_analysis:
+            music_analysis_label.draw()
 
 
 currentchord = chord([])
@@ -743,6 +759,7 @@ def mode_show(dt):
     global pause_start
     global message_label
     global playnotes
+    global show_music_analysis_list
     if not paused:
         currentime = time.time() - startplay
         if note_mode == 'bars drop':
@@ -781,6 +798,14 @@ def mode_show(dt):
                         if not play_midi_file:
                             current_sound.play()
                         nownote[3] = 1
+                        if show_music_analysis:
+                            if show_music_analysis_list:
+                                current_music_analysis = show_music_analysis_list[
+                                    0]
+                                if k == current_music_analysis[0]:
+                                    music_analysis_label.text = current_music_analysis[
+                                        1]
+                                    del show_music_analysis_list[0]
                         if note_mode == 'bars':
                             places = note_place[current_note.degree - 21]
                             current_bar = shapes.Rectangle(
@@ -805,6 +830,7 @@ def mode_show(dt):
                         nownote[3] = 2
                         if k == sheetlen - 1:
                             finished = True
+
         playnotes = [wholenotes[x[4]] for x in playls if x[3] == 1]
         if playnotes:
             playnotes.sort(key=lambda x: x.degree)
@@ -884,6 +910,9 @@ def mode_show(dt):
         label2.text = ''
         for each in plays:
             each.batch = None
+        if show_music_analysis:
+            music_analysis_label.text = ''
+            show_music_analysis_list = copy(default_show_music_analysis_list)
         label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
             label.text = 'reloading, please wait...'
@@ -1043,6 +1072,13 @@ def browse_reset():
 
 melody_notes = []
 
+if show_music_analysis:
+    with open(music_analysis_file, encoding='utf-8-sig') as f:
+        data = f.read()
+        music_analysis_list = [i.split(' ') for i in data.split('\n')]
+        music_analysis_list = [[float(j[0]) - 1, j[1]]
+                               for j in music_analysis_list if len(j) == 2]
+
 
 def init_show():
     global playls
@@ -1118,6 +1154,13 @@ def init_show():
     # 2 means it has stopped playing
     musicsheet.start_time = start_time
     playls = initialize(musicsheet, unit_time, start_time)
+    if show_music_analysis:
+        global show_music_analysis_list
+        show_music_analysis_list = [[
+            add_to_index(musicsheet.interval, each[0])[-1], each[1]
+        ] for each in music_analysis_list]
+        global default_show_music_analysis_list
+        default_show_music_analysis_list = copy(show_music_analysis_list)
     startplay = time.time()
     lastshow = None
     finished = False
