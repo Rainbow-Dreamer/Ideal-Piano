@@ -393,6 +393,6 @@ black_keys_set_num = 7
 
 piano_background_image = 'piano_background.png'
 
-show_music_analysis = True
+show_music_analysis = False
 music_analysis_file = 'musical analysis.txt'
 music_analysis_place = 300, 500
