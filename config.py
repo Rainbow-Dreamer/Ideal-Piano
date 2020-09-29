@@ -187,7 +187,7 @@ delay_only_read_current = True
 sound_format = 'wav'
 
 # the path of the sounds folder
-sound_path = 'sounds/'
+sound_path = 'sounds'
 
 # when the mode is in 'show' mode, the delay time for the sounds
 show_delay_time = 1

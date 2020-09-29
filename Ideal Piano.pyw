@@ -150,7 +150,7 @@ def get_off_sort(a):
 
 def load(dic, path, file_format, volume):
     wavedict = {
-        i: pygame.mixer.Sound(f'{path}{dic[i]}.{file_format}')
+        i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
         for i in dic
     }
     if volume != None:
