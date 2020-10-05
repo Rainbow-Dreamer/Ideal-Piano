@@ -283,6 +283,7 @@ def on_mouse_press(x, y, button, modifiers):
         if draw_piano_keys:
             for k in range(len(piano_keys)):
                 piano_keys[k].color = initial_colors[k]
+        label3.text = ''
 
     if self_play.inside() & button & mouse.LEFT and first_time:
         click_mode = 0
@@ -980,7 +981,7 @@ def initialize(musicsheet, unit_time, start_time):
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
                 currentwav = pygame.mixer.Sound(
-                    f'{sound_path}{currentnote}.{sound_format}')
+                    f'{sound_path}/{currentnote}.{sound_format}')
                 duration = unit_time * currentnote.duration
                 interval = unit_time * musicsheet.interval[i]
                 currentstart = start
