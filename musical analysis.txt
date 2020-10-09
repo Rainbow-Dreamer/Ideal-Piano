@@ -1,1 +1,21 @@
-﻿
+﻿key: B大调
+
+1 G#m7 vim7
+2 Emaj9(omit 3) IVM7
+3 F#7(omit 3) V7
+4 Bmaj7 IM7
+5 G#m7 vim7
+6 Emaj9(omit 3) IVM7
+7 F#7(omit 3) V7
+7.5 C#dim/G iio/#5
+8 G#m11 vim11 即将转到G#大调
+
+key: G#大调
+
+9 Fm9(omit 7) vim9
+10 C#maj9(omit 3) IVM9
+11 D#9(omit 3) V9
+12 G#maj9(omit 3) IM9
+12.5 G#maj7 IM7
+12.75 C7/G III7/7
+13 Fm7 vim7

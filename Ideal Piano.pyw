@@ -133,7 +133,9 @@ if show_music_analysis:
                                              y=music_analysis_place[1],
                                              color=message_color,
                                              anchor_x=label_anchor_x,
-                                             anchor_y=label_anchor_y)
+                                             anchor_y=label_anchor_y,
+                                             multiline=True,
+                                             width=500)
 
 
 def get_off_sort(a):
@@ -957,7 +959,7 @@ def initialize(musicsheet, unit_time, start_time):
             import musicpy.musicpy
             musicpy.musicpy.write('temp.mid',
                                   musicsheet,
-                                  int(60 / unit_time),
+                                  60/(unit_time/4),
                                   time1=musicsheet.start_time)
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
@@ -1076,9 +1078,29 @@ melody_notes = []
 if show_music_analysis:
     with open(music_analysis_file, encoding='utf-8-sig') as f:
         data = f.read()
-        music_analysis_list = [i.split(' ') for i in data.split('\n')]
+        lines = [i for i in data.split('\n') if i]
+        keys_list = [i for i in lines if i[:3] == 'key']
+        keys = [j.split('key: ')[1] for j in keys_list]
+        keys_list_ind = [i for i in range(len(lines)) if lines[i][:3] == 'key']
+        music_analysis_list = [i.split(' ') for i in lines]
+        if keys_list_ind:
+            keys_num = len(keys_list_ind)
+            for i in range(keys_num):
+                current_key_ind = keys_list_ind[i]
+                current_key = keys[i]
+                if i != keys_num - 1:
+                    next_key_ind = keys_list_ind[i + 1]
+                else:
+                    next_key_ind = len(music_analysis_list)
+                for j in range(current_key_ind + 1, next_key_ind):
+                    music_analysis_list[j][
+                        1] = f'{key_header}{current_key}\n' + music_analysis_list[
+                            j][1]
+        music_analysis_list = [[k[0], ' '.join(k[1:])]
+                               for k in music_analysis_list]
         music_analysis_list = [[float(j[0]) - 1, j[1]]
-                               for j in music_analysis_list if len(j) == 2]
+                               for j in music_analysis_list
+                               if len(j) == 2 and j[0] != 'key:']
 
 
 def init_show():
@@ -1107,7 +1129,6 @@ def init_show():
             bpm2, musicsheet, start_time = read_result
             if set_bpm:
                 bpm2 = float(set_bpm)
-            sheetlen = sheetlen
 
         else:
             browse_reset()
@@ -1148,7 +1169,7 @@ def init_show():
         return 'back'
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
-    unit_time = 60 / bpm_to_use
+    unit_time = 4 * 60 / bpm_to_use
 
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
@@ -1158,7 +1179,7 @@ def init_show():
     if show_music_analysis:
         global show_music_analysis_list
         show_music_analysis_list = [[
-            add_to_index(musicsheet.interval, each[0])[-1], each[1]
+            add_to_last_index(musicsheet.interval, each[0]), each[1]
         ] for each in music_analysis_list]
         global default_show_music_analysis_list
         default_show_music_analysis_list = copy(show_music_analysis_list)

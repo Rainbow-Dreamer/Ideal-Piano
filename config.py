@@ -352,7 +352,7 @@ opacity_change_by_velocity = True
 # color mode: choose one from 'normal' and 'rainbow'
 color_mode = 'normal'
 bar_steps = 6
-bar_unit = 50
+bar_unit = 200
 bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 173
@@ -389,6 +389,7 @@ black_keys_set_num = 7
 
 piano_background_image = 'piano_background.png'
 
-show_music_analysis = False
+show_music_analysis = True
 music_analysis_file = 'musical analysis.txt'
 music_analysis_place = 300, 500
+key_header = '当前调性：'
