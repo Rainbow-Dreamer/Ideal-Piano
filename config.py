@@ -389,7 +389,9 @@ black_keys_set_num = 7
 
 piano_background_image = 'piano_background.png'
 
-show_music_analysis = False
+show_music_analysis = True
 music_analysis_file = 'musical analysis.txt'
 music_analysis_place = 300, 500
 key_header = '当前调性：'
+music_analysis_width = 1300
+music_analysis_fonts_size = 23
