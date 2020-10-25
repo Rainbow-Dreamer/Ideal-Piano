@@ -125,17 +125,18 @@ label3 = pyglet.text.Label('',
                            anchor_x=label_anchor_x,
                            anchor_y=label_anchor_y)
 if show_music_analysis:
-    music_analysis_label = pyglet.text.Label('',
-                                             font_name=fonts,
-                                             font_size=music_analysis_fonts_size,
-                                             bold=bold,
-                                             x=music_analysis_place[0],
-                                             y=music_analysis_place[1],
-                                             color=message_color,
-                                             anchor_x=label_anchor_x,
-                                             anchor_y=label_anchor_y,
-                                             multiline=True,
-                                             width=music_analysis_width)
+    music_analysis_label = pyglet.text.Label(
+        '',
+        font_name=fonts,
+        font_size=music_analysis_fonts_size,
+        bold=bold,
+        x=music_analysis_place[0],
+        y=music_analysis_place[1],
+        color=message_color,
+        anchor_x=label_anchor_x,
+        anchor_y=label_anchor_y,
+        multiline=True,
+        width=music_analysis_width)
 
 
 def get_off_sort(a):
@@ -959,7 +960,7 @@ def initialize(musicsheet, unit_time, start_time):
             import musicpy.musicpy
             musicpy.musicpy.write('temp.mid',
                                   musicsheet,
-                                  60/(unit_time/4),
+                                  60 / (unit_time / 4),
                                   time1=musicsheet.start_time)
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
