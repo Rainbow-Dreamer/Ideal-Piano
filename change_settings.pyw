@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 from ast import literal_eval
-with open('config.py', encoding='utf-8') as f:
+with open('config.py', encoding='utf-8-sig') as f:
     text = f.read()
     exec(text)
 
