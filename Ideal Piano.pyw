@@ -1080,6 +1080,7 @@ if show_music_analysis:
     with open(music_analysis_file, encoding='utf-8-sig') as f:
         data = f.read()
         lines = [i for i in data.split('\n') if i]
+        lines = [k.replace('\\n', '\n') for k in lines]
         keys_list = [i for i in lines if i[:3] == 'key']
         keys = [j.split('key: ')[1] for j in keys_list]
         keys_list_ind = [i for i in range(len(lines)) if lines[i][:3] == 'key']
