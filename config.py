@@ -391,7 +391,7 @@ piano_background_image = 'piano_background.png'
 
 show_music_analysis = False
 music_analysis_file = 'musical analysis.txt'
-music_analysis_place = 300, 500
+music_analysis_place = (250, 500)
 key_header = '当前调性：'
 music_analysis_width = 1300
-music_analysis_fonts_size = 23
+music_analysis_fonts_size = 20

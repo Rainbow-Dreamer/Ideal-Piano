@@ -1100,9 +1100,17 @@ if show_music_analysis:
                             j][1]
         music_analysis_list = [[k[0], ' '.join(k[1:])]
                                for k in music_analysis_list]
-        music_analysis_list = [[float(j[0]) - 1, j[1]]
-                               for j in music_analysis_list
-                               if len(j) == 2 and j[0] != 'key:']
+        music_analysis_list = [
+            k for k in music_analysis_list if len(k) == 2 and k[0] != 'key:'
+        ]
+        bar_counter = 0
+        for each in music_analysis_list:
+            bar_ind, content = each
+            if bar_ind[0] == '+':
+                bar_counter += eval(bar_ind[1:])
+            else:
+                bar_counter = float(bar_ind) - 1
+            each[0] = bar_counter
 
 
 def init_show():
