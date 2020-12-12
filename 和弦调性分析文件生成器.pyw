@@ -1,9 +1,6 @@
 ﻿from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
-with open('config.py', encoding='utf-8-sig') as f:
-    text = f.read()
-    exec(text)
 
 
 class Root(Tk):
@@ -118,7 +115,7 @@ class Root(Tk):
         if not current_key:
             self.msg.configure(text='当前并未输入任何调性')
         else:
-            self.text += f'{key_header}{current_key}'
+            self.text += f'key: {current_key}'
             self.refresh_preview()
             self.msg.configure(text='已成功输入调性')
 
@@ -205,12 +202,16 @@ class Root(Tk):
                 if current_ind == 0:
                     self.recent_line = self.text[self.text.rfind('\n') + 1:]
                     self.text = self.text[:(-2 * self.interval - 1)] + '\\n'
-                    inds = self.recent_line.index(' ') + 1
+                    inds = 0
+                    adjust_len = self.recent_line.index(' ') + 1
                     if self.current_play_set and self.current_play_num == 0:
-                        inds += self.interval + 1
+                        inds += 2
+                        adjust_len += 1
+                    elif self.current_play_set and self.current_play_num != 0:
+                        adjust_len += 1
                     self.text += ' ' * inds + chord_degree
                     self.chord_inds = [
-                        j + self.interval + 1
+                        j + self.interval + 1 - adjust_len
                         for j in range(len(self.recent_line))
                         if self.recent_line[j] == '|'
                     ]
