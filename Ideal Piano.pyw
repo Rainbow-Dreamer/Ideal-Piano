@@ -105,7 +105,9 @@ label = pyglet.text.Label('',
                           y=label1_place[1],
                           color=message_color,
                           anchor_x=label_anchor_x,
-                          anchor_y=label_anchor_y)
+                          anchor_y=label_anchor_y,
+                          multiline=True,
+                          width=1000)
 label2 = pyglet.text.Label('',
                            font_name=fonts,
                            font_size=fonts_size,
@@ -917,7 +919,7 @@ def mode_show(dt):
         if show_music_analysis:
             music_analysis_label.text = ''
             show_music_analysis_list = copy(default_show_music_analysis_list)
-        label.text = f'music playing finished, press {repeat_key} to listen again, or press {exit_key} to exit'
+        label.text = f'music playing finished,\npress {repeat_key} to listen again,\nor press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
             label.text = 'reloading, please wait...'
             if note_mode == 'bars' or note_mode == 'bars drop':
@@ -1079,38 +1081,25 @@ melody_notes = []
 if show_music_analysis:
     with open(music_analysis_file, encoding='utf-8-sig') as f:
         data = f.read()
-        lines = [i for i in data.split('\n') if i]
-        lines = [k.replace('\\n', '\n') for k in lines]
-        keys_list = [i for i in lines if i[:3] == 'key']
-        keys = [j.split('key: ')[1] for j in keys_list]
-        keys_list_ind = [i for i in range(len(lines)) if lines[i][:3] == 'key']
-        music_analysis_list = [i.split(' ') for i in lines]
-        if keys_list_ind:
-            keys_num = len(keys_list_ind)
-            for i in range(keys_num):
-                current_key_ind = keys_list_ind[i]
-                current_key = keys[i]
-                if i != keys_num - 1:
-                    next_key_ind = keys_list_ind[i + 1]
-                else:
-                    next_key_ind = len(music_analysis_list)
-                for j in range(current_key_ind + 1, next_key_ind):
-                    music_analysis_list[j][
-                        1] = f'{key_header}{current_key}\n' + music_analysis_list[
-                            j][1]
-        music_analysis_list = [[k[0], ' '.join(k[1:])]
-                               for k in music_analysis_list]
-        music_analysis_list = [
-            k for k in music_analysis_list if len(k) == 2 and k[0] != 'key:'
-        ]
+        lines = [i for i in data.split('\n\n') if i]
+        music_analysis_list = []
+        current_key = None
         bar_counter = 0
-        for each in music_analysis_list:
-            bar_ind, content = each
-            if bar_ind[0] == '+':
-                bar_counter += eval(bar_ind[1:])
-            else:
-                bar_counter = float(bar_ind) - 1
-            each[0] = bar_counter
+        for each in lines:
+            if each:
+                if each[:3] != 'key':
+                    current = each.split('\n')
+                    current_bar = current[0]
+                    if current_bar[0] == '+':
+                        bar_counter += eval(current_bar[1:])
+                    else:
+                        bar_counter = float(current_bar) - 1
+                    current_chords = '\n'.join(current[1:])
+                    if current_key:
+                        current_chords = f'{key_header}{current_key}\n' + current_chords
+                    music_analysis_list.append([bar_counter, current_chords])
+                else:
+                    current_key = each.split('key: ')[1]
 
 
 def init_show():

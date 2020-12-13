@@ -10,11 +10,12 @@ class Root(Tk):
         self.minsize(900, 500)
         self.text = ''
         self.preview = Text(self,
-                            width=50,
-                            height=30,
+                            width=40,
+                            height=20,
                             undo=True,
                             maxundo=-1,
                             autoseparators=False)
+        self.preview.configure(font=("Consolas", 12))
         self.preview.place(x=510, y=0)
         self.preview_label = ttk.Label(self, text='预览')
         self.preview_label.place(x=510, y=410)
@@ -115,7 +116,7 @@ class Root(Tk):
         if not current_key:
             self.msg.configure(text='当前并未输入任何调性')
         else:
-            self.text += f'key: {current_key}'
+            self.text += f'key: {current_key}\n\n'
             self.refresh_preview()
             self.msg.configure(text='已成功输入调性')
 
@@ -147,14 +148,18 @@ class Root(Tk):
         if not bar:
             self.msg.configure(text='当前并未输入任何小节')
         else:
-            if self.text[(-2 * self.interval -
-                          1):] == f'{" "*self.interval}|{" "*self.interval}':
-                self.text = self.text[:(-2 * self.interval - 1)]
+            if self.text:
+                if self.text[(
+                        -2 * self.interval -
+                        1):] == f'{" "*self.interval}|{" "*self.interval}':
+                    self.text = self.text[:(-2 * self.interval - 1)] + '\n\n'
+                elif self.text[-1] != '\n':
+                    self.text += '\n\n'
             bar_type = self.bar_type_value.get()
             if bar_type == 1:
-                self.text += f'\n+{bar} ' if self.text else f'+{bar} '
+                self.text += f'+{bar}\n'
             elif bar_type == 2:
-                self.text += f'\n{bar} ' if self.text else f'{bar} '
+                self.text += f'{bar}\n'
             self.refresh_preview()
             self.msg.configure(text='已成功输入小节')
             self.current_bar_chords.clear()
@@ -201,30 +206,23 @@ class Root(Tk):
             else:
                 if current_ind == 0:
                     self.recent_line = self.text[self.text.rfind('\n') + 1:]
-                    self.text = self.text[:(-2 * self.interval - 1)] + '\\n'
+                    self.text = self.text[:(-2 * self.interval - 1)] + '\n'
                     inds = 0
-                    adjust_len = self.recent_line.index(' ') + 1
                     if self.current_play_set and self.current_play_num == 0:
                         inds += 2
-                        adjust_len += 1
-                    elif self.current_play_set and self.current_play_num != 0:
-                        adjust_len += 1
                     self.text += ' ' * inds + chord_degree
                     self.chord_inds = [
-                        j + self.interval + 1 - adjust_len
+                        j + self.interval + 1
                         for j in range(len(self.recent_line))
                         if self.recent_line[j] == '|'
                     ]
                     if self.current_play_set and self.current_play_num != 0:
-                        self.chord_inds[self.current_play_num - 1] += 3
+                        self.chord_inds[self.current_play_num - 1] += 2
                 else:
-
                     inds = self.chord_inds[current_ind - 1]
                     last_degree = self.current_bar_chords_degree[-1]
                     last_degree_len = len(last_degree)
                     last_chord = self.current_bar_chords[current_ind - 1]
-                    if '→' in last_chord:
-                        last_degree_len -= 1
                     self.text += ' ' * (inds - self.degree_inds[-1] -
                                         last_degree_len) + chord_degree
                 self.degree_inds.append(inds)
@@ -236,7 +234,7 @@ class Root(Tk):
         if not comments:
             self.msg.configure(text='当前并未输入任何说明')
             return
-        self.text += f'\\n{comments}'
+        self.text += f'\n{comments}'
         self.refresh_preview()
         self.msg.configure(text='已成功为当前小节加入说明')
 
@@ -244,7 +242,7 @@ class Root(Tk):
         if self.text[(-2 * self.interval -
                       1):] == f'{" "*self.interval}|{" "*self.interval}':
             self.text = self.text[:(-2 * self.interval - 1)]
-        self.text += '\n'
+        self.text += '\n\n'
         self.refresh_preview()
 
 
