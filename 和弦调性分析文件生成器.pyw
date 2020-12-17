@@ -117,8 +117,9 @@ class Root(Tk):
                                         text='输入特殊批处理语句',
                                         command=self.grammar_translate)
         self.enter_grammar.place(x=0, y=500)
-        self.enter_grammar_entry = ttk.Entry(self, width=100)
+        self.enter_grammar_entry = ttk.Entry(self, width=80)
         self.enter_grammar_entry.place(x=140, y=500)
+        self.enter_grammar_entry.configure(font=('Consolas', 12))
 
     def grammar_translate(self):
         current = self.enter_grammar_entry.get()
