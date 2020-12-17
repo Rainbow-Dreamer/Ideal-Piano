@@ -7,7 +7,7 @@ class Root(Tk):
     def __init__(self):
         super(Root, self).__init__()
         self.title("和弦调性分析文件生成器")
-        self.minsize(900, 500)
+        self.minsize(900, 600)
         self.text = ''
         self.preview = Text(self,
                             width=40,
@@ -113,6 +113,99 @@ class Root(Tk):
         self.interval_entry = ttk.Entry(self, width=20)
         self.interval_entry.place(x=100, y=450)
         self.interval_entry.insert(END, self.interval)
+        self.enter_grammar = ttk.Button(self,
+                                        text='输入特殊批处理语句',
+                                        command=self.grammar_translate)
+        self.enter_grammar.place(x=0, y=500)
+        self.enter_grammar_entry = ttk.Entry(self, width=100)
+        self.enter_grammar_entry.place(x=140, y=500)
+
+    def grammar_translate(self):
+        current = self.enter_grammar_entry.get()
+        if current[:2] == 'k.':
+            current_key = current[2:]
+            self.text += f'key: {current_key}\n\n'
+            self.refresh_preview()
+            self.msg.configure(text='已成功解析语句')
+            return
+        parts = current.split('$')
+        length = len(parts)
+        if length == 2:
+            bar_chords, chord_degrees = parts
+        elif length == 3:
+            bar_chords, chord_degrees, comments = parts
+        else:
+            self.msg.configure(text='输入的特殊批处理语句不符合语法')
+            return
+        bar_chords_split = bar_chords.split(';')
+        bar_num = bar_chords_split[0]
+        current_chords = bar_chords_split[1:]
+        current_play = False
+        current_play_num = 0
+        for i in range(len(current_chords)):
+            each = current_chords[i]
+            if each[0] == '!':
+                current_play = True
+                current_play_num = i
+                current_chords[i] = each[1:]
+        chord_degrees = chord_degrees.split(';')
+
+        if self.text:
+            if self.text[(-2 * self.interval -
+                          1):] == f'{" "*self.interval}|{" "*self.interval}':
+                self.text = self.text[:(-2 * self.interval - 1)] + '\n\n'
+            elif self.text[-1] != '\n':
+                self.text += '\n\n'
+        self.text += f'{bar_num}\n'
+        self.current_bar_chords.clear()
+        self.current_bar_chords_degree.clear()
+        self.degree_inds.clear()
+        self.chord_inds.clear()
+        self.current_play_set = False
+        self.current_play_num = 0
+
+        current_chord_num = len(current_chords)
+        chord_degrees_num = len(chord_degrees)
+        for k in range(current_chord_num):
+            chord_name = current_chords[k]
+            if current_play and k == current_play_num:
+                chord_name = '→ ' + chord_name
+                self.current_play.set(0)
+            self.text += f'{chord_name}{" "*self.interval}|{" "*self.interval}'
+
+        if current_chord_num == 0:
+            self.msg.configure(text='当前的小节还没有任何和弦')
+            return
+        for current_ind in range(chord_degrees_num):
+            chord_degree = chord_degrees[current_ind]
+            if current_ind == 0:
+                self.recent_line = self.text[self.text.rfind('\n') + 1:]
+                self.text = self.text[:(-2 * self.interval - 1)] + '\n'
+                inds = 0
+                if current_play and current_play_num == 0:
+                    inds += 2
+                self.text += ' ' * inds + chord_degree
+                self.chord_inds = [
+                    j + self.interval + 1 for j in range(len(self.recent_line))
+                    if self.recent_line[j] == '|'
+                ]
+                if current_play and current_play_num != 0:
+                    self.chord_inds[current_play_num - 1] += 2
+            else:
+                inds = self.chord_inds[current_ind - 1]
+                last_degree = chord_degrees[current_ind - 1]
+                last_degree_len = len(last_degree)
+                last_chord = current_chords[current_ind - 1]
+                self.text += ' ' * (inds - self.degree_inds[-1] -
+                                    last_degree_len) + chord_degree
+            self.degree_inds.append(inds)
+
+        if length == 3:
+            comments = comments.replace('\\n', '\n')
+            self.text += f'\n{comments}'
+
+        self.refresh_preview()
+        self.msg.configure(text='已成功解析语句')
 
     def undo_last_chord(self):
         self.undo_func()
