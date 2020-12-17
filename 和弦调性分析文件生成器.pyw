@@ -17,6 +17,8 @@ class Root(Tk):
                             autoseparators=False)
         self.preview.configure(font=("Consolas", 12))
         self.preview.place(x=510, y=0)
+        self.preview.bind("<Control-z>", self.undo_func)
+        self.preview.bind("<Control-y>", self.redo_func)
         self.preview_label = ttk.Label(self, text='预览')
         self.preview_label.place(x=510, y=410)
         self.enter_key = ttk.Button(self,
@@ -26,11 +28,15 @@ class Root(Tk):
         self.enter_key_entry = ttk.Entry(self, width=20)
         self.enter_key_entry.place(x=100, y=100)
         self.msg = ttk.Label(self, text='')
-        self.msg.place(x=300, y=450)
+        self.msg.place(x=500, y=450)
         self.save = ttk.Button(self, text='保存预览', command=self.save_current)
         self.save.place(x=0, y=30)
         self.output_as_file = ttk.Button(self, text='导出', command=self.output)
-        self.output_as_file.place(x=150, y=30)
+        self.output_as_file.place(x=100, y=30)
+        self.input_as_file = ttk.Button(self,
+                                        text='导入',
+                                        command=self.input_file)
+        self.input_as_file.place(x=200, y=30)
         self.enter_new_bar = ttk.Button(self,
                                         text='输入小节',
                                         command=self.enter_bar)
@@ -65,6 +71,7 @@ class Root(Tk):
         self.enter_chord_degree.place(x=0, y=350)
         self.enter_chord_degree_entry = ttk.Entry(self, width=20)
         self.enter_chord_degree_entry.place(x=100, y=350)
+        self.chord_inds = []
         self.current_bar_chords_degree = []
         self.degree_inds = []
         self.add_comments = ttk.Button(self,
@@ -84,6 +91,8 @@ class Root(Tk):
         self.current_play_num = 0
         self.undo_button = ttk.Button(self, text='撤销', command=self.undo_func)
         self.undo_button.place(x=300, y=350)
+        self.redo_button = ttk.Button(self, text='恢复', command=self.redo_func)
+        self.redo_button.place(x=300, y=450)
         self.clear_all = ttk.Button(self,
                                     text='清空',
                                     command=self.clear_preview)
@@ -92,6 +101,10 @@ class Root(Tk):
                                     text='收尾',
                                     command=self.add_last_line)
         self.last_line.place(x=300, y=400)
+        self.undo_chord = ttk.Button(self,
+                                     text='撤销和弦',
+                                     command=self.undo_last_chord)
+        self.undo_chord.place(x=400, y=400)
         self.interval = 1
         self.interval_button = ttk.Button(self,
                                           text='改变小节线间隔',
@@ -101,12 +114,41 @@ class Root(Tk):
         self.interval_entry.place(x=100, y=450)
         self.interval_entry.insert(END, self.interval)
 
+    def undo_last_chord(self):
+        self.undo_func()
+        self.preview.edit_separator()
+        if self.chord_inds:
+            del self.degree_inds[-1]
+            del self.current_bar_chords_degree[-1]
+            if not self.current_bar_chords_degree:
+                self.chord_inds.clear()
+        elif self.current_bar_chords:
+            del self.current_bar_chords[-1]
+
+    def input_file(self):
+        filename = filedialog.askopenfilename(initialdir='.',
+                                              title="打开文本",
+                                              filetype=(("所有文件", "*.*"), ),
+                                              defaultextension=".txt")
+        if filename:
+            with open(filename, encoding='utf-8-sig') as f:
+                self.text = f.read()
+                self.refresh_preview()
+            self.msg.configure(text='导入文本文件成功')
+
     def change_interval(self):
         self.interval = int(self.interval_entry.get())
 
-    def undo_func(self):
+    def undo_func(self, e=None):
         try:
             self.preview.edit_undo()
+            self.text = self.preview.get('1.0', 'end-1c')
+        except:
+            pass
+
+    def redo_func(self, e=None):
+        try:
+            self.preview.edit_redo()
             self.text = self.preview.get('1.0', 'end-1c')
         except:
             pass
@@ -124,10 +166,12 @@ class Root(Tk):
         self.preview.delete('1.0', END)
         self.preview.insert(END, self.text)
         self.preview.edit_separator()
+        self.preview.see(INSERT)
 
     def clear_preview(self):
         self.preview.delete('1.0', END)
         self.text = self.preview.get('1.0', 'end-1c')
+        self.preview.edit_separator()
 
     def save_current(self):
         self.text = self.preview.get('1.0', 'end-1c')
@@ -165,6 +209,7 @@ class Root(Tk):
             self.current_bar_chords.clear()
             self.current_bar_chords_degree.clear()
             self.degree_inds.clear()
+            self.chord_inds.clear()
             self.current_play_set = False
             self.current_play_num = 0
 
