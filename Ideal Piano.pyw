@@ -1093,7 +1093,7 @@ if show_music_analysis:
                     if current_bar[0] == '+':
                         bar_counter += eval(current_bar[1:])
                     else:
-                        bar_counter = float(current_bar) - 1
+                        bar_counter = eval(current_bar) - 1
                     current_chords = '\n'.join(current[1:])
                     if current_key:
                         current_chords = f'{key_header}{current_key}\n' + current_chords
