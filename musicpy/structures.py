@@ -326,10 +326,11 @@ class chord:
             return self.get(obj)
         elif types == int:
             return self.inv(obj)
+        elif types == str:
+            return self.inv(self.names().index(obj))
         else:
             import musicpy
             if types == tuple:
-
                 return musicpy.negative_harmony(obj[0], self, *obj[1:])
             else:
                 return musicpy.negative_harmony(obj, self)
@@ -478,7 +479,7 @@ class chord:
             result = [i - root for i in others]
         if not translate:
             return result
-        return [INTERVAL[x][0] for x in result]
+        return [INTERVAL[x % octave][0] for x in result]
 
     def add(self,
             note1=None,
@@ -551,6 +552,8 @@ class chord:
 
     def inv(self, num=1):
         temp = self.copy()
+        if type(num) == str:
+            return self @ num
         if num not in range(1, len(self.notes)):
             return 'the number of inversion is out of range of the notes in this chord'
         while temp[num + 1].degree >= temp[num].degree:
