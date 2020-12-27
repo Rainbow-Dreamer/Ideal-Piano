@@ -126,6 +126,19 @@ label3 = pyglet.text.Label('',
                            color=message_color,
                            anchor_x=label_anchor_x,
                            anchor_y=label_anchor_y)
+
+label_midi_device = pyglet.text.Label('',
+                                      font_name=fonts,
+                                      font_size=15,
+                                      bold=bold,
+                                      x=250,
+                                      y=400,
+                                      color=message_color,
+                                      anchor_x=label_anchor_x,
+                                      anchor_y=label_anchor_y,
+                                      multiline=True,
+                                      width=1000)
+
 if show_music_analysis:
     music_analysis_label = pyglet.text.Label(
         '',
@@ -244,9 +257,9 @@ if draw_piano_keys:
     bar_offset_x = 0
 
 
-def has_load():
+def has_load(change):
     global midi_device_load
-    midi_device_load = True
+    midi_device_load = change
 
 
 @window.event
@@ -298,6 +311,9 @@ def on_mouse_press(x, y, button, modifiers):
         click_mode = 2
 
 
+current_midi_device = 'please enter midi keyboard mode at first, press ctrl to close me ~'
+
+
 @window.event
 def on_draw():
     window.clear()
@@ -307,14 +323,20 @@ def on_draw():
     if batch:
         batch.draw()
     button_go_back.draw()
+    label_midi_device.draw()
     if first_time:
         global is_click
         global mode_num
         global func
+        global current_midi_device
         button_play.draw()
         button_self_midi.draw()
         button_play_midi.draw()
         if mode_num is None:
+            if keyboard.is_pressed('shift'):
+                label_midi_device.text = current_midi_device
+            if keyboard.is_pressed('ctrl'):
+                label_midi_device.text = ''
             if click_mode == 0:
                 mode_num = 0
                 label.text = 'loading sound samples, please wait...'
@@ -348,7 +370,10 @@ def on_draw():
                         func = mode_self_midi
                         not_first()
                         pyglet.clock.schedule_interval(func, 1 / fps)
-                except:
+                except Exception as e:
+                    has_load(False)
+                    pygame.midi.quit()
+                    current_midi_device += f'\nerror message: {e}'
                     label.text = 'there is no midi input devices, please check'
                     mode_num = 3
                     reset_click_mode()
@@ -751,6 +776,12 @@ def mode_self_midi(dt):
                 plays.append(current_bar)
                 still_hold.remove(k)
 
+    if keyboard.is_pressed('shift'):
+        global current_midi_device
+        label_midi_device.text = current_midi_device
+    if keyboard.is_pressed('ctrl'):
+        label_midi_device.text = ''
+
 
 paused = False
 pause_start = 0
@@ -1045,11 +1076,16 @@ def init_self_midi():
     global wavdic
     global device
     global last
+    global current_midi_device
     if not midi_device_load:
         device = None
-        has_load()
+        has_load(True)
+        current_midi_device = 'press ctrl to close me ~\n'
         pygame.mixer.set_num_channels(maxinum_channels)
         pygame.midi.init()
+        midi_info = [('default', pygame.midi.get_default_input_id())]
+        midi_info += [(i, pygame.midi.get_device_info(i)) for i in range(10)]
+        current_midi_device += '\n'.join([str(j) for j in midi_info])
         device = pygame.midi.Input(midi_device_id)
     else:
         if device:
