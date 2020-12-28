@@ -25,10 +25,29 @@ these two modules with this file
 '''
 
 
-def toNote(notename, duration=0.25, volume=100):
-    num = eval(''.join([x for x in notename if x.isdigit()]))
-    name = ''.join([x for x in notename if not x.isdigit()])
-    return note(name, num, duration, volume)
+def toNote(notename, duration=0.25, volume=100, pitch=4):
+    if any(all(i in notename for i in j) for j in ['()', '[]', '{}']):
+        split_symbol = '(' if '(' in notename else (
+            '[' if '[' in notename else '{')
+        notename, info = notename.split(split_symbol)
+        info = info[:-1].split(';')
+        if len(info) == 1:
+            duration = info[0]
+        else:
+            duration, volume = info[0], eval(info[1])
+        if duration[0] == '.':
+            duration = 1 / eval(duration[1:])
+        else:
+            duration = eval(duration)
+        return toNote(notename, duration, volume)
+    else:
+        num_text = ''.join([x for x in notename if x.isdigit()])
+        if not num_text.isdigit():
+            num = pitch
+        else:
+            num = int(num_text)
+        name = ''.join([x for x in notename if not x.isdigit()])
+        return note(name, num, duration, volume)
 
 
 def degree_to_note(degree, duration=0.25, volume=100):
@@ -112,10 +131,7 @@ def getchord(start,
              sharp=None,
              ind=0):
     if not isinstance(start, note):
-        try:
-            start = toNote(start)
-        except:
-            start = note(start, pitch)
+        start = toNote(start, pitch=pitch)
     if interval is not None:
         return getchord_by_interval(start, interval, duration, intervals,
                                     cummulative)
@@ -200,6 +216,7 @@ def play(chord1,
          name='temp.mid',
          modes='quick',
          instrument=None,
+         i=None,
          save_as_file=True,
          deinterleave=False):
     file = write(name_of_midi=name,
@@ -211,6 +228,7 @@ def play(chord1,
                  track_num=track_num,
                  mode=modes,
                  instrument=instrument,
+                 i=i,
                  save_as_file=save_as_file,
                  deinterleave=deinterleave)
     if save_as_file:
@@ -374,9 +392,12 @@ def write(name_of_midi,
           track_num=1,
           mode='quick',
           instrument=None,
+          i=None,
           save_as_file=True,
           midi_io=None,
           deinterleave=False):
+    if instrument is None and i is not None:
+        instrument = i
     if isinstance(chord1, piece):
         mode = 'multi'
     if mode == 'multi':
@@ -500,6 +521,7 @@ def write(name_of_midi,
                      track_num,
                      mode='m+',
                      instrument=instrument,
+                     i=i,
                      save_as_file=save_as_file,
                      midi_io=current_io,
                      deinterleave=deinterleave)
@@ -563,6 +585,7 @@ def write(name_of_midi,
                          time1,
                          track_num,
                          instrument=instrument,
+                         i=i,
                          save_as_file=save_as_file,
                          deinterleave=deinterleave)
             if save_as_file:
@@ -2699,3 +2722,19 @@ def guitar_chord(frets,
     if return_chord:
         return result
     return detect(result.sortchord(), **detect_args)
+
+
+def build(*tracks_list, bpm=80):
+    if len(set([len(i) for i in tracks_list])) != 1:
+        return 'every track should has the same number of variables'
+    tracks = [i[1] for i in tracks_list]
+    instruments_list = [i[0] for i in tracks_list]
+    start_times = [i[2] for i in tracks_list]
+    channels = None
+    track_names = None
+    tracks_len = len(tracks_list[0])
+    if tracks_len >= 4:
+        channels = [i[3] for i in tracks_list]
+    if tracks_len >= 5:
+        track_names = [i[4] for i in tracks_list]
+    return P(tracks, instruments_list, bpm, start_times, track_names, channels)
