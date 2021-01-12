@@ -32,11 +32,11 @@ def change(var, new, is_str=True):
         next_var = all_config_options[current_var_ind + 1]
         next_var_ind = text.index('\n' + next_var + ' ')
     else:
-        next_var_ind = var_ind + var_len
+        next_var_ind = -1
     if is_str:
-        text_ls[var_ind:next_var_ind] = f" = '{new}'\n"
+        text_ls[var_ind:next_var_ind] = f" = '{new}'"
     else:
-        text_ls[var_ind:next_var_ind] = f" = {new}\n"
+        text_ls[var_ind:next_var_ind] = f" = {new}"
     with open('config.py', 'w', encoding='utf-8') as f:
         f.write(''.join(text_ls))
 
