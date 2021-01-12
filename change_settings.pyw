@@ -27,8 +27,12 @@ def change(var, new, is_str=True):
     text_ls = list(text)
     var_len = len(var) + 1
     var_ind = text.index('\n' + var + ' ') + var_len
-    next_var = all_config_options[all_config_options.index(var) + 1]
-    next_var_ind = text.index('\n' + next_var + ' ')
+    current_var_ind = all_config_options.index(var)
+    if current_var_ind < len(all_config_options) - 1:
+        next_var = all_config_options[current_var_ind + 1]
+        next_var_ind = text.index('\n' + next_var + ' ')
+    else:
+        next_var_ind = var_ind + var_len
     if is_str:
         text_ls[var_ind:next_var_ind] = f" = '{new}'\n"
     else:
