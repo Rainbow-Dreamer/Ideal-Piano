@@ -27,11 +27,12 @@ def change(var, new, is_str=True):
     text_ls = list(text)
     var_len = len(var) + 1
     var_ind = text.index('\n' + var + ' ') + var_len
-    next_line = text[var_ind:].index('\n')
+    next_var = all_config_options[all_config_options.index(var) + 1]
+    next_var_ind = text.index('\n' + next_var + ' ')
     if is_str:
-        text_ls[var_ind:var_ind + next_line] = f" = '{new}'"
+        text_ls[var_ind:next_var_ind] = f" = '{new}'\n"
     else:
-        text_ls[var_ind:var_ind + next_line] = f" = {new}"
+        text_ls[var_ind:next_var_ind] = f" = {new}\n"
     with open('config.py', 'w', encoding='utf-8') as f:
         f.write(''.join(text_ls))
 
@@ -48,6 +49,7 @@ class Root(Tk):
             self, yscrollcommand=self.config_options_bar.set)
         self.choose_config_options.bind('<<ListboxSelect>>',
                                         self.show_current_config_options)
+        global all_config_options
         all_config_options = get_all_config_options(text)
         self.options_num = len(all_config_options)
         self.all_config_options = all_config_options
