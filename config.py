@@ -195,13 +195,11 @@ show_delay_time = 1
 # these are the parameters for chord types detections
 # change_from_first: detection result is preferentially chosen as changed from another chord(flat or sharp some notes)
 # original_first: detection result is preferentially chosen as a variation of the original position of the chord(i.e. no inversion or any changes to the notes of the chord)
-# ignore_add_from : detection result will ignore the result for adding notes from another chord
 detect_mode = 'chord'
 inv_num = False
 rootpitch = 5
 change_from_first = True
 original_first = True
-ignore_add_from = True
 same_note_special = False
 whole_detect = True
 return_fromchord = False
