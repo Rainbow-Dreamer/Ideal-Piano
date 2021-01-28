@@ -600,7 +600,7 @@ def mode_self_pc(dt):
                 if show_chord:
                     chordtype = detect(
                         currentchord, detect_mode, inv_num, rootpitch,
-                        change_from_first, original_first, ignore_add_from,
+                        change_from_first, original_first,
                         same_note_special, whole_detect, return_fromchord,
                         two_show_interval, poly_chord_first,
                         root_position_return_first, alter_notes_show_degree)
