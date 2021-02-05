@@ -31,6 +31,11 @@ def change(var, new, is_str=True):
     if current_var_ind < len(all_config_options) - 1:
         next_var = all_config_options[current_var_ind + 1]
         next_var_ind = text.index('\n' + next_var + ' ')
+        next_comments_ind = text[var_ind:].find('\n\n')
+        if next_comments_ind != -1:
+            next_comments_ind += var_ind
+            if next_comments_ind < next_var_ind:
+                next_var_ind = next_comments_ind
     else:
         next_var_ind = -1
     if is_str:
