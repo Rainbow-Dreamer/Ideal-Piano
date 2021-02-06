@@ -23,6 +23,8 @@ class note:
         return self.name == other.name
 
     def setvolume(self, vol):
+        if vol > 127:
+            vol = 127
         self.volume = vol
 
     def set(self, duration=0.25, volume=100):
@@ -140,6 +142,51 @@ def read_notes(note_ls, rootpitch=4):
     for each in note_ls:
         if isinstance(each, note):
             notes_result.append(each)
+        elif isinstance(each, tempo) or isinstance(each, pitch_bend):
+            notes_result.append(each)
+        elif each.startswith('tempo'):
+            current = each.split(';')[1:]
+            if len(current) == 2:
+                current_bpm, current_start_time = current
+            else:
+                current_bpm, current_start_time = current[0], None
+            if current_bpm[0] == '[':
+                current_bpm = current_bpm[1:-1].split(':')
+                current_bpm = [float(i) for i in current_bpm]
+                current_start_time = current_start_time[1:-1].split(':')
+                current_start_time = [float(i) for i in current_start_time]
+            else:
+                current_bpm = float(current_bpm)
+                if current_start_time:
+                    current_start_time = float(current_start_time)
+            notes_result.append(tempo(current_bpm, current_start_time))
+            intervals.append(0)
+        elif each.startswith('pitch'):
+            current = each.split(';')[1:]
+            length = len(current)
+            mode = 'cents'
+            if length > 1:
+                current_time = current[1]
+                if current_time == 'None':
+                    current[1] = None
+                else:
+                    current[1] = float(current_time)
+            if length > 2:
+                mode = current[2]
+                if mode != 'cents' and mode != 'semitones':
+                    current[0] = int(current[0])
+                else:
+                    current[0] = float(current[0])
+                if length > 3:
+                    current[3] = int(current[3])
+                if length > 4:
+                    current[4] = int(current[3])
+                del current[2]
+            else:
+                current[0] = float(current[0])
+            current_pitch_bend = pitch_bend(*current, mode=mode)
+            notes_result.append(current_pitch_bend)
+            intervals.append(0)
         else:
             if any(all(i in each for i in j) for j in ['()', '[]', '{}']):
                 split_symbol = '(' if '(' in each else (
@@ -188,26 +235,34 @@ class chord:
         standardize_msg = False
         if type(notes) == str:
             notes = notes.replace(' ', '').split(',')
-            if all(not any(i.isdigit() for i in j) for j in notes):
+            if all(not any(i.isdigit() for i in j) for j in notes
+                   if (not j.startswith('tempo')) and (
+                       not j.startswith('pitch'))):
                 standardize_msg = True
-        elif type(notes) == list and all(
-                type(i) == str and (not any(j.isdigit() for j in i))
-                for i in notes):
+        elif type(notes) == list and all(type(i) != note
+                                         for i in notes) and all(
+                                             not any(j.isdigit() for j in i)
+                                             for i in notes if type(i) == str):
             standardize_msg = True
         notes_msg = read_notes(notes, rootpitch)
         notes, current_intervals = notes_msg
         if current_intervals:
             interval = current_intervals
-        #notes = [x if isinstance(x, note) else toNote(x) for x in notes]
         if standardize_msg and notes:
             root = notes[0]
             notels = [root]
             for i in range(1, len(notes)):
-                last = notels[i - 1]
-                current = note(notes[i].name, last.num)
-                if standard[current.name] <= standard[last.name]:
-                    current = note(current.name, last.num + 1)
-                notels.append(current)
+                last_note = notels[i - 1]
+                if type(last_note) == note:
+                    last = last_note
+                current_note = notes[i]
+                if type(current_note) != note:
+                    notels.append(current_note)
+                else:
+                    current = note(current_note.name, last.num)
+                    if standard[current.name] <= standard[last.name]:
+                        current = note(current.name, last.num + 1)
+                    notels.append(current)
             notes = notels
         self.notes = notes
         # interval between each two notes one-by-one
@@ -232,7 +287,7 @@ class chord:
         return [i.degree for i in self]
 
     def names(self):
-        return [i.name for i in self]
+        return [i.name for i in self if type(i) == note]
 
     def __eq__(self, other):
         return isinstance(
@@ -249,6 +304,157 @@ class chord:
 
     def split(self):
         return self.notes
+
+    def cut(self, ind1=1, ind2=None, start_time=0):
+        # get parts of notes between two bars
+        current_bar = 1 + start_time
+        notes = self.notes
+        intervals = self.interval
+        length = len(notes)
+        start_ind = 0
+        to_ind = length
+        find_start = False
+        if ind1 == 1:
+            find_start = True
+        for i in range(length):
+            current_note = notes[i]
+            if type(current_note) == note:
+                current_bar += intervals[i]
+                if (not find_start) and current_bar >= ind1:
+                    start_ind = i + 1
+                    find_start = True
+                    if ind2 is None:
+                        break
+                elif ind2 and current_bar >= ind2:
+                    to_ind = i + 1
+                    break
+        return self[start_ind + 1:to_ind + 1]
+
+    def cut_time(self, bpm, time1=0, time2=None, start_time=0):
+        current_bar = start_time
+        notes = self.notes
+        intervals = self.interval
+        length = len(notes)
+        start_ind = 0
+        to_ind = length
+        find_start = False
+        if time1 == 0:
+            find_start = True
+        for i in range(length):
+            current_note = notes[i]
+            if type(current_note) == note:
+                current_bar += intervals[i]
+                if (not find_start) and (60 / bpm) * current_bar * 4 >= time1:
+                    start_ind = i + 1
+                    find_start = True
+                    if time2 is None:
+                        break
+                elif time2 and (60 / bpm) * current_bar * 4 >= time2:
+                    to_ind = i + 1
+                    break
+        return self[start_ind + 1:to_ind + 1]
+
+    def bars(self, start_time=0):
+        durations = self.get_duration()
+        intervals = self.interval
+        length = len(self)
+        return start_time + durations[0] + sum([
+            durations[i + 1] - (durations[i] - intervals[i])
+            for i in range(1, length - 1)
+        ])
+
+    def firstnbars(self, n, start_time=0):
+        return self.cut(1, n + 1, start_time)
+
+    def get_bar(self, n, start_time=0):
+        return self.cut(n, n + 1, start_time)
+
+    def split_bars(self, start_time=0):
+        bars_length = int(self.bars(start_time))
+        result = []
+        for i in range(1, bars_length + 1):
+            result.append(self.cut(i, i + 1, start_time))
+        return result
+
+    def count(self, note1, mode='name'):
+        if type(note1) == str:
+            if any(i.isdigit() for i in note1):
+                mode = 'note'
+            note1 = toNote(note1)
+        if mode == 'name':
+            return self.names().count(note1.name)
+        elif mode == 'note':
+            return self.notes.count(note1)
+
+    def standard_notation(self):
+        temp = copy(self)
+        for each in temp.notes:
+            if type(each) == note and each.name in standard_dict:
+                each.name = standard_dict[each.name]
+        return temp
+
+    def most_appear(self, choices=None, mode='name', as_standard=False):
+        test_obj = self
+        if as_standard:
+            test_obj = self.standard_notation()
+        if not choices:
+            return max([i for i in standard2], key=lambda s: test_obj.count(s))
+        else:
+            choices = [toNote(i) if type(i) == str else i for i in choices]
+            if mode == 'name':
+                return max([i.name for i in choices],
+                           key=lambda s: test_obj.count(s))
+            elif mode == 'note':
+                return max(choices,
+                           key=lambda s: test_obj.count(s, mode='note'))
+
+    def eval_time(self,
+                  bpm,
+                  ind1=None,
+                  ind2=None,
+                  mode='seconds',
+                  start_time=0):
+        if ind1 is None:
+            whole_bars = self.bars(start_time)
+        else:
+            if ind2 is None:
+                ind2 = self.bars(start_time)
+            whole_bars = ind2 - ind1
+        result = (60 / bpm) * whole_bars * 4
+        if mode == 'seconds':
+            result = round(result, 3)
+            return f'{result}s'
+        elif mode == 'hms':
+            hours = int(result / 3600)
+            minutes = int((result - 3600 * hours) / 60)
+            seconds = round(result - 3600 * hours - 60 * minutes, 3)
+            if hours:
+                return f'{hours} hours, {minutes} minutes, {seconds} seconds'
+            else:
+                return f'{minutes} minutes, {seconds} seconds'
+
+    def clear_pitch_bend(self, value=0):
+        length = len(self)
+        whole_notes = self.notes
+        if value == 0:
+            inds = [
+                i for i in range(length)
+                if not (type(whole_notes[i]) == pitch_bend
+                        and whole_notes[i].value == 0)
+            ]
+        elif value == 'all':
+            inds = [
+                i for i in range(length) if type(whole_notes[i]) != pitch_bend
+            ]
+        self.notes = [whole_notes[k] for k in inds]
+        self.interval = [self.interval[k] for k in inds]
+
+    def clear_tempo(self):
+        length = len(self)
+        whole_notes = self.notes
+        inds = [i for i in range(length) if type(whole_notes[i]) != tempo]
+        self.notes = [whole_notes[k] for k in inds]
+        self.interval = [self.interval[k] for k in inds]
 
     def __mod__(self, alist):
         types = type(alist)
@@ -274,7 +480,10 @@ class chord:
         for i in range(len(names_standard)):
             current = names_standard[i]
             if current not in names_offrep:
-                names_offrep.append(current)
+                if current is not None:
+                    names_offrep.append(current)
+                else:
+                    names_offrep.append(temp.notes[i])
                 new_interval.append(intervals[i])
                 new_duration.append(durations[i])
         temp.notes = chord(names_offrep,
@@ -288,8 +497,11 @@ class chord:
         temp.notes.sort(key=lambda x: x.degree)
         return temp
 
-    def set(self, duration=None, interval=None):
-        return chord(copy(self.notes), duration, interval)
+    def set(self, duration=None, interval=None, volume=None, ind='all'):
+        result = chord(copy(self.notes), duration, interval)
+        if volume:
+            result.setvolume(volume, ind)
+        return result
 
     def changeInterval(self, newinterval):
         if isinstance(newinterval, int) or isinstance(newinterval, float):
@@ -320,14 +532,7 @@ class chord:
             temp.notes.append(copy(obj))
             temp.interval.append(temp.interval[-1])
         elif isinstance(obj, str):
-            try:
-                return temp.__add__(toNote(obj))
-            except:
-                obj_num = temp[-1].num
-                if obj in standard:
-                    if standard[obj] <= standard[temp[-1].name]:
-                        obj_num += 1
-                return temp.__add__(note(obj, obj_num))
+            return temp.__add__(toNote(obj))
         elif isinstance(obj, chord):
             obj = copy(obj)
             temp.notes += obj.notes
@@ -558,21 +763,13 @@ class chord:
             return result
         return [INTERVAL[x % octave][0] for x in result]
 
-    def add(self,
-            note1=None,
-            interval=None,
-            mode='tail',
-            start=0,
-            duration=0.25):
+    def add(self, note1=None, mode='tail', start=0, duration=0.25):
         temp = copy(self)
         if type(note1) == int:
             temp += temp[1].up(note1)
             return temp
         if mode == 'tail':
-            if interval is not None:
-                return temp + degree_to_note(temp.notes[0].degree + interval)
-            else:
-                return temp + note1
+            return temp + note1
         elif mode == 'head':
             note1 = copy(note1)
             if isinstance(note1, chord):
@@ -584,10 +781,6 @@ class chord:
                     note1 = chord([note1])
                 elif isinstance(note1, list):
                     note1 = chord(note1)
-                if isinstance(interval, int):
-                    inter = [interval for i in range(len(note1))]
-                else:
-                    inter = interval if interval else [0]
             # calculate the absolute distances of all of the notes of the chord to add and self,
             # and then sort them, make differences between each two distances
             distance = []
@@ -616,7 +809,6 @@ class chord:
                 return self + note1
 
     def inversion(self, num=1):
-        # return chord's [first, second, ... (num)] inversion chord
         if num not in range(1, len(self.notes)):
             return 'the number of inversion is out of range of the notes in this chord'
         else:
@@ -701,35 +893,32 @@ class chord:
     def up(self, unit=1, ind=None, ind2=None):
         temp = copy(self)
         if type(unit) != int:
-            for k in range(len(unit)):
-                temp.notes[k] = temp.notes[k].up(unit[k])
+            temp.notes = [temp.notes[k].up(unit[k]) for k in range(len(unit))]
             return temp
         if type(ind) != int and ind is not None:
             temp.notes = [
-                temp.notes[i - 1].up(unit) if i in ind else temp.notes[i - 1]
-                for i in range(1,
-                               len(temp.notes) + 1)
+                temp.notes[i].up(unit) if i in ind else temp.notes[i]
+                for i in range(len(temp.notes))
             ]
             return temp
         if ind2 is None:
             if ind is None:
                 temp.notes = [
-                    degree_to_note(temp[i].degree + unit, temp[i].duration,
-                                   temp[i].volume)
-                    for i in range(1,
-                                   len(temp) + 1)
+                    degree_to_note(each.degree + unit, each.duration,
+                                   each.volume) if type(each) == note else each
+                    for each in temp.notes
                 ]
             else:
-                temp[ind] = degree_to_note(temp[ind].degree + unit,
-                                           temp[ind].duration,
-                                           temp[ind].volume)
+                change_note = temp[ind]
+                if type(change_note) == note:
+                    temp[ind] = degree_to_note(change_note.degree + unit,
+                                               change_note.duration,
+                                               change_note.volume)
         else:
-            temp.notes = [
-                degree_to_note(temp[i].degree + unit, temp[i].duration,
-                               temp[i].volume) if ind <= i < ind2 else temp[i]
-                for i in range(1,
-                               len(temp) + 1)
-            ]
+            temp.notes = temp.notes[:ind1] + [
+                degree_to_note(each.degree + unit, each.duration, each.volume)
+                for each in temp.notes[ind1:ind2] if type(each) == note
+            ] + temp.notes[ind2:]
         return temp
 
     def down(self, unit=1, ind=None, ind2=None):
@@ -858,16 +1047,28 @@ class chord:
         # of music from a given scale to another given scale, and return
         # the new changing piece of music.
         temp = copy(self)
-        number = len(new_scale.getScale())
+        old_scale_names = [
+            i if i not in standard_dict else standard_dict[i]
+            for i in old_scale.names()
+        ]
+        new_scale_names = [
+            i if i not in standard_dict else standard_dict[i]
+            for i in new_scale.names()
+        ]
+        number = len(new_scale_names)
         transdict = {
-            old_scale[i].name: new_scale[i].name
-            for i in range(1, number + 1)
+            old_scale_names[i]: new_scale_names[i]
+            for i in range(number)
         }
         for k in range(len(temp)):
-            if temp[k + 1].name in transdict:
-                current = temp.notes[k]
+            current = temp.notes[k]
+            if current.name in standard_dict:
+                current_name = standard_dict[current.name]
+            else:
+                current_name = current.name
+            if current_name in transdict:
                 temp.notes[k] = toNote(
-                    f'{transdict[current.name]}{current.num}',
+                    f'{transdict[current_name]}{current.num}',
                     current.duration, current.volume)
         return temp
 
@@ -897,23 +1098,32 @@ class chord:
 
     def setvolume(self, vol, ind='all'):
         if type(ind) == int:
-            self.notes[ind - 1].setvolume(vol)
+            each = self.notes[ind - 1]
+            if type(each) == note:
+                each.setvolume(vol)
         elif type(ind) == list:
             if type(vol) == list:
                 for i in range(len(ind)):
                     current = ind[i]
-                    self.notes[current - 1].setvolume(vol[i])
+                    each = self.notes[current - 1]
+                    if type(each) == note:
+                        each.setvolume(vol[i])
             elif type(vol) == int:
                 for i in range(len(ind)):
-                    current = ind[i]
-                    self.notes[current - 1].setvolume(vol)
+                    each = self.notes[current - 1]
+                    if type(each) == note:
+                        each.setvolume(vol)
         elif ind == 'all':
             if type(vol) == list:
+                available_notes = [i for i in self.notes if type(i) == note]
                 for i in range(len(vol)):
-                    self.notes[i].setvolume(vol[i])
+                    current = available_notes[i]
+                    if type(current) == note:
+                        current.setvolume(vol[i])
             elif type(vol) == int:
                 for each in self.notes:
-                    each.setvolume(vol)
+                    if type(each) == note:
+                        each.setvolume(vol)
 
     def move(self, x):
         # x could be a dict or list of (index, move_steps)
@@ -926,40 +1136,6 @@ class chord:
             for i in x:
                 temp.notes[i[0] - 1] = temp.notes[i[0] - 1].up(i[1])
             return temp
-
-    def extend(self,
-               distance,
-               duration=None,
-               intervals=None,
-               volume=None,
-               modes='tail'):
-        # extend a chord with notes has one or multiple given distances
-        # with the first note in the chord
-        temp = copy(self)
-        if duration is None:
-            duration = temp[-1].duration
-        if intervals is None:
-            intervals = temp.interval[-1]
-        if volume is None:
-            volume = temp[-1].volume
-        if isinstance(distance, int):
-            temp = temp.add(degree_to_note(temp[1].degree + distance, duration,
-                                           volume),
-                            mode=modes)
-            temp.interval[-1] = intervals
-        else:
-            if not isinstance(duration, list):
-                duration = [duration for x in range(len(distance))]
-            if not isinstance(intervals, list):
-                intervals = [intervals for y in range(len(distance))]
-            if not isinstance(volume, list):
-                volume = [volume for y in range(len(distance))]
-            for k in range(len(distance)):
-                temp = temp.add(degree_to_note(temp[1].degree + distance[k],
-                                               duration[k], volume[k]),
-                                mode=modes)
-                temp.interval[-1] = intervals[k]
-        return temp
 
     def play(self, *args, **kwargs):
         import musicpy
@@ -980,6 +1156,10 @@ class chord:
     def detect_scale(self, *args, **kwargs):
         import musicpy
         return musicpy.detect_scale(self, *args, **kwargs)
+
+    def detect_in_scale(self, *args, **kwargs):
+        import musicpy
+        return musicpy.detect_in_scale(self, *args, **kwargs)
 
     def chord_analysis(self, *args, **kwargs):
         import musicpy
@@ -1020,6 +1200,15 @@ class chord:
                                               self.interval, False)
         return result
 
+    def only_notes(self):
+        temp = copy(self)
+        whole_notes = temp.notes
+        intervals = temp.interval
+        inds = [i for i in range(len(temp)) if type(whole_notes[i]) == note]
+        temp.notes = [whole_notes[k] for k in inds]
+        temp.interval = [intervals[k] for k in inds]
+        return temp
+
 
 class scale:
     def __init__(self,
@@ -1035,6 +1224,7 @@ class scale:
             self.notes = notels
             self.start = notels[0]
             self.mode = mode
+            self.pitch = pitch
         else:
             if not isinstance(start, note):
                 try:
@@ -1328,9 +1518,8 @@ class scale:
         if ind2 is not None:
             notes = copy(self.notes)
             return scale(notels=[
-                notes[i - 1].up(unit) if ind <= i < ind2 else notes[i - 1]
-                for i in range(1,
-                               len(notes) + 1)
+                notes[i].up(unit) if ind <= i < ind2 else notes[i]
+                for i in range(len(notes))
             ])
         if ind is None:
             return scale(self[1].up(unit), self.mode, self.interval)
@@ -1340,14 +1529,13 @@ class scale:
                 notes[ind - 1] = notes[ind - 1].up(unit)
             else:
                 notes = [
-                    notes[i - 1].up(unit) if i in ind else notes[i - 1]
-                    for i in range(1,
-                                   len(notes) + 1)
+                    notes[i].up(unit) if i in ind else notes[i]
+                    for i in range(len(notes))
                 ]
             return scale(notels=notes)
 
     def down(self, unit=1, ind=None, ind2=None):
-        return self.up(-unit, ind2)
+        return self.up(-unit, ind, ind2)
 
     def __pos__(self):
         return self.up()
@@ -1611,25 +1799,56 @@ class piece:
     def up(self, n):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = temp.tracks[i].up(n)
+            temp.tracks[i] += n
         return temp
 
     def down(self, n):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = temp.tracks[i].down(n)
+            temp.tracks[i] -= n
         return temp
 
     def __mul__(self, n):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = temp.tracks[i] * n
+            temp.tracks[i] *= n
         return temp
 
     def __mod__(self, n):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = temp.tracks[i] % n
+            temp.tracks[i] %= n
+        return temp
+
+    def __or__(self, n):
+        temp = copy(self)
+        whole_length = None
+        for i in range(temp.track_number):
+            current = temp.tracks[i]
+            counter = 0
+            for j in range(len(current) - 1, -1, -1):
+                current_note = current.notes[j]
+                if type(current_note) == note:
+                    current.interval[j] = current.notes[j].duration
+                    counter = j
+                    break
+            if i == 0:
+                whole_length = current.bars()
+            else:
+                current.interval[counter] += (whole_length - current.bars() -
+                                              temp.start_times[i])
+            unit = copy(current)
+            for k in range(n - 1):
+                current_start_time = temp.start_times[i]
+                if current_start_time:
+                    for j in range(len(current) - 1, -1, -1):
+                        current_note = current.notes[j]
+                        if type(current_note) == note:
+                            current.interval[j] += current_start_time
+                            break
+                current.notes += unit.notes
+                current.interval += unit.interval
+            temp.tracks[i] = current
         return temp
 
     def __add__(self, n):
@@ -1651,13 +1870,13 @@ class piece:
     def __neg__(self):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = -temp.tracks[i]
+            temp.tracks[i] -= 1
         return temp
 
     def __pos__(self):
         temp = copy(self)
         for i in range(temp.track_number):
-            temp.tracks[i] = +temp.tracks[i]
+            temp.tracks[i] += 1
         return temp
 
     def play(self, *args, **kwargs):
@@ -1670,5 +1889,126 @@ class piece:
             self.start_times[num - 1]
         ]
 
+    def add_pitch_bend(self,
+                       value,
+                       time=1,
+                       channel='all',
+                       track=0,
+                       mode='cents',
+                       ind=None):
+        if channel == 'all':
+            for i in range(len(self.tracks)):
+                current_channel = self.channels[
+                    i] if self.channels is not None else i
+                self.tracks[i] += chord(
+                    [pitch_bend(value, time, current_channel, track, mode)])
+        else:
+            current_channel = self.channels[
+                channel] if self.channels is not None else channel
+            if ind is not None:
+                self.tracks[channel].insert(
+                    ind + 1,
+                    pitch_bend(value, time, current_channel, track, mode))
+            else:
+                self.tracks[channel] += chord(
+                    [pitch_bend(value, time, current_channel, track, mode)])
+
+    def add_tempo_change(self, bpm, start_time=None, ind=None, track_ind=None):
+        if ind is not None and track_ind is not None:
+            self.tracks[track_ind].insert(ind + 1, tempo(bpm, start_time))
+        else:
+            self.tracks[0] += chord([tempo(bpm, start_time)])
+
+    def clear_pitch_bend(self, ind='all', value=0):
+        if ind == 'all':
+            for each in self.tracks:
+                each.clear_pitch_bend(value)
+        else:
+            self.tracks[ind - 1].clear_pitch_bend(value)
+
+    def clear_tempo(self, ind='all'):
+        if ind == 'all':
+            for each in self.tracks:
+                each.clear_tempo()
+        else:
+            self.tracks[ind - 1].clear_tempo()
+
 
 P = piece
+
+
+class tempo:
+    # this is a class to change tempo for the notes after it when it is read,
+    # it can be inserted into a chord, and if the chord is in a piece,
+    # then it also works for the piece.
+    def __init__(self, bpm, start_time=None):
+        self.bpm = bpm
+        self.start_time = start_time
+        self.degree = 0
+        self.duration = 0
+        self.volume = 100
+
+    def __str__(self):
+        result = f'tempo change to {self.bpm}'
+        if self.start_time is not None:
+            result += f' starts at {self.start_time}'
+        return result
+
+    __repr__ = __str__
+
+
+class pitch_bend:
+    def __init__(self, value, time=None, channel=None, track=0, mode='cents'):
+        # general midi pitch bend values could be taken from -8192 to 8192,
+        # and the default pitch bend range is -2 semitones to 2 semitones,
+        # which is -200 cents to 200 cents, which means 1 cent equals to
+        # 8192/200 = 40.96, about 41 values, and 1 semitone equals to
+        # 8192/2 = 4096 values.
+        # if mode == 'cents', convert value as cents to midi pitch bend values,
+        # if mode == 'semitones', convert value as semitones to midi pitch bend values,
+        # if mode == other values, use value as midi pitch bend values
+        self.value = value
+        self.time = time
+        self.channel = channel
+        self.track = track
+        self.mode = mode
+        if self.mode == 'cents':
+            self.value = int(self.value * 40.96)
+        elif self.mode == 'semitones':
+            self.value = int(self.value * 4096)
+        self.degree = 0
+        self.duration = 0
+        self.volume = 100
+
+    def __str__(self):
+        result = f'pitch bend {"up" if self.value >= 0 else "down"} by {abs(self.value/40.96)} cents'
+        if self.time is not None:
+            result += f' starts at {self.time}'
+        return result
+
+    __repr__ = __str__
+
+
+class tuning:
+    def __init__(self,
+                 tuning_dict,
+                 track=0,
+                 sysExChannel=127,
+                 realTime=True,
+                 tuningProgam=0):
+        self.tuning_dict = tuning_dict
+        keys = list(self.tuning_dict.keys())
+        values = list(self.tuning_dict.values())
+        keys = [
+            i.degree if type(i) == note else toNote(i).degree for i in keys
+        ]
+        self.tunings = [(keys[i], values[i]) for i in range(len(keys))]
+        self.track = track
+        self.sysExChannel = sysExChannel
+        self.realTime = realTime
+        self.tuningProgam = tuningProgam
+
+    def __str__(self):
+        return f'tuning: {self.tuning_dict}'
+
+    __repr__ = __str__
