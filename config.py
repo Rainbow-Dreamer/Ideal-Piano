@@ -343,7 +343,7 @@ note_mode = 'bars drop'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
-bar_y = 174
+bar_y = 178
 bar_offset_x = 6
 dots_offset_x = 10
 bar_opacity = 160
@@ -355,7 +355,7 @@ bar_unit = 200
 bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 173
-adjust_ratio = 55
+adjust_ratio = 62
 
 # when play midi files, if you choose to merge all tracks, get_off_drums
 # set to True will not merge the drum tracks if your midi file has
