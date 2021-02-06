@@ -1,4 +1,4 @@
-# basic screen settings
+﻿# basic screen settings
 
 screen_size = (1300, 650)
 background_image = 'white.png'
@@ -300,6 +300,7 @@ load_sound = True
 
 # detect chord types when the current notes change
 show_chord = True
+show_notes = True
 
 # names of intervals
 perfect_unison = 0
@@ -362,7 +363,7 @@ get_off_drums = True
 
 sort_invisible = False
 
-play_as_midi = False
+play_as_midi = True
 
 draw_piano_keys = True
 
@@ -393,3 +394,11 @@ music_analysis_place = (250, 500)
 key_header = '当前调性：'
 music_analysis_width = 1300
 music_analysis_fonts_size = 20
+
+use_track_colors = True
+tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
+                 (255, 0, 255), (0, 128, 0), (0, 191, 255), (0, 255, 127),
+                 (0, 128, 128), (0, 0, 128), (255, 215, 0), (255, 165, 0),
+                 (124, 252, 0), (238, 130, 238), (218, 112, 214),
+                 (255, 20, 147)]
+use_default_tracks_colors = True

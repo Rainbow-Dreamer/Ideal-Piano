@@ -56,6 +56,7 @@ class Root(Tk):
         self.check_bpm_text.destroy()
         self.check_bpm.destroy()
         self.merge_all_tracks.destroy()
+        self.filename_label.destroy()
         self.make_button()
 
     def go_back(self):
@@ -94,19 +95,53 @@ class Root(Tk):
                 read_mode = 'find'
             if not if_merge:
                 read_result = read(file_path, track_ind_get, read_mode)
+                whole_notes = read_result[1]
+                whole_notes.clear_pitch_bend('all')
+                for each in whole_notes:
+                    each.own_color = bar_color
+                changes = [i for i in whole_notes if type(i) != note]
+                whole_notes.clear_tempo()
+                read_result.append(changes)
+
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
                                   'all',
                                   get_off_drums=get_off_drums)
+                changes = all_tracks[-1]
+                all_tracks = all_tracks[:-1]
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
+                if use_track_colors:
+                    if not use_default_tracks_colors:
+                        color_num = len(all_tracks)
+                        import random
+                        colors = []
+                        for i in range(color_num):
+                            current_color = tuple(
+                                [random.randint(0, 255) for j in range(3)])
+                            while (colors == (255, 255, 255)) or (current_color
+                                                                  in colors):
+                                current_color = tuple(
+                                    [random.randint(0, 255) for j in range(3)])
+                            colors.append(current_color)
+                    else:
+                        colors = tracks_colors
                 first_track = all_tracks[0]
                 tempo, all_track_notes, first_track_start_time = first_track
-                for i in all_tracks[1:]:
-                    all_track_notes &= (i[1], i[2] - first_track_start_time)
-                read_result = tempo, all_track_notes, first_track_start_time
+                for i in range(len(all_tracks)):
+                    current = all_tracks[i]
+                    current_track = current[1]
+                    if use_track_colors:
+                        current_color = colors[i]
+                        for each in current_track:
+                            each.own_color = current_color
+                    if i > 0:
+                        all_track_notes &= (current_track, current[2] -
+                                            first_track_start_time)
+                all_track_notes.clear_pitch_bend('all')
+                read_result = tempo, all_track_notes, first_track_start_time, changes
 
         except Exception as e:
             print(str(e))
@@ -178,6 +213,10 @@ class Root(Tk):
                 variable=self.if_merge_all_tracks)
             self.merge_all_tracks.place(x=100, y=0, width=125, height=30)
             self.make_error_labels()
+            current_filename = os.path.basename(file_path)
+            self.filename_label = ttk.Label(
+                self, text=f'file name: {current_filename}')
+            self.filename_label.place(x=60, y=50, width=2000, height=30)
 
 
 appears = False

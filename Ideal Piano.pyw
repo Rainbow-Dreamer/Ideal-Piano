@@ -813,9 +813,11 @@ def mode_show(dt):
                             y=screen_height,
                             width=bar_width,
                             height=bar_unit * current_note.duration,
-                            color=bar_color if color_mode == 'normal' else
-                            (random.randint(0, 255), random.randint(0, 255),
-                             random.randint(0, 255)),
+                            color=current_note.own_color
+                            if use_track_colors else
+                            (bar_color if color_mode == 'normal' else
+                             (random.randint(0, 255), random.randint(0, 255),
+                              random.randint(0, 255))),
                             batch=batch,
                             group=bottom_group)
                         current_bar.opacity = 255 * (
@@ -851,10 +853,12 @@ def mode_show(dt):
                                 y=bar_y,
                                 width=bar_width,
                                 height=bar_unit * current_note.duration,
-                                color=bar_color if color_mode == 'normal' else
-                                (random.randint(0, 255),
-                                 random.randint(0, 255),
-                                 random.randint(0, 255)),
+                                color=current_note.own_color
+                                if use_track_colors else
+                                (bar_color if color_mode == 'normal' else
+                                 (random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255))),
                                 batch=batch,
                                 group=play_highlight)
                             current_bar.opacity = 255 * (
@@ -888,12 +892,15 @@ def mode_show(dt):
                     for i in playnotes:
                         piano_keys[
                             i.degree -
-                            21].color = bar_color if color_mode == 'normal' else (
-                                random.randint(0, 255), random.randint(0, 255),
-                                random.randint(0, 255))
+                            21].color = i.own_color if use_track_colors else (
+                                bar_color if color_mode == 'normal' else
+                                (random.randint(0, 255),
+                                 random.randint(0, 255),
+                                 random.randint(0, 255)))
 
                 lastshow = playnotes
-                label.text = str(playnotes)
+                if show_notes:
+                    label.text = str(playnotes)
                 if show_chord:
                     chordtype = detect(playnotes, detect_mode, inv_num,
                                        rootpitch, change_from_first,
@@ -954,7 +961,10 @@ def mode_show(dt):
             show_music_analysis_list = copy(default_show_music_analysis_list)
         label.text = f'music playing finished,\npress {repeat_key} to listen again,\nor press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
-            label.text = 'reloading, please wait...'
+            if show_notes:
+                label.text = 'reloading, please wait...'
+            else:
+                label.text = ''
             if note_mode == 'bars' or note_mode == 'bars drop':
                 plays.clear()
                 if note_mode == 'bars drop':
@@ -1033,7 +1043,8 @@ def initialize(musicsheet, unit_time, start_time):
                     bars_drop_time.append(
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
-        except:
+        except Exception as e:
+            print(str(e))
             pygame.mixer.music.load(path)
             play_midi_file = True
             playls.clear()
@@ -1163,7 +1174,7 @@ def init_show():
         global interval
         play_interval = interval
         if read_result != 'error':
-            bpm2, musicsheet, start_time = read_result
+            bpm2, musicsheet, start_time, changes = read_result
             if set_bpm:
                 bpm2 = float(set_bpm)
 
