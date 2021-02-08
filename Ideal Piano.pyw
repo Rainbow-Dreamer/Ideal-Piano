@@ -1174,7 +1174,7 @@ def init_show():
         global interval
         play_interval = interval
         if read_result != 'error':
-            bpm2, musicsheet, start_time, changes = read_result
+            bpm2, musicsheet, start_time = read_result
             if set_bpm:
                 bpm2 = float(set_bpm)
 
