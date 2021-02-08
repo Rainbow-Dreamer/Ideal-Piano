@@ -96,7 +96,6 @@ class Root(Tk):
             if not if_merge:
                 read_result = read(file_path, track_ind_get, read_mode)
                 whole_notes = read_result[1]
-                whole_notes.clear_pitch_bend('all')
                 for each in whole_notes:
                     each.own_color = bar_color
                 changes = [i for i in whole_notes if type(i) != note]
@@ -140,8 +139,10 @@ class Root(Tk):
                     if i > 0:
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
-                all_track_notes.clear_pitch_bend('all')
-                read_result = tempo, all_track_notes, first_track_start_time, changes
+                all_track_notes += changes
+                all_track_notes.normalize_tempo(
+                    tempo, start_time=first_track_start_time)
+                read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
             print(str(e))
