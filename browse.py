@@ -98,17 +98,31 @@ class Root(Tk):
                 whole_notes = read_result[1]
                 for each in whole_notes:
                     each.own_color = bar_color
-                changes = [i for i in whole_notes if type(i) != note]
-                whole_notes.clear_tempo()
-                read_result.append(changes)
-
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
                                   'all',
                                   get_off_drums=get_off_drums)
-                changes = all_tracks[-1]
-                all_tracks = all_tracks[:-1]
+                if not all_tracks:
+                    changes = []
+                    all_tracks = read(file_path,
+                                      track_ind_get,
+                                      'all',
+                                      get_off_drums=False,
+                                      to_piece=True,
+                                      split_channels=True)
+                    all_tracks_new = [(all_tracks.tempo, all_tracks.tracks[i],
+                                       all_tracks.start_times[i])
+                                      for i in range(len(all_tracks.tracks))]
+                    if get_off_drums:
+                        drums_ind = all_tracks.channels.index(9)
+                        if all_tracks.start_times[drums_ind] != min(
+                                all_tracks.start_times):
+                            del all_tracks_new[drums_ind]
+                    all_tracks = all_tracks_new
+                else:
+                    changes = all_tracks[-1]
+                    all_tracks = all_tracks[:-1]
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
@@ -141,7 +155,8 @@ class Root(Tk):
                     if i > 0:
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
-                all_track_notes += changes
+                if changes:
+                    all_track_notes += changes
                 all_track_notes.normalize_tempo(
                     tempo, start_time=first_track_start_time)
                 read_result = tempo, all_track_notes, first_track_start_time

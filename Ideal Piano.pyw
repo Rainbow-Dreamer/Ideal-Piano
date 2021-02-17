@@ -1006,7 +1006,7 @@ def initialize(musicsheet, unit_time, start_time):
             musicpy.musicpy.write('temp.mid',
                                   musicsheet,
                                   60 / (unit_time / 4),
-                                  time1=musicsheet.start_time)
+                                  start_time=musicsheet.start_time)
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
             os.chdir(abs_path)
