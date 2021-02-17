@@ -98,6 +98,9 @@ class Root(Tk):
                 whole_notes = read_result[1]
                 for each in whole_notes:
                     each.own_color = bar_color
+                read_result[1].normalize_tempo(read_result[0],
+                                               start_time=read_result[2])
+                read_result[1].clear_pitch_bend('all')
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
