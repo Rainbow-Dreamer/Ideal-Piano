@@ -211,7 +211,10 @@ def read_track(infile, debug=False, clip=False):
             peek_data = []
 
         if status_byte == 0xff:
-            msg = read_meta_message(infile, delta)
+            try:
+                msg = read_meta_message(infile, delta)
+            except:
+                msg = None
         elif status_byte in [0xf0, 0xf7]:
             # TODO: I'm not quite clear on the difference between
             # f0 and f7 events.
@@ -219,7 +222,8 @@ def read_track(infile, debug=False, clip=False):
         else:
             msg = read_message(infile, status_byte, peek_data, delta, clip)
 
-        track.append(msg)
+        if msg:
+            track.append(msg)
 
         if debug:
             _dbg('-> {!r}'.format(msg))
