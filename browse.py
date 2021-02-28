@@ -100,14 +100,14 @@ class Root(Tk):
                     each.own_color = bar_color
                 read_result[1].normalize_tempo(read_result[0],
                                                start_time=read_result[2])
-                read_result[1].clear_pitch_bend('all')
+                if clear_pitch_bend:
+                    read_result[1].clear_pitch_bend(value=0)
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
                                   'all',
                                   get_off_drums=get_off_drums)
                 if not all_tracks:
-                    changes = []
                     all_tracks = read(file_path,
                                       track_ind_get,
                                       'all',
@@ -123,9 +123,9 @@ class Root(Tk):
                                 all_tracks.start_times):
                             del all_tracks_new[drums_ind]
                     all_tracks = all_tracks_new
-                else:
-                    changes = all_tracks[-1]
-                    all_tracks = all_tracks[:-1]
+                if clear_pitch_bend:
+                    for each in all_tracks:
+                        each[1].clear_pitch_bend(value=0)
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
@@ -158,8 +158,6 @@ class Root(Tk):
                     if i > 0:
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
-                if changes:
-                    all_track_notes += changes
                 all_track_notes.normalize_tempo(
                     tempo, start_time=first_track_start_time)
                 read_result = tempo, all_track_notes, first_track_start_time

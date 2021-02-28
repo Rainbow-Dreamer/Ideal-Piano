@@ -402,3 +402,4 @@ tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
                  (124, 252, 0), (238, 130, 238), (218, 112, 214),
                  (255, 20, 147)]
 use_default_tracks_colors = True
+clear_pitch_bend = True
