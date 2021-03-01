@@ -15,15 +15,15 @@
 
 ![image](previews/1.jpg)
 
-<center>打开Ideal Piano的初始页面</center>
+<p align="center">打开Ideal Piano的初始页面</p>
 
 ![image](previews/2.jpg)
 
-演奏时显示音符并且实时通过乐理逻辑分析判断当前演奏的音组成的和弦类型
+<p align="center">演奏时显示音符并且实时通过乐理逻辑分析判断当前演奏的音组成的和弦类型</p>
 
 ![image](previews/3.jpg)
 
-选择midi文件播放的窗口
+<p align="center">选择midi文件播放的窗口</p>
 
 
 其他的说明：
