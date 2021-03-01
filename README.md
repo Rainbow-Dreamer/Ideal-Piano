@@ -15,7 +15,7 @@
 
 ![image](previews/1.jpg)
 
-打开Ideal Piano的初始页面
+<center>打开Ideal Piano的初始页面</center>
 
 ![image](previews/2.jpg)
 
