@@ -27,9 +27,9 @@ def change(var, new, is_str=True):
     text_ls = list(text)
     var_len = len(var) + 1
     var_ind = text.index('\n' + var + ' ') + var_len
-    current_var_ind = all_config_options.index(var)
+    current_var_ind = all_config_options_ind[var]
     if current_var_ind < len(all_config_options) - 1:
-        next_var = all_config_options[current_var_ind + 1]
+        next_var = config_original[current_var_ind + 1]
         next_var_ind = text.index('\n' + next_var + ' ')
         next_comments_ind = text[var_ind:].find('\n\n')
         if next_comments_ind != -1:
@@ -62,6 +62,14 @@ class Root(Tk):
         all_config_options = get_all_config_options(text)
         self.options_num = len(all_config_options)
         self.all_config_options = all_config_options
+        global all_config_options_ind
+        all_config_options_ind = {
+            all_config_options[i]: i
+            for i in range(self.options_num)
+        }
+        global config_original
+        config_original = all_config_options.copy()
+        all_config_options.sort(key=lambda s: s.lower())
         for k in all_config_options:
             self.choose_config_options.insert(END, k)
         self.choose_config_options.place(x=0, y=30, width=220)
