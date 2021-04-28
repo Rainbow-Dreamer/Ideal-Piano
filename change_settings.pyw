@@ -92,7 +92,7 @@ class Root(Tk):
         self.choose_directory_button.place(x=0, y=320)
         self.save = ttk.Button(self, text="save", command=self.save_current)
         self.save.place(x=0, y=400)
-        self.saved_text = ttk.Label(text='saved')
+        self.saved_text = ttk.Label(self, text='saved')
         self.search_text = ttk.Label(self, text='search for config options')
         self.search_text.place(x=0, y=450)
         self.search_contents = StringVar()
