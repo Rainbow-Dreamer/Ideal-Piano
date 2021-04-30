@@ -38,9 +38,14 @@ pyglet.resource.reindex()
 icon = pyglet.resource.image('piano.ico')
 background = pyglet.resource.image(background_image)
 if not background_size:
-    ratio_background = screen_width / background.width
-    background.width = screen_width
-    background.height *= ratio_background
+    if width_or_height_first:
+        ratio_background = screen_width / background.width
+        background.width = screen_width
+        background.height *= ratio_background
+    else:
+        ratio_background = screen_height / background.height
+        background.height = screen_height
+        background.width *= ratio_background
 else:
     background.width, background.height = background_size
 

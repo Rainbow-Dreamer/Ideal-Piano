@@ -3,6 +3,7 @@
 screen_size = (1300, 650)
 background_image = 'white.png'
 background_size = None
+width_or_height_first = True
 piano_image = 'piano.png'
 piano_size = None
 message_color = (0, 0, 0, 255)
