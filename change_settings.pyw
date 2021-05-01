@@ -178,6 +178,8 @@ class Root(Tk):
 
     def search(self, *args):
         current = self.search_contents.get()
+        if not current:
+            return
         self.search_inds_list = [
             i for i in range(self.options_num)
             if current in all_config_options[i]
