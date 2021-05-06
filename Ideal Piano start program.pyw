@@ -9,6 +9,7 @@ import midiutil
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
 sys.path.append(abs_path)
