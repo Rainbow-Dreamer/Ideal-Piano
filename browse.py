@@ -146,8 +146,6 @@ class Root(Tk):
                         colors = tracks_colors
                 first_track = all_tracks[0]
                 tempo, all_track_notes, first_track_start_time = first_track
-                if set_bpm != '':
-                    tempo = float(set_bpm)
                 for i in range(len(all_tracks)):
                     current = all_tracks[i]
                     current_track = current[1]
@@ -160,6 +158,8 @@ class Root(Tk):
                                             first_track_start_time)
                 all_track_notes.normalize_tempo(
                     tempo, start_time=first_track_start_time)
+                if set_bpm != '':
+                    tempo = float(set_bpm)
                 read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
