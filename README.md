@@ -25,7 +25,7 @@
 
 <p align="center">选择midi文件播放的窗口</p>
 
-![image](previews/3.jpg)
+![image](previews/4.jpg)
 
 <p align="center">音符条下落模式</p>
 
