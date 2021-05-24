@@ -1,4 +1,56 @@
 # Ideal-Piano
+
+[中文](Ideal-Piano中文版介绍) English
+
+This is a smart piano software that I started to develop in April 2020 and recently near completion in early August. This smart piano software has some usefulness for music beginners, musicians, music lovers, etc. The best feature of Ideal Piano is the algorithm that uses music logic to determine what chord the currently played note is composed of and display it on the screen. This algorithm is a project of my own, a music logic algorithm designed by musicpy, a music composition language library, and it works very well, including all in-situ chords, all kinds of chord inversions, voicings and changes, omissions, etc. It can determine very complicated chord compositions, and there are several parameters to adjust the priority of the music logic. (The default parameter settings are the most widely applicable)
+
+There are three modes in total: computer keyboard free play, midi keyboard free play and play midi file to analyze chords and demonstrate them in real time. In the demo mode of playing the midi file, you can choose to remove the main melody by the algorithm and listen only to the notes of the chords in the bass part. These three modes can be accessed by selecting the corresponding buttons in the upper left corner after opening Ideal Piano.
+
+In the first mode, the computer keyboard plays freely, and the default keys are in the file config.py. If you want to change the notes corresponding to the keyboard, you can change them directly in config.py and save them. This mode is mainly provided to the partners who do not have any midi keyboard can usually play to play (yes is so boring www)
+
+The second mode, midi keyboard free play, is to connect a midi keyboard to your computer and then enter this mode, you can play on the midi keyboard, and the software will show you the position of the current note in the corresponding piano, and at the same time analyze in real time what chords you are currently playing (the root note plus the full expression of the chord type), and display them on the screen. You can set the path and the file type of the sound source (wav, mp3, ogg, etc.) in config.py. Previously I wanted to implement a midi keyboard shared by both DAW (arranger host) and Ideal Piano, or to play a project in DAW and display the current notes in Ideal Piano, but at the beginning it failed, always showing errors like Host error, but later I found a good solution. loopMIDI is a free software that allows you to create virtual midi ports, so you can use it to connect to the midi ports of several different software. With loopMIDI you can use a midi keyboard for both the DAW and Ideal Piano, so you can load the source you want to hear in the DAW and then play it on the midi keyboard and hear the DAW source, while Ideal Piano can display the chord type and notes you are currently playing in real time. In addition, it is also possible to play a project in the DAW and have Ideal Piano display the chord types and notes being played at the same time. The procedure is described in "Please read me first! .txt", please check it out.
+
+The third mode is to play the midi file to analyze the current chords in real time. After entering this mode, a file browsing box will pop up for you to select the midi file you want to play in Ideal Piano, and after that, you can select the midi track you want to play and the range you want to play (according to the percentage, for example, you can enter the first half of the play in the range You can also choose the BPM (speed of the song) to be played. You can also choose to remove the main melody through the algorithm and listen only to the notes of the chords in the bass part. (The algorithm to remove the main melody of the tune is my own idea, and after testing, it works well for most of the tune.) A special note here is that the midi track box can be left blank, and the program I wrote will intelligently find the first track with notes in the midi file you choose and use it as the track to play. So if it is a pure piano song with only one track, then you can leave it blank and the program will play the track with the notes directly, if it is a midi with multiple tracks, then you can fill in the track you want to play according to your needs. In this mode, the selected midi file will be played in Ideal Piano, with the sound coming from the source you set (the source must be a folder with music files named after notes, like C5.wav), and the current position of the notes on the piano will be displayed on the screen, and the chords of the notes currently played will be analyzed in real time. If you don't want the sound to come from a set source, but from a DAW, you can use loopMIDI to play the project in the DAW, while Ideal Piano receives the midi signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file "Please read me first! .txt" file.
+
+Since this project is entirely done by myself, my artwork is not good, so Ideal Piano can be used very smoothly if you are not very picky about the artwork qwq
+
+Here is a preview of Ideal Piano's screen.
+
+![image](previews/1.jpg)
+
+<p align="center">Opening the initial page of Ideal Piano</p
+
+![image](previews/2.jpg)
+
+<p align="center">Displays notes as they are played and determines the chord type of the currently played note in real time by logical analysis of the music theory</p
+
+![image](previews/3.jpg)
+
+<p align="center">Window for selecting midi files to play</p
+
+![image](previews/4.jpg)
+
+<p align="center">Note bar drop mode</p
+
+Other notes.
+
+1. it seems that some people github download failed, so I nut cloud also upload a copy, you can download directly (no registration) https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
+
+2. Since my software is in English, I made a Chinese patch package, which includes: the buttons in the interface, the chord type names displayed, and the chord type names.
+The Chinese patch package includes: the buttons of the interface, the names of the chord types displayed, (the original chords will keep the other English names, the first one is the Chinese name), the monophonic and intervals, the interface for selecting midi files and each setting item, the procedure for changing the settings.
+The download address of the Chinese patch installation package: https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
+
+5. the various parameters of this software settings can be modified using the folder change_settings.exe or directly to the config.py to modify, save and then open the software to see the changes.
+
+If you encounter any problems, please add my qq number 2180502841 to talk to me, thank you for your support!
+
+The chord logic algorithm used in this software comes from another project of mine, a chord judgment algorithm I designed in musicpy, a professional music theory composition language, which follows the logic of music theory completely. The algorithm to remove the main melody is also from my project musicpy, so you can say that this smart piano software is one of the practical applications of musicpy. If you are interested in the musicpy project, please check my repository, the link is here  
+https://github.com/Rainbow-Dreamer/musicpy
+
+# Ideal-Piano中文版介绍
+
+中文 English(#Ideal-Piano)
+
 这是一款智能钢琴软件，我在2020年的4月份开始开发，最近8月初接近完工。这款智能钢琴软件对于音乐初学者，音乐人，音乐爱好者等都有一些用处。 Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏的音组成的是什么和弦，并且显示在屏幕上。这个算法是自己的一个项目， 乐理作曲语言库musicpy里面自己精心设计的一个乐理逻辑算法，判断的效果非常好，包括所有的原位和弦，各种和弦的转位，voicings 和变化音，省略音等等，可以判断非常覆杂的和弦组成，并且有多个乐理逻辑判断优先级的参数可以调整。 （默认的参数设置的适用性最广泛）
 
 这个智能钢琴软件总共有三个模式，电脑键盘自由演奏，midi键盘自由演奏和播放midi文件分析和弦并且实时演示。在播放midi文件演示的模式中，可以选择通过算法去除主旋律，只听低音部分的和弦的音符。这三个模式在打开Ideal Piano之后选择左上角对应的按钮就可以进入。
