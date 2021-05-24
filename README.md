@@ -1,6 +1,6 @@
 # Ideal-Piano
 
-[中文](Ideal-Piano中文版介绍) English
+[中文](#Ideal-Piano中文版介绍) English
 
 This is a smart piano software that I started to develop in April 2020 and recently near completion in early August. This smart piano software has some usefulness for music beginners, musicians, music lovers, etc. The best feature of Ideal Piano is the algorithm that uses music logic to determine what chord the currently played note is composed of and display it on the screen. This algorithm is a project of my own, a music logic algorithm designed by musicpy, a music composition language library, and it works very well, including all in-situ chords, all kinds of chord inversions, voicings and changes, omissions, etc. It can determine very complicated chord compositions, and there are several parameters to adjust the priority of the music logic. (The default parameter settings are the most widely applicable)
 
