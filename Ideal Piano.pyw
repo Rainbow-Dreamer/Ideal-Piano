@@ -602,7 +602,7 @@ def mode_self_pc(dt):
             if currentchord != lastshow:
                 lastshow = currentchord
                 label.text = str(currentchord.notes)
-                if show_chord:
+                if show_chord and any(type(t) == note for t in currentchord):
                     chordtype = detect(currentchord, detect_mode, inv_num,
                                        rootpitch, change_from_first,
                                        original_first, same_note_special,
@@ -649,7 +649,8 @@ def mode_self_midi(dt):
                         currentchord = chord(stillplay)
                         currentchord.notes.sort(key=lambda x: x.degree)
                         label.text = str(currentchord.notes)
-                        if show_chord:
+                        if show_chord and any(
+                                type(t) == note for t in currentchord):
                             chordtype = detect(
                                 currentchord, detect_mode, inv_num, rootpitch,
                                 change_from_first, original_first,
@@ -681,7 +682,7 @@ def mode_self_midi(dt):
                 current_play) if delay_only_read_current else chord(stillplay)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
-            if show_chord:
+            if show_chord and any(type(t) == note for t in currentchord):
                 chordtype = detect(currentchord, detect_mode, inv_num,
                                    rootpitch, change_from_first,
                                    original_first, same_note_special,
@@ -906,7 +907,7 @@ def mode_show(dt):
                 lastshow = playnotes
                 if show_notes:
                     label.text = str(playnotes)
-                if show_chord:
+                if show_chord and any(type(t) == note for t in playnotes):
                     chordtype = detect(playnotes, detect_mode, inv_num,
                                        rootpitch, change_from_first,
                                        original_first, same_note_special,
