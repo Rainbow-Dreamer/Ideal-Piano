@@ -424,8 +424,25 @@ class chord:
                 self.interval[i] = current.duration
                 break
 
-    def bars(self, start_time=0):
-        return start_time + sum(self.interval)
+    def bars(self, start_time=0, mode=1):
+        if mode == 0:
+            max_length = sum(self.interval)
+        elif mode == 1:
+            temp = self.only_notes()
+            current_durations = temp.get_duration()
+            if not current_durations:
+                return 0
+            current_intervals = temp.interval
+            max_length = current_durations[0]
+            current_length = 0
+            for i in range(1, len(temp)):
+                current_duration = current_durations[i]
+                last_interval = current_intervals[i - 1]
+                current_length += last_interval + current_duration
+                if current_length > max_length:
+                    max_length = current_length
+                current_length -= current_duration
+        return start_time + max_length
 
     def firstnbars(self, n, start_time=0):
         return self.cut(1, n + 1, start_time)
@@ -517,6 +534,8 @@ class chord:
                 return f'{hours} hours, {minutes} minutes, {seconds} seconds'
             else:
                 return f'{minutes} minutes, {seconds} seconds'
+        elif mode == 'number':
+            return result
 
     def count_bars(self, ind1, ind2, bars_range=True):
         bars_length = self[ind1:ind2].bars()
@@ -1420,7 +1439,7 @@ class chord:
             k for k in tempo_changes if self.notes[k].start_time is None
         ]
         for each in tempo_changes_no_time:
-            current_time = self[:each + 1].bars() + 1
+            current_time = self[:each + 1].bars(mode=0) + 1
             current_tempo = self.notes[each]
             current_tempo.start_time = current_time
         tempo_changes = [self.notes[j] for j in tempo_changes]
@@ -1444,7 +1463,7 @@ class chord:
             for i in range(len(new_tempo_changes) - 1)
         ]
         tempo_changes_ranges.append(
-            (new_tempo_changes[-1].start_time, 1 + self.bars(),
+            (new_tempo_changes[-1].start_time, 1 + self.bars(mode=0),
              new_tempo_changes[-1].bpm))
         whole_notes = self.notes
         intervals = self.interval
@@ -2412,7 +2431,7 @@ class piece:
             if first_track.notes[i].track_num == k
         ][0] for k in range(length)]
         new_start_times = [
-            first_track_start_time + first_track[:k + 1].bars()
+            first_track_start_time + first_track[:k + 1].bars(mode=0)
             for k in start_times_inds
         ]
         new_track_notes = [[] for k in range(length)]
@@ -2520,7 +2539,7 @@ class piece:
         ]
         start_times_inds = [i[0] for i in start_times_inds if i]
         new_start_times = [
-            first_track_start_time + first_track[:k + 1].bars()
+            first_track_start_time + first_track[:k + 1].bars(mode=0)
             for k in start_times_inds
         ]
         new_start_times = [i if i >= 0 else 0 for i in new_start_times]
@@ -2620,9 +2639,9 @@ class piece:
         start_time = min(self.start_times)
         return self.cut(1 + start_time, n + 1 + start_time)
 
-    def bars(self):
+    def bars(self, mode=1):
         return max([
-            self.tracks[i].bars(start_time=self.start_times[i])
+            self.tracks[i].bars(start_time=self.start_times[i], mode=mode)
             for i in range(len(self.tracks))
         ])
 
