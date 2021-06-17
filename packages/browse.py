@@ -101,7 +101,10 @@ class Root(Tk):
                 read_result[1].normalize_tempo(read_result[0],
                                                start_time=read_result[2])
                 if clear_pitch_bend:
-                    read_result[1].clear_pitch_bend(value=0)
+                    if clear_all_pitch_bend:
+                        read_result[1].clear_pitch_bend(value='all')
+                    else:
+                        read_result[1].clear_pitch_bend(value=0)
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
@@ -160,6 +163,8 @@ class Root(Tk):
                     tempo, start_time=first_track_start_time)
                 if set_bpm != '':
                     tempo = float(set_bpm)
+                if clear_all_pitch_bend:
+                    all_track_notes = all_track_notes.only_notes()
                 read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
