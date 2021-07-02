@@ -2149,25 +2149,35 @@ def relative_note(a, b):
 class piece:
     def __init__(self,
                  tracks,
-                 instruments_list,
-                 tempo,
-                 start_times,
+                 instruments_list=None,
+                 tempo=120,
+                 start_times=None,
                  track_names=None,
                  channels=None,
                  name=None,
                  pan=None,
                  volume=None):
         self.tracks = tracks
-        self.instruments_list = [
-            reverse_instruments[i] if isinstance(i, int) else i
-            for i in instruments_list
-        ]
-        self.instruments_numbers = [
-            instruments[j] for j in self.instruments_list
-        ]
+        if instruments_list is None:
+            self.instruments_list = [
+                reverse_instruments[1] for i in range(len(self.tracks))
+            ]
+            self.instruments_numbers = [
+                instruments[j] for j in self.instruments_list
+            ]
+        else:
+            self.instruments_list = [
+                reverse_instruments[i] if isinstance(i, int) else i
+                for i in instruments_list
+            ]
+            self.instruments_numbers = [
+                instruments[j] for j in self.instruments_list
+            ]
         self.tempo = tempo
         self.start_times = start_times
         self.track_number = len(tracks)
+        if self.start_times is None:
+            self.start_times = [0 for i in range(self.track_number)]
         self.track_names = track_names
         self.channels = channels
         self.name = name
@@ -2907,8 +2917,8 @@ class tuning:
 class track:
     def __init__(self,
                  content,
-                 instrument,
-                 start_time,
+                 instrument=1,
+                 start_time=0,
                  tempo=None,
                  track_name=None,
                  channel=None,
