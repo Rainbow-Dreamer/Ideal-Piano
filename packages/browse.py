@@ -191,7 +191,7 @@ class Root(Tk):
         self.filename = filedialog.askopenfilename(
             initialdir=self.last_place,
             title="Choose A Midi File",
-            filetype=(("midi files", "*.mid"), ("all files", "*.*")))
+            filetypes=(("midi files", "*.mid"), ("all files", "*.*")))
         if '.mid' in self.filename or '.MID' in self.filename:
             file_path = self.filename
             memory = self.filename[:self.filename.rindex('/') + 1]
