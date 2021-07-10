@@ -222,7 +222,7 @@ class Root(Tk):
     def input_file(self):
         filename = filedialog.askopenfilename(initialdir='.',
                                               title="打开文本",
-                                              filetype=(("所有文件", "*.*"), ),
+                                              filetypes=(("所有文件", "*.*"), ),
                                               defaultextension=".txt")
         if filename:
             with open(filename, encoding='utf-8-sig') as f:
@@ -274,7 +274,7 @@ class Root(Tk):
     def output(self):
         filename = filedialog.asksaveasfilename(initialdir='.',
                                                 title="保存输入文本",
-                                                filetype=(("所有文件", "*.*"), ),
+                                                filetypes=(("所有文件", "*.*"), ),
                                                 defaultextension=".txt")
         if filename:
             with open(filename, 'w', encoding='utf-8-sig') as f:
