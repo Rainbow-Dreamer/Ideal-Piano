@@ -1116,6 +1116,7 @@ class chord:
             temp.notes = [temp.notes[k].up(unit[k]) for k in range(len(unit))]
             return temp
         if type(ind) != int and ind is not None:
+            ind = [i - 1 if i > 0 else i for i in ind]
             temp.notes = [
                 temp.notes[i].up(unit) if i in ind else temp.notes[i]
                 for i in range(len(temp.notes))
@@ -1241,16 +1242,18 @@ class chord:
 
     def index(self, value):
         if type(value) == str:
-            try:
+            if value not in standard:
                 value = toNote(value)
                 if value not in self:
                     return -1
                 return self.notes.index(value) + 1
-            except:
+            else:
                 note_names = self.names()
                 if value not in note_names:
                     return -1
                 return note_names.index(value) + 1
+        else:
+            return self.index(str(value))
 
     def remove(self, note1):
         if type(note1) == str:
@@ -1280,16 +1283,20 @@ class chord:
         self.interval.extend(intervals)
 
     def delete(self, ind):
-        del self.notes[ind - 1]
-        del self.interval[ind - 1]
+        if ind > 0:
+            ind -= 1
+        del self.notes[ind]
+        del self.interval[ind]
 
     def insert(self, ind, value, interval=None):
+        if ind > 0:
+            ind -= 1
         if type(value) == str:
             value = toNote(value)
-        self.notes.insert(ind - 1, value)
+        self.notes.insert(ind, value)
         if interval is None:
             interval = self.interval[-1]
-        self.interval.insert(ind - 1, interval)
+        self.interval.insert(ind, interval)
 
     def drops(self, ind):
         temp = self.copy()
@@ -2042,11 +2049,16 @@ class scale:
             if type(ind) == int:
                 notes[ind - 1] = notes[ind - 1].up(unit)
             else:
+                ind = [i - 1 if i > 0 else i for i in ind]
                 notes = [
                     notes[i].up(unit) if i in ind else notes[i]
                     for i in range(len(notes))
                 ]
-            return scale(notels=notes)
+            result = scale(notels=notes)
+            current_mode = result.detect()
+            if current_mode != 'not found':
+                result.mode = current_mode
+            return result
 
     def down(self, unit=1, ind=None, ind2=None):
         return self.up(-unit, ind, ind2)
