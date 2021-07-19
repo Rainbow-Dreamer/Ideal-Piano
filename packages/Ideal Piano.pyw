@@ -821,7 +821,8 @@ def mode_show(dt):
                             x=places[0] + bar_offset_x,
                             y=screen_height,
                             width=bar_width,
-                            height=bar_unit * current_note.duration,
+                            height=bar_unit * current_note.duration /
+                            (bpm_to_use / 130),
                             color=current_note.own_color
                             if use_track_colors else
                             (bar_color if color_mode == 'normal' else
@@ -861,7 +862,8 @@ def mode_show(dt):
                                 x=places[0] + bar_offset_x,
                                 y=bar_y,
                                 width=bar_width,
-                                height=bar_unit * current_note.duration,
+                                height=bar_unit * current_note.duration /
+                                (bpm_to_use / 130),
                                 color=current_note.own_color
                                 if use_track_colors else
                                 (bar_color if color_mode == 'normal' else
@@ -1173,6 +1175,7 @@ def init_show():
     global melody_notes
     global action
     global path
+    global bpm_to_use
     setup()
     path = file_path
     if action == 1:
