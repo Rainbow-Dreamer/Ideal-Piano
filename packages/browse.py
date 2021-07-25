@@ -108,8 +108,14 @@ class Root(Tk):
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
-                                  'all',
-                                  get_off_drums=get_off_drums)
+                                  mode='all',
+                                  get_off_drums=get_off_drums,
+                                  to_piece=True)
+                tempo_changes = all_tracks.get_tempo_changes()
+                all_tracks.clear_tempo()
+                all_tracks = [(all_tracks.tempo, all_tracks.tracks[i],
+                               all_tracks.start_times[i])
+                              for i in range(len(all_tracks.tracks))]
                 if not all_tracks:
                     all_tracks = read(file_path,
                                       track_ind_get,
@@ -117,6 +123,8 @@ class Root(Tk):
                                       get_off_drums=False,
                                       to_piece=True,
                                       split_channels=True)
+                    tempo_changes = all_tracks.get_tempo_changes()
+                    all_tracks.clear_tempo()
                     all_tracks_new = [(all_tracks.tempo, all_tracks.tracks[i],
                                        all_tracks.start_times[i])
                                       for i in range(len(all_tracks.tracks))]
@@ -159,6 +167,7 @@ class Root(Tk):
                     if i > 0:
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
+                all_track_notes += tempo_changes
                 all_track_notes.normalize_tempo(
                     tempo, start_time=first_track_start_time)
                 if set_bpm != '':
