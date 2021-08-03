@@ -812,7 +812,6 @@ def mode_show(dt):
     global message_label
     global playnotes
     global show_music_analysis_list
-    global sheetlen
     if not paused:
         currentime = time.time() - startplay
         if note_mode == 'bars drop':
@@ -990,7 +989,6 @@ def mode_show(dt):
                 for k in range(len(piano_keys)):
                     piano_keys[k].color = initial_colors[k]
             del playls
-            sheetlen = len(musicsheet)
             playls = initialize(musicsheet, unit_time, musicsheet.start_time)
             startplay = time.time()
             lastshow = None
@@ -1014,7 +1012,6 @@ def midi_file_play(dt):
 
 def initialize(musicsheet, unit_time, start_time):
     global play_midi_file
-    global sheetlen
     play_midi_file = False
     playls = []
     start = start_time * unit_time + bars_drop_interval
@@ -1033,11 +1030,6 @@ def initialize(musicsheet, unit_time, start_time):
         pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
         for i in range(sheetlen):
             currentnote = musicsheet.notes[i]
-            if not (pitch_range[0].degree <= currentnote.degree <=
-                    pitch_range[1].degree):
-                interval = unit_time * musicsheet.interval[i]
-                start += interval
-                continue
             duration = unit_time * currentnote.duration
             interval = unit_time * musicsheet.interval[i]
             currentstart = start
@@ -1051,11 +1043,6 @@ def initialize(musicsheet, unit_time, start_time):
         try:
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
-                if not (pitch_range[0].degree <= currentnote.degree <=
-                        pitch_range[1].degree):
-                    interval = unit_time * musicsheet.interval[i]
-                    start += interval
-                    continue
                 currentwav = pygame.mixer.Sound(
                     f'{sound_path}/{currentnote}.{sound_format}')
                 duration = unit_time * currentnote.duration
@@ -1081,11 +1068,6 @@ def initialize(musicsheet, unit_time, start_time):
             start = start_time * unit_time + bars_drop_interval
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
-                if not (pitch_range[0].degree <= currentnote.degree <=
-                        pitch_range[1].degree):
-                    interval = unit_time * musicsheet.interval[i]
-                    start += interval
-                    continue
                 duration = unit_time * currentnote.duration
                 interval = unit_time * musicsheet.interval[i]
                 currentstart = start
@@ -1097,7 +1079,6 @@ def initialize(musicsheet, unit_time, start_time):
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
             pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
-    sheetlen = len(playls)
     return playls
 
 
@@ -1210,6 +1191,15 @@ def init_show():
         play_interval = interval
         if read_result != 'error':
             bpm2, musicsheet, start_time = read_result
+            available_inds = [
+                k for k in range(len(musicsheet)) if pitch_range[0].degree <=
+                musicsheet.notes[k].degree <= pitch_range[1].degree
+            ]
+            musicsheet.notes = [musicsheet.notes[k] for k in available_inds]
+            musicsheet.interval = [
+                musicsheet.interval[k] for k in available_inds
+            ]
+            sheetlen = len(musicsheet)
             if set_bpm:
                 bpm2 = float(set_bpm)
 
@@ -1247,9 +1237,9 @@ def init_show():
     if show_modulation != None:
         musicsheet = modulation(musicsheet, eval(show_modulation[0]),
                                 eval(show_modulation[1]))
-
     if sheetlen == 0:
         return 'back'
+
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
     unit_time = 4 * 60 / bpm_to_use
