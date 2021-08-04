@@ -22,8 +22,6 @@ class Button:
             0] <= mouse_pos[1] <= range_y[1]
 
 
-pitch_range = (musicpy.musicpy.N(pitch_range[0]),
-               musicpy.musicpy.N(pitch_range[1]))
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
@@ -1191,14 +1189,8 @@ def init_show():
         play_interval = interval
         if read_result != 'error':
             bpm2, musicsheet, start_time = read_result
-            available_inds = [
-                k for k in range(len(musicsheet)) if pitch_range[0].degree <=
-                musicsheet.notes[k].degree <= pitch_range[1].degree
-            ]
-            musicsheet.notes = [musicsheet.notes[k] for k in available_inds]
-            musicsheet.interval = [
-                musicsheet.interval[k] for k in available_inds
-            ]
+            musicsheet, new_start_time = musicsheet.pitch_filter(*pitch_range)
+            start_time += new_start_time
             sheetlen = len(musicsheet)
             if set_bpm:
                 bpm2 = float(set_bpm)
