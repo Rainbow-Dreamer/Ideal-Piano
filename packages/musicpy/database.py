@@ -1,54 +1,74 @@
 from .match import match
-perfect_unison, minor_second, augmented_unison, major_second,\
-    diminished_third, minor_third, augmented_second, major_third,\
-    diminished_fourth, perfect_fourth, augmented_third, diminished_fifth,\
-    augmented_fourth, perfect_fifth, diminished_sixth, minor_sixth,\
-    augmented_fifth, major_sixth, diminished_seventh, minor_seventh,\
-    augmented_sixth, major_seventh, diminished_octave, perfect_octave,\
-    octave, augmented_seventh = 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,\
-    7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12
+
+perfect_unison = diminished_second = P1 = d2 = 0
+minor_second = augmented_unison = m2 = A1 = 1
+major_second = diminished_third = M2 = d3 = 2
+minor_third = augmented_second = m3 = A2 = 3
+major_third = diminished_fourth = M3 = d4 = 4
+perfect_fourth = augmented_third = P4 = A3 = 5
+diminished_fifth = augmented_fourth = tritone = d5 = A4 = 6
+perfect_fifth = diminished_sixth = P5 = d6 = 7
+minor_sixth = augmented_fifth = m6 = A5 = 8
+major_sixth = diminished_seventh = M6 = d7 = 9
+minor_seventh = augmented_sixth = m7 = A6 = 10
+major_seventh = diminished_octave = M7 = d8 = 11
+perfect_octave = octave = augmented_seventh = diminished_ninth = P8 = A7 = d9 = 12
+minor_ninth = augmented_octave = m9 = A8 = 13
+major_ninth = diminished_tenth = M9 = d10 = 14
+minor_tenth = augmented_ninth = m10 = A9 = 15
+major_tenth = diminished_eleventh = M10 = d11 = 16
+perfect_eleventh = augmented_tenth = P11 = A10 = 17
+diminished_twelfth = augmented_eleventh = d12 = A11 = 18
+perfect_twelfth = tritave = diminished_thirteenth = P12 = d13 = 19
+minor_thirteenth = augmented_twelfth = m13 = A12 = 20
+major_thirteenth = diminished_fourteenth = M13 = d14 = 21
+minor_fourteenth = augmented_thirteenth = m14 = A13 = 22
+major_fourteenth = diminished_fifteenth = M14 = d15 = 23
+perfect_fifteenth = double_octave = augmented_fourteenth = P15 = A14 = 24
+minor_sixteenth = augmented_fifteenth = m16 = A15 = 25
+major_sixteenth = diminished_seventeenth = M16 = d17 = 26
+minor_seventeenth = augmented_sixteenth = m17 = A16 = 27
+major_seventeenth = M17 = 28
+
 INTERVAL = {
-    0: ('perfect unison', ),
-    1: ('minor second', 'augmented unison'),
-    2: ('major second', 'diminished third'),
-    3: ('minor third', 'augmented second'),
-    4: ('major third', 'diminished fourth'),
-    5: ('perfect fourth', 'augmented third'),
-    6: ('diminished fifth', 'augmented fourth'),
-    7: ('perfect fifth', 'diminished sixth'),
-    8: ('minor sixth', 'augmented fifth'),
-    9: ('major sixth', 'diminished seventh'),
-    10: ('minor seventh', 'augmented sixth'),
-    11: ('major seventh', 'diminished octave'),
-    12: ('perfect octave', 'octave', 'augmented seventh')
+    0: 'perfect unison',
+    1: 'minor second',
+    2: 'major second',
+    3: 'minor third',
+    4: 'major third',
+    5: 'perfect fourth',
+    6: 'diminished fifth',
+    7: 'perfect fifth',
+    8: 'minor sixth',
+    9: 'major sixth',
+    10: 'minor seventh',
+    11: 'major seventh',
+    12: 'perfect octave',
+    13: 'minor ninth',
+    14: 'major ninth',
+    17: 'perfect eleventh',
+    20: 'minor thirteenth',
+    21: 'major thirteenth'
 }
 NAME_OF_INTERVAL = {
     'perfect unison': 0,
     'minor second': 1,
-    'augmented unison': 1,
     'major second': 2,
-    'diminished third': 2,
     'minor third': 3,
-    'augmented second': 3,
     'major third': 4,
-    'diminished fourth': 4,
     'perfect fourth': 5,
-    'augmented third': 5,
     'diminished fifth': 6,
-    'augmented fourth': 6,
     'perfect fifth': 7,
-    'diminished sixth': 7,
     'minor sixth': 8,
-    'augmented fifth': 8,
     'major sixth': 9,
-    'diminished seventh': 9,
     'minor seventh': 10,
-    'augmented sixth': 10,
     'major seventh': 11,
-    'diminished octave': 11,
     'perfect octave': 12,
-    'octave': 12,
-    'augmented seventh': 12
+    'minor ninth': 13,
+    'major ninth': 14,
+    'perfect eleventh': 17,
+    'minor thirteenth': 20,
+    'major thirteenth': 21
 }
 standard = {
     'C': 0,
@@ -231,18 +251,68 @@ notedict = {
 
 degree_match = {
     '1': [perfect_unison],
-    '2': [major_second],
+    '2': [major_second, minor_second],
     '3': [minor_third, major_third],
     '4': [perfect_fourth],
     '5': [perfect_fifth],
-    '6': [major_sixth],
+    '6': [major_sixth, minor_sixth],
     '7': [minor_seventh, major_seventh],
-    '9': [major_second + octave],
-    '11': [perfect_fourth + octave],
-    '13': [major_sixth + octave]
+    '9': [major_ninth, minor_ninth],
+    '11': [perfect_eleventh],
+    '13': [major_thirteenth, minor_thirteenth]
 }
 
 reverse_degree_match = match({tuple(j): i for i, j in degree_match.items()})
+
+precise_degree_match = {
+    '1': perfect_unison,
+    'b2': minor_second,
+    '2': major_second,
+    'b3': minor_third,
+    '3': major_third,
+    '4': perfect_fourth,
+    '#4': diminished_fifth,
+    'b5': diminished_fifth,
+    '5': perfect_fifth,
+    '#5': minor_sixth,
+    'b6': minor_sixth,
+    '6': major_sixth,
+    'b7': minor_seventh,
+    '7': major_seventh,
+    'b9': minor_ninth,
+    '9': major_ninth,
+    '#9': augmented_ninth,
+    'b11': diminished_eleventh,
+    '11': perfect_eleventh,
+    '#11': augmented_eleventh,
+    'b13': minor_thirteenth,
+    '13': major_thirteenth,
+    '#13': augmented_thirteenth
+}
+
+reverse_precise_degree_match = {
+    perfect_unison: '1',
+    minor_second: 'b2',
+    major_second: '2',
+    minor_third: 'b3',
+    major_third: '3',
+    perfect_fourth: '4',
+    diminished_fifth: 'b5/#4',
+    perfect_fifth: '5',
+    minor_sixth: 'b6/#5',
+    major_sixth: '6',
+    minor_seventh: 'b7',
+    major_seventh: '7',
+    minor_ninth: 'b9',
+    major_ninth: '9',
+    augmented_ninth: '#9',
+    diminished_eleventh: 'b11',
+    perfect_eleventh: '11',
+    augmented_eleventh: '#11',
+    minor_thirteenth: 'b13',
+    major_thirteenth: '13',
+    augmented_thirteenth: '#13'
+}
 
 instruments = {
     'Acoustic Grand Piano': 1,
