@@ -100,22 +100,12 @@ class Root(Tk):
                     each.own_color = bar_color
                 read_result[1].normalize_tempo(read_result[0],
                                                start_time=read_result[2])
-                if clear_pitch_bend:
-                    if clear_all_pitch_bend:
-                        read_result[1].clear_pitch_bend(value='all')
-                    else:
-                        read_result[1].clear_pitch_bend(value=0)
             else:
                 all_tracks = read(file_path,
                                   track_ind_get,
                                   mode='all',
                                   get_off_drums=get_off_drums,
                                   to_piece=True)
-                tempo_changes = all_tracks.get_tempo_changes()
-                all_tracks.clear_tempo()
-                all_tracks = [(all_tracks.tempo, all_tracks.tracks[i],
-                               all_tracks.start_times[i])
-                              for i in range(len(all_tracks.tracks))]
                 if not all_tracks:
                     all_tracks = read(file_path,
                                       track_ind_get,
@@ -123,20 +113,22 @@ class Root(Tk):
                                       get_off_drums=False,
                                       to_piece=True,
                                       split_channels=True)
-                    tempo_changes = all_tracks.get_tempo_changes()
-                    all_tracks.clear_tempo()
-                    all_tracks_new = [(all_tracks.tempo, all_tracks.tracks[i],
-                                       all_tracks.start_times[i])
-                                      for i in range(len(all_tracks.tracks))]
                     if get_off_drums:
                         drums_ind = all_tracks.channels.index(9)
                         if all_tracks.start_times[drums_ind] != min(
                                 all_tracks.start_times):
                             del all_tracks_new[drums_ind]
                     all_tracks = all_tracks_new
-                if clear_pitch_bend:
-                    for each in all_tracks:
-                        each[1].clear_pitch_bend(value=0)
+                tempo_changes = all_tracks.get_tempo_changes()
+                all_tracks.clear_tempo()
+                all_tracks = [(all_tracks.tempo, all_tracks.tracks[i],
+                               all_tracks.start_times[i])
+                              for i in range(len(all_tracks.tracks))]
+                pitch_bends = concat([
+                    i[1].split(pitch_bend, get_time=True) for i in all_tracks
+                ])
+                for each in all_tracks:
+                    each[1].clear_pitch_bend('all')
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
@@ -181,12 +173,11 @@ class Root(Tk):
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
                 all_track_notes += tempo_changes
+                all_track_notes += pitch_bends
                 all_track_notes.normalize_tempo(
                     tempo, start_time=first_track_start_time)
                 if set_bpm != '':
                     tempo = float(set_bpm)
-                if clear_all_pitch_bend:
-                    all_track_notes = all_track_notes.only_notes()
                 read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
