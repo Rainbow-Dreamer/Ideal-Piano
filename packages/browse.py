@@ -121,7 +121,7 @@ class Root(Tk):
                     all_tracks = all_tracks_new
                 tempo_changes = all_tracks.get_tempo_changes()
                 all_tracks.clear_tempo()
-                all_tracks = [(all_tracks.tempo, all_tracks.tracks[i],
+                all_tracks = [(all_tracks.bpm, all_tracks.tracks[i],
                                all_tracks.start_times[i])
                               for i in range(len(all_tracks.tracks))]
                 pitch_bends = concat([
