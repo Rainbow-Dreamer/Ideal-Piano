@@ -3,7 +3,7 @@ from .database import *
 
 
 class note:
-    def __init__(self, name, num, duration=0.25, volume=100):
+    def __init__(self, name, num=4, duration=0.25, volume=100):
         self.name = name
         self.num = num
         self.degree = standard[name] + 12 * (num + 1)
@@ -166,10 +166,11 @@ def trans_note(notename, duration=0.25, volume=100, pitch=4):
     return note(name, num, duration, volume)
 
 
-def degrees_to_chord(ls, duration=0.25, interval=0):
+def degrees_to_chord(ls, duration=0.25, interval=0, start_time=0):
     return chord([degree_to_note(i) for i in ls],
                  duration=duration,
-                 interval=interval)
+                 interval=interval,
+                 start_time=start_time)
 
 
 def degree_to_note(degree, duration=0.25, volume=100):
@@ -181,6 +182,7 @@ def degree_to_note(degree, duration=0.25, volume=100):
 def read_notes(note_ls, rootpitch=4):
     intervals = []
     notes_result = []
+    start_time = 0
     for each in note_ls:
         if each == '':
             continue
@@ -188,6 +190,11 @@ def read_notes(note_ls, rootpitch=4):
             notes_result.append(each)
         elif isinstance(each, tempo) or isinstance(each, pitch_bend):
             notes_result.append(each)
+        elif isinstance(each, rest):
+            if not notes_result:
+                start_time += each.duration
+            elif intervals:
+                intervals[-1] += each.duration
         elif isinstance(each, str):
             if each.startswith('tempo'):
                 current = each.split(';')[1:]
@@ -311,14 +318,18 @@ def read_notes(note_ls, rootpitch=4):
                         if notename != 'r':
                             intervals.append(interval)
                     if notename == 'r':
-                        if intervals:
+                        if not notes_result:
+                            start_time += duration
+                        elif intervals:
                             intervals[-1] += duration
                     else:
                         notes_result.append(
                             toNote(notename, duration, volume, rootpitch))
                 else:
                     if each == 'r':
-                        if intervals:
+                        if not notes_result:
+                            start_time += 1 / 4
+                        elif intervals:
                             intervals[-1] += 1 / 4
                     else:
                         intervals.append(0)
@@ -327,16 +338,22 @@ def read_notes(note_ls, rootpitch=4):
             notes_result.append(each)
     if len(intervals) != len(notes_result):
         intervals = []
-    return notes_result, intervals
+    return notes_result, intervals, start_time
 
 
 def process_dotted_note(value):
+    length = len(value)
     if value[0] != '.':
-        dotted_notes = value.count('.')
-        value = value.replace('.', '')
+        num_ind = length - 1
+        for k in range(num_ind, -1, -1):
+            if value[k] != '.':
+                num_ind = k
+                break
+        dotted_notes = value[num_ind + 1:].count('.')
+        value = value[:num_ind + 1]
         value = eval(value) * sum([(1 / 2)**i
                                    for i in range(dotted_notes + 1)])
-    elif len(value) > 1:
+    elif length > 1:
         dotted_notes = value[1:].count('.')
         value = value.replace('.', '')
         value = (1 / eval(value)) * sum([(1 / 2)**i
@@ -391,6 +408,10 @@ def process_settings(settings):
     return settings
 
 
+def dotted(duration, num=1):
+    return duration * sum([(1 / 2)**i for i in range(num + 1)])
+
+
 class chord:
     ''' This class can contain a chord with many notes played simultaneously and either has intervals, the default interval is 0.'''
     def __init__(self,
@@ -398,7 +419,8 @@ class chord:
                  duration=None,
                  interval=None,
                  rootpitch=4,
-                 other_messages=[]):
+                 other_messages=[],
+                 start_time=None):
         self.other_messages = other_messages
         standardize_msg = False
         if type(notes) == str:
@@ -413,7 +435,11 @@ class chord:
                                              for i in notes if type(i) == str):
             standardize_msg = True
         notes_msg = read_notes(notes, rootpitch)
-        notes, current_intervals = notes_msg
+        notes, current_intervals, current_start_time = notes_msg
+        if start_time is None:
+            self.start_time = current_start_time
+        else:
+            self.start_time = start_time
         if current_intervals and not interval:
             interval = current_intervals
         if standardize_msg and notes:
@@ -485,7 +511,7 @@ class chord:
                 current.start_time = current_time
             if sort:
                 notes.sort(key=lambda s: s.start_time)
-        return chord(notes, interval=intervals)
+        return chord(notes, interval=intervals, start_time=temp.start_time)
 
     def cut(self, ind1=1, ind2=None, start_time=0, return_inds=False):
         # get parts of notes between two bars
@@ -810,7 +836,10 @@ class chord:
     def set(self, duration=None, interval=None, volume=None, ind='all'):
         if interval is None:
             interval = copy(self.interval)
-        result = chord(copy(self.notes), duration, interval)
+        result = chord(copy(self.notes),
+                       duration,
+                       interval,
+                       start_time=copy(self.start_time))
         if volume is not None:
             result.setvolume(volume, ind)
         return result
@@ -822,7 +851,10 @@ class chord:
                     ind='all'):
         if interval is None:
             interval = copy(self.interval)
-        result = chord(copy(self.notes), duration, interval)
+        result = chord(copy(self.notes),
+                       duration,
+                       interval,
+                       start_time=copy(self.start_time))
         result.interval = [
             0 if hasattr(self.notes[i], 'keep_same_time')
             and self.notes[i].keep_same_time else result.interval[i]
@@ -871,6 +903,8 @@ class chord:
             return self.up(obj)
         if isinstance(obj, tuple):
             return self.up(*obj)
+        if isinstance(obj, rest):
+            return self.rest(obj.duration)
         temp = copy(self)
         if isinstance(obj, note):
             temp.notes.append(copy(obj))
@@ -881,6 +915,7 @@ class chord:
             obj = copy(obj)
             temp.notes += obj.notes
             temp.interval += obj.interval
+            temp.other_messages += obj.other_messages
         return temp
 
     def __pos__(self):
@@ -907,10 +942,15 @@ class chord:
                 for k in range(first - 1):
                     temp |= (self, start)
                 return temp
+            elif type(first) == rest:
+                return self.rest(first.duration,
+                                 ind=obj[1] if len(obj) == 2 else None)
             else:
                 return self.add(first, start=start, mode='after')
         elif types == list:
             return self.rest(*obj)
+        elif types == rest:
+            return self.rest(obj.duration)
         return self.add(obj, mode='after')
 
     def __or__(self, other):
@@ -1063,21 +1103,24 @@ class chord:
         return musicpy.detect(self, *args, **kwargs)
 
     def get(self, ls):
+        temp = copy(self)
         result = []
         result_interval = []
         for each in ls:
             if isinstance(each, int):
-                result.append(self[each])
-                result_interval.append(self.interval[each - 1])
+                result.append(temp[each])
+                result_interval.append(temp.interval[each - 1])
             elif isinstance(each, float):
                 num, pitch = [int(j) for j in str(each).split('.')]
                 if num > 0:
-                    current_note = self[num] + pitch * octave
+                    current_note = temp[num] + pitch * octave
                 else:
-                    current_note = self[-num] - pitch * octave
+                    current_note = temp[-num] - pitch * octave
                 result.append(current_note)
-                result_interval.append(self.interval[num - 1])
-        return chord(result, interval=result_interval)
+                result_interval.append(temp.interval[num - 1])
+        return chord(result,
+                     interval=result_interval,
+                     start_time=temp.start_time)
 
     def pop(self, ind=None):
         if ind is None:
@@ -1216,8 +1259,8 @@ class chord:
             distance = []
             intervals1 = temp.interval
             intervals2 = note1.interval
-            temp.notes[-1].inds = 0
-            note1.notes[-1].inds = 1
+            current_start_time = min(temp.start_time, note1.start_time + start)
+            start += (note1.start_time - temp.start_time)
             if start != 0:
                 note1.notes.insert(0, temp.notes[0])
                 intervals2.insert(0, start)
@@ -1237,12 +1280,16 @@ class chord:
                 newinterval[i] - newinterval[i - 1]
                 for i in range(1, len(newinterval))
             ] + [distance[-1][1].duration]
-            return chord(newnotes, interval=newinterval)
+            return chord(newnotes,
+                         interval=newinterval,
+                         start_time=current_start_time,
+                         other_messages=temp.other_messages +
+                         note1.other_messages)
         elif mode == 'after':
             if self.interval[-1] == 0:
-                return (self.rest(0) | start) + note1
+                return (self.rest(0) | (start + note1.start_time)) + note1
             else:
-                return (self | start) + note1
+                return (self | (start + note1.start_time)) + note1
 
     def inversion(self, num=1):
         if num not in range(1, len(self.notes)):
@@ -1276,7 +1323,8 @@ class chord:
         return chord(names,
                      rootpitch=rootpitch,
                      interval=new_interval,
-                     duration=new_duration)
+                     duration=new_duration,
+                     start_time=temp.start_time)
 
     def voicing(self, rootpitch=None):
         if rootpitch is None:
@@ -1547,16 +1595,27 @@ class chord:
         temp.interval.insert(0, dropinterval)
         return temp
 
-    def rest(self, length, dotted=None):
+    def rest(self, length, dotted=None, ind=None):
         temp = copy(self)
-        last_interval = temp.interval[-1]
         if dotted is not None:
             length = length * sum([(1 / 2)**i for i in range(dotted + 1)])
-        if last_interval != 0:
-            temp.interval[-1] += length
+        if ind is None:
+            last_interval = temp.interval[-1]
+            if last_interval != 0:
+                temp.interval[-1] += length
+            else:
+                temp.interval[-1] += (temp.notes[-1].duration + length)
         else:
-            temp.interval[-1] += (temp.notes[-1].duration + length +
-                                  last_interval)
+            if ind > 0:
+                ind -= 1
+            if ind == len(temp) - 1:
+                last_interval = temp.interval[-1]
+                if last_interval != 0:
+                    temp.interval[-1] += length
+                else:
+                    temp.interval[-1] += (temp.notes[-1].duration + length)
+            else:
+                temp.interval[ind] += length
         return temp
 
     def modulation(self, old_scale, new_scale):
@@ -1611,7 +1670,8 @@ class chord:
         temp = copy(self)
         return chord(temp.notes[i:j],
                      interval=temp.interval[i:j],
-                     other_messages=temp.other_messages)
+                     other_messages=temp.other_messages,
+                     start_time=temp.start_time)
 
     def __len__(self):
         return len(self.notes)
@@ -2048,7 +2108,10 @@ class chord:
     def get_voicing(self, voicing):
         notes = [self.interval_note(i).name for i in voicing]
         pitch = self.notes[self.names().index(notes[0])].num
-        return chord(notes, interval=copy(self.interval), rootpitch=pitch)
+        return chord(notes,
+                     interval=copy(self.interval),
+                     rootpitch=pitch,
+                     start_time=copy(self.start_time))
 
     def near_voicing(self, other, keep_root=True, root_lower=False):
         temp = self.standardize()
@@ -2199,6 +2262,11 @@ class chord:
             if types == tempo or types == pitch_bend:
                 if each.start_time is not None:
                     each.start_time += start_time
+
+    def with_start(self, start_time):
+        temp = copy(self)
+        temp.start_time = start_time
+        return temp
 
 
 class scale:
@@ -4081,12 +4149,15 @@ class drum:
                  mapping=drum_mapping,
                  name=None,
                  notes=None,
-                 i=1):
+                 i=1,
+                 start_time=None):
         self.pattern = pattern
         self.mapping = mapping
         self.name = name
         self.notes = self.translate(self.pattern,
                                     self.mapping) if not notes else notes
+        if start_time is not None:
+            self.notes.start_time = start_time
         self.instrument = i if type(i) == int else (
             drum_set_dict_reverse[i] if i in drum_set_dict_reverse else 1)
 
@@ -4096,6 +4167,7 @@ class drum:
     __repr__ = __str__
 
     def translate(self, pattern, mapping):
+        start_time = 0
         import musicpy
         notes = []
         pattern_intervals = []
@@ -4171,6 +4243,8 @@ class drum:
                 current_interval = process_settings([current_content])[0]
                 if pattern_intervals:
                     pattern_intervals[-1] += current_interval
+                else:
+                    start_time += current_interval
             elif '(' in i and i[-1] == ')':
                 repeat_times = int(i[i.index('(') + 1:-1])
                 repeat_part = i[:i.index('(')]
@@ -4245,15 +4319,12 @@ class drum:
         durations = pattern_durations
         volumes = pattern_volumes
         result = chord(notes) % (durations, intervals, volumes)
+        result.start_time = start_time
         return result
 
-    def play(self, bpm=80, instrument=None, start_time=0):
+    def play(self, *args, **kwargs):
         import musicpy
-        musicpy.play(
-            P([self.notes],
-              [instrument if instrument is not None else self.instrument],
-              bpm, [start_time],
-              channels=[9]))
+        musicpy.play(self, *args, **kwargs)
 
     def __mul__(self, n):
         temp = copy(self)
@@ -4291,6 +4362,11 @@ class drum:
 
     def info(self):
         return f"[drum] {self.name if self.name else ''}\ninstrument: {drum_set_dict[self.instrument] if self.instrument in drum_set_dict else 'unknown'}\n{', '.join([drum_types[k.degree] for k in self.notes])} with interval {self.notes.interval}"
+
+    def with_start(self, start_time):
+        temp = copy(self)
+        temp.notes.start_time = start_time
+        return temp
 
 
 def event(mode='controller', *args, **kwargs):
@@ -4479,3 +4555,14 @@ class track_name:
         self.track = track
         self.time = (time - 1) * 4
         self.name = name
+
+
+class rest:
+    def __init__(self, duration=1 / 4, dotted=None):
+        self.duration = duration
+        if dotted is not None:
+            self.duration = self.duration * sum([(1 / 2)**i
+                                                 for i in range(dotted + 1)])
+
+    def __repr__(self):
+        return f'rest {self.duration}'
