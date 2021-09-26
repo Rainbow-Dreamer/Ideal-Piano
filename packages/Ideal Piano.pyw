@@ -1016,10 +1016,10 @@ def initialize(musicsheet, unit_time, start_time):
     if play_as_midi:
         play_midi_file = True
         if not if_merge:
-            musicpy.musicpy.write('temp.mid',
-                                  musicsheet,
+            musicpy.musicpy.write(musicsheet,
                                   60 / (unit_time / 4),
-                                  start_time=musicsheet.start_time)
+                                  start_time=musicsheet.start_time,
+                                  name='temp.mid')
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
             os.chdir(abs_path)
