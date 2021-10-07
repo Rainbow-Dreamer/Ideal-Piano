@@ -101,24 +101,19 @@ class Root(Tk):
                 read_result[1].normalize_tempo(read_result[0],
                                                start_time=read_result[2])
             else:
-                all_tracks = read(file_path,
-                                  track_ind_get,
-                                  mode='all',
-                                  get_off_drums=get_off_drums,
-                                  to_piece=True)
-                if not all_tracks:
+                try:
                     all_tracks = read(file_path,
                                       track_ind_get,
-                                      'all',
-                                      get_off_drums=False,
+                                      mode='all',
+                                      get_off_drums=get_off_drums,
+                                      to_piece=True)
+                except:
+                    all_tracks = read(file_path,
+                                      track_ind_get,
+                                      mode='all',
+                                      get_off_drums=get_off_drums,
                                       to_piece=True,
                                       split_channels=True)
-                    if get_off_drums:
-                        drums_ind = all_tracks.channels.index(9)
-                        if all_tracks.start_times[drums_ind] != min(
-                                all_tracks.start_times):
-                            del all_tracks_new[drums_ind]
-                    all_tracks = all_tracks_new
                 tempo_changes = all_tracks.get_tempo_changes()
                 all_tracks.clear_tempo()
                 all_tracks = [(all_tracks.bpm, all_tracks.tracks[i],

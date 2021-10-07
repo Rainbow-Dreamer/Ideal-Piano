@@ -3472,11 +3472,14 @@ class piece:
                 each.track_num = k
 
     def reconstruct(self, track, start_time=0, offset=0, correct=False):
+        no_notes = [i for i in track.notes if type(i) != note]
+        track = track.only_notes()
         first_track, first_track_start_time = track, start_time
         length = len(self.tracks)
         start_times_inds = [[
             i for i in range(len(first_track))
-            if first_track.notes[i].track_num == k
+            if type(first_track.notes[i]) == note
+            and first_track.notes[i].track_num == k
         ] for k in range(length)]
         available_tracks_inds = [
             k for k in range(length) if start_times_inds[k]
@@ -3516,6 +3519,14 @@ class piece:
         for i in available_tracks_inds:
             new_track_intervals[i].append(
                 sum(whole_interval[new_track_inds[i][-1]:]))
+        if no_notes:
+            for i in range(length):
+                current_no_notes = [j for j in no_notes if j.track_num == i]
+                new_track_notes[i] += current_no_notes
+                new_track_intervals[i] += [
+                    0 for k in range(len(current_no_notes))
+                ]
+
         new_tracks = [
             chord(new_track_notes[available_tracks_inds[i]],
                   interval=new_track_intervals[available_tracks_inds[i]],
@@ -3538,6 +3549,10 @@ class piece:
             ]
         if self.channels:
             self.channels = [self.channels[k] for k in available_tracks_inds]
+        if self.pan:
+            self.pan = [self.pan[k] for k in available_tracks_inds]
+        if self.volume:
+            self.volume = [self.volume[k] for k in available_tracks_inds]
         self.track_number = len(self.tracks)
 
     def eval_time(self,
