@@ -1,4 +1,4 @@
-import musicpy.musicpy
+import musicpy as mp
 
 
 class Button:
@@ -1016,15 +1016,26 @@ def initialize(musicsheet, unit_time, start_time):
     if play_as_midi:
         play_midi_file = True
         if not if_merge:
-            musicpy.musicpy.write(musicsheet,
-                                  60 / (unit_time / 4),
-                                  start_time=musicsheet.start_time,
-                                  name='temp.mid')
+            mp.write(musicsheet,
+                     60 / (unit_time / 4),
+                     start_time=musicsheet.start_time,
+                     name='temp.mid')
             pygame.mixer.music.load('temp.mid')
             os.remove('temp.mid')
             os.chdir(abs_path)
         else:
-            pygame.mixer.music.load(path)
+            try:
+                pygame.mixer.music.load(path)
+            except:
+                current_path = mp.riff_to_midi(path)
+                current_buffer = current_path.getbuffer()
+                try:
+                    pygame.mixer.music.load(current_path)
+                except:
+                    with open('temp.mid', 'wb') as f:
+                        f.write(current_buffer)
+                    pygame.mixer.music.load('temp.mid')
+                    os.remove('temp.mid')
         pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
         for i in range(sheetlen):
             currentnote = musicsheet.notes[i]

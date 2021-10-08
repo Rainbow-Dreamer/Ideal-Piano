@@ -10,7 +10,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 
-abs_path = os.path.dirname(os.path.abspath(__file__))
+abs_path = os.path.dirname(sys.executable)
 os.chdir(abs_path)
 sys.path.append(abs_path)
 sys.path.append('packages')
