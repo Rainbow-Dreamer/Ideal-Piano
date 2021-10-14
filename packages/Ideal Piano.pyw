@@ -299,6 +299,7 @@ def on_mouse_press(x, y, button, modifiers):
                 each.batch = None
             if mode_num == 2:
                 if play_midi_file:
+                    pyglet.clock.unschedule(midi_file_play)
                     pygame.mixer.music.stop()
                 if show_music_analysis:
                     music_analysis_label.text = ''
