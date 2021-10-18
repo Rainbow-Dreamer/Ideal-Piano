@@ -42,7 +42,10 @@ for each in [
             exec(f"{each} = '{os.path.basename(each_value)}'")
 pyglet.resource.reindex()
 icon = pyglet.resource.image('resources/piano.ico')
-background = pyglet.resource.image(background_image)
+try:
+    background = pyglet.resource.image(background_image)
+except:
+    background = pyglet.resource.image('resources/white.png')
 if not background_size:
     if width_or_height_first:
         ratio_background = screen_width / background.width
