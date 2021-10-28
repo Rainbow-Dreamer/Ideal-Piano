@@ -18,11 +18,17 @@ class Root(Tk):
         super(Root, self).__init__()
         self.title("Choose Midi Files")
         self.minsize(200, 300)
-        self.wm_iconbitmap('resources/piano.ico')
+        if sys.platform == 'win32':
+            self.wm_iconbitmap('resources/piano.ico')
+        elif sys.platform == 'linux':
+            self.tk.call('wm', 'iconphoto', self._w,
+                         PhotoImage(file='resources/piano_icon.png'))
+        elif sys.platform == 'darwin':
+            self.iconphoto(True, PhotoImage(file='resources/piano_icon.png'))
 
         self.labelFrame = ttk.LabelFrame(self,
                                          text="midi files",
-                                         borderwidth=60)
+                                         borderwidth=70)
         self.labelFrame.grid(padx=200, pady=100, row=0)
         self.button_a = ttk.Button(self.labelFrame,
                                    text="Go Back",
@@ -233,7 +239,7 @@ class Root(Tk):
                 self.labelFrame,
                 text='main melody off when show chords',
                 variable=self.if_melody)
-            self.main_melody.place(x=0, y=180, width=230, height=30)
+            self.main_melody.place(x=0, y=180, width=330, height=30)
             self.if_merge_all_tracks = IntVar()
             self.merge_all_tracks = ttk.Checkbutton(
                 self.labelFrame,
