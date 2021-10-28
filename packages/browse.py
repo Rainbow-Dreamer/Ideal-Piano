@@ -239,7 +239,7 @@ class Root(Tk):
                 self.labelFrame,
                 text='main melody off when show chords',
                 variable=self.if_melody)
-            self.main_melody.place(x=0, y=180, width=330, height=30)
+            self.main_melody.place(x=-60, y=180, width=300, height=30)
             self.if_merge_all_tracks = IntVar()
             self.merge_all_tracks = ttk.Checkbutton(
                 self.labelFrame,
