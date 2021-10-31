@@ -406,9 +406,9 @@ use_default_tracks_colors = True
 pitch_range = ('A0', 'C8')
 
 use_soundfont = False
-play_use_soundfont = True
+play_use_soundfont = False
 sf2_path = 'resources/gm.sf2'
-bank_num = 128
+bank_num = 0
 preset_num = 0
 sf2_duration = 6
 sf2_decay = 1

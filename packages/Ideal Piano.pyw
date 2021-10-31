@@ -1,14 +1,9 @@
 import musicpy as mp
 
-mouse_left = 1
-if play_use_soundfont or (play_as_midi and use_soundfont):
-    current_sf2 = rs.sf2_loader(sf2_path)
-    current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
 
-
-class Button:
+class ideal_piano_button:
     def __init__(self, img, x, y):
-        self.img = pyglet.resource.image(img)
+        self.img = pyglet.resource.image(img).get_transform()
         self.img.width /= button_resize_num
         self.img.height /= button_resize_num
         self.x = x
@@ -26,6 +21,11 @@ class Button:
         return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[
             0] <= mouse_pos[1] <= range_y[1]
 
+
+mouse_left = 1
+if play_use_soundfont or (play_as_midi and use_soundfont):
+    current_sf2 = rs.sf2_loader(sf2_path)
+    current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
 
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
@@ -105,13 +105,13 @@ if note_mode == 'dots':
 else:
     plays = []
 
-go_back = Button(go_back_image, *go_back_place)
+go_back = ideal_piano_button(go_back_image, *go_back_place)
 button_go_back = go_back.MakeButton()
-self_play = Button(self_play_image, *self_play_place)
+self_play = ideal_piano_button(self_play_image, *self_play_place)
 button_play = self_play.MakeButton()
-self_midi = Button(self_midi_image, *self_midi_place)
+self_midi = ideal_piano_button(self_midi_image, *self_midi_place)
 button_self_midi = self_midi.MakeButton()
-play_midi = Button(play_midi_image, *play_midi_place)
+play_midi = ideal_piano_button(play_midi_image, *play_midi_place)
 button_play_midi = play_midi.MakeButton()
 window = pyglet.window.Window(*screen_size, caption='Ideal Piano')
 window.set_icon(icon)
@@ -171,57 +171,6 @@ if show_music_analysis:
         anchor_y=label_anchor_y,
         multiline=True,
         width=music_analysis_width)
-
-
-def get_off_sort(a):
-    each_chord = a.split('/')
-    for i in range(len(each_chord)):
-        current = each_chord[i]
-        if 'sort as' in current:
-            current = current[:current.index('sort as') - 1]
-            if current[0] == '[':
-                current += ']'
-            each_chord[i] = current
-    return '/'.join(each_chord)
-
-
-def load(dic, path, file_format, volume):
-    wavedict = {
-        i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
-        for i in dic
-    }
-    if volume != None:
-        [wavedict[x].set_volume(volume) for x in wavedict]
-    return wavedict
-
-
-def load_sf2(dic, sf2, volume):
-    wavedict = {
-        i: pygame.mixer.Sound(buffer=sf2.export_note(dic[i],
-                                                     duration=sf2_duration,
-                                                     decay=sf2_decay,
-                                                     volume=sf2_volume,
-                                                     get_audio=True).raw_data)
-        for i in dic
-    }
-    if volume != None:
-        [wavedict[x].set_volume(volume) for x in wavedict]
-    return wavedict
-
-
-def configkey(q):
-    return pressed(f'{config_key} + {q}')
-
-
-def configshow(content):
-    label.text = str(content)
-
-
-def switchs(q, name):
-    if configkey(q):
-        globals()[name] = not globals()[name]
-        configshow(f'{name} changes to {globals()[name]}')
-
 
 mouse_pos = 0, 0
 is_click = True
@@ -289,6 +238,343 @@ if draw_piano_keys:
     note_place = [(each.x, each.y) for each in piano_keys]
     bar_offset_x = 0
 
+current_midi_device = 'please enter midi keyboard mode at first, press ctrl to close me ~'
+currentchord = chord([])
+playnotes = []
+still_hold_pc = []
+still_hold = []
+paused = False
+pause_start = 0
+if note_mode == 'bars drop':
+    bars_drop_time = []
+    distances = screen_height - piano_height
+    bar_steps = (distances / bars_drop_interval) / adjust_ratio
+else:
+    bars_drop_interval = 0
+
+melody_notes = []
+
+if show_music_analysis:
+    with open(music_analysis_file, encoding='utf-8-sig') as f:
+        data = f.read()
+        lines = [i for i in data.split('\n\n') if i]
+        music_analysis_list = []
+        current_key = None
+        bar_counter = 0
+        for each in lines:
+            if each:
+                if each[:3] != 'key':
+                    current = each.split('\n')
+                    current_bar = current[0]
+                    if current_bar[0] == '+':
+                        bar_counter += eval(current_bar[1:])
+                    else:
+                        bar_counter = eval(current_bar) - 1
+                    current_chords = '\n'.join(current[1:])
+                    if current_key:
+                        current_chords = f'{key_header}{current_key}\n' + current_chords
+                    music_analysis_list.append([bar_counter, current_chords])
+                else:
+                    current_key = each.split('key: ')[1]
+
+
+def get_off_sort(a):
+    each_chord = a.split('/')
+    for i in range(len(each_chord)):
+        current = each_chord[i]
+        if 'sort as' in current:
+            current = current[:current.index('sort as') - 1]
+            if current[0] == '[':
+                current += ']'
+            each_chord[i] = current
+    return '/'.join(each_chord)
+
+
+def load(dic, path, file_format, volume):
+    wavedict = {
+        i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
+        for i in dic
+    }
+    if volume != None:
+        [wavedict[x].set_volume(volume) for x in wavedict]
+    return wavedict
+
+
+def load_sf2(dic, sf2, volume):
+    wavedict = {
+        i: pygame.mixer.Sound(buffer=sf2.export_note(dic[i],
+                                                     duration=sf2_duration,
+                                                     decay=sf2_decay,
+                                                     volume=sf2_volume,
+                                                     get_audio=True).raw_data)
+        for i in dic
+    }
+    if volume != None:
+        [wavedict[x].set_volume(volume) for x in wavedict]
+    return wavedict
+
+
+def open_settings():
+    os.chdir(abs_path)
+    os.chdir('tools')
+    with open('change_settings.pyw') as f:
+        exec(f.read(), globals(), globals())
+    os.chdir(abs_path)
+
+
+def reload_settings():
+    os.chdir(abs_path)
+    with open('packages/config.py', encoding='utf-8-sig') as f:
+        exec(f.read(), globals(), globals())
+    global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place
+    if play_use_soundfont or (play_as_midi and use_soundfont):
+        current_sf2 = rs.sf2_loader(sf2_path)
+        current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
+    screen_width, screen_height = screen_size
+    show_delay_time = int(show_delay_time * 1000)
+    pygame.mixer.quit()
+    pygame.mixer.init(frequency, size, channel, buffer)
+    pyglet.resource.path = [abs_path]
+    for each in [
+            'background_image', 'piano_image', 'notes_image', 'go_back_image',
+            'self_play_image', 'self_midi_image', 'play_midi_image',
+            'piano_background_image'
+    ]:
+        each_value = eval(each, globals(), globals())
+        each_path = os.path.dirname(each_value)
+        if each_path:
+            if each_path == 'resources':
+                exec(f"{each} = '{each_value}'", globals(), globals())
+            else:
+                pyglet.resource.path.append(each_path.replace('/', '\\'))
+                exec(f"{each} = '{os.path.basename(each_value)}'", globals(),
+                     globals())
+    pyglet.resource.reindex()
+    icon = pyglet.resource.image('resources/piano.ico')
+    try:
+        background = pyglet.resource.image(background_image)
+    except:
+        background = pyglet.resource.image('resources/white.png')
+    if not background_size:
+        if width_or_height_first:
+            ratio_background = screen_width / background.width
+            background.width = screen_width
+            background.height *= ratio_background
+        else:
+            ratio_background = screen_height / background.height
+            background.height = screen_height
+            background.width *= ratio_background
+    else:
+        background.width, background.height = background_size
+
+    batch = pyglet.graphics.Batch()
+    bottom_group = pyglet.graphics.OrderedGroup(0)
+    piano_bg = pyglet.graphics.OrderedGroup(1)
+    piano_key = pyglet.graphics.OrderedGroup(2)
+    play_highlight = pyglet.graphics.OrderedGroup(3)
+
+    if not draw_piano_keys:
+        bar_offset_x = 9
+        image = pyglet.resource.image(piano_image)
+        if not piano_size:
+            ratio = screen_width / image.width
+            image.width = screen_width
+            image.height *= ratio
+        else:
+            image.width, image.height = piano_size
+        image_show = pyglet.sprite.Sprite(image,
+                                          x=0,
+                                          y=0,
+                                          batch=batch,
+                                          group=piano_bg)
+    playing = pyglet.resource.image(notes_image)
+    playing.width /= notes_resize_num
+    playing.height /= notes_resize_num
+    piano_keys = []
+    initial_colors = []
+
+    if note_mode == 'dots':
+        if not draw_piano_keys:
+            plays = [
+                pyglet.sprite.Sprite(playing,
+                                     x=j[0] + dots_offset_x,
+                                     y=j[1],
+                                     group=play_highlight) for j in note_place
+            ]
+        else:
+            plays = [
+                pyglet.sprite.Sprite(playing,
+                                     x=j[0] + dots_offset_x,
+                                     y=j[1],
+                                     group=play_highlight) for j in note_place
+            ]
+    else:
+        plays = []
+
+    go_back = ideal_piano_button(go_back_image, *go_back_place)
+    button_go_back = go_back.MakeButton()
+    self_play = ideal_piano_button(self_play_image, *self_play_place)
+    button_play = self_play.MakeButton()
+    self_midi = ideal_piano_button(self_midi_image, *self_midi_place)
+    button_self_midi = self_midi.MakeButton()
+    play_midi = ideal_piano_button(play_midi_image, *play_midi_place)
+    button_play_midi = play_midi.MakeButton()
+
+    label = pyglet.text.Label('',
+                              font_name=fonts,
+                              font_size=fonts_size,
+                              bold=bold,
+                              x=label1_place[0],
+                              y=label1_place[1],
+                              color=message_color,
+                              anchor_x=label_anchor_x,
+                              anchor_y=label_anchor_y,
+                              multiline=True,
+                              width=1000)
+    label2 = pyglet.text.Label('',
+                               font_name=fonts,
+                               font_size=fonts_size,
+                               bold=bold,
+                               x=label2_place[0],
+                               y=label2_place[1],
+                               color=message_color,
+                               anchor_x=label_anchor_x,
+                               anchor_y=label_anchor_y)
+    label3 = pyglet.text.Label('',
+                               font_name=fonts,
+                               font_size=fonts_size,
+                               bold=bold,
+                               x=label3_place[0],
+                               y=label3_place[1],
+                               color=message_color,
+                               anchor_x=label_anchor_x,
+                               anchor_y=label_anchor_y)
+
+    label_midi_device = pyglet.text.Label('',
+                                          font_name=fonts,
+                                          font_size=15,
+                                          bold=bold,
+                                          x=250,
+                                          y=400,
+                                          color=message_color,
+                                          anchor_x=label_anchor_x,
+                                          anchor_y=label_anchor_y,
+                                          multiline=True,
+                                          width=1000)
+
+    if show_music_analysis:
+        music_analysis_label = pyglet.text.Label(
+            '',
+            font_name=fonts,
+            font_size=music_analysis_fonts_size,
+            bold=bold,
+            x=music_analysis_place[0],
+            y=music_analysis_place[1],
+            color=message_color,
+            anchor_x=label_anchor_x,
+            anchor_y=label_anchor_y,
+            multiline=True,
+            width=music_analysis_width)
+    notedic = key_settings
+    piano_height = white_key_y + white_key_height
+    if draw_piano_keys:
+        piano_background = pyglet.resource.image(piano_background_image)
+        if not piano_size:
+            ratio = screen_width / piano_background.width
+            piano_background.width = screen_width
+            piano_background.height *= ratio
+        else:
+            piano_background.width, piano_background.height = piano_size
+        piano_background_show = pyglet.sprite.Sprite(piano_background,
+                                                     x=0,
+                                                     y=0,
+                                                     batch=batch,
+                                                     group=piano_bg)
+        for i in range(white_keys_number):
+            current_piano_key = pyglet.shapes.Rectangle(
+                x=white_key_start_x + white_key_interval * i,
+                y=white_key_y,
+                width=white_key_width,
+                height=white_key_height,
+                color=white_key_color,
+                batch=batch,
+                group=piano_key)
+            piano_keys.append(current_piano_key)
+            initial_colors.append((current_piano_key.x, white_key_color))
+        first_black_key = pyglet.shapes.Rectangle(x=black_key_first_x,
+                                                  y=black_key_y,
+                                                  width=black_key_width,
+                                                  height=black_key_height,
+                                                  color=black_key_color,
+                                                  batch=batch,
+                                                  group=piano_key)
+        piano_keys.append(first_black_key)
+        initial_colors.append((first_black_key.x, black_key_color))
+        current_start = black_key_start_x
+        for j in range(black_keys_set_num):
+            for k in black_keys_set:
+                current_start += k
+                piano_keys.append(
+                    pyglet.shapes.Rectangle(x=current_start,
+                                            y=black_key_y,
+                                            width=black_key_width,
+                                            height=black_key_height,
+                                            color=black_key_color,
+                                            batch=batch,
+                                            group=piano_key))
+                initial_colors.append((current_start, black_key_color))
+            current_start += black_keys_set_interval
+        piano_keys.sort(key=lambda s: s.x)
+        initial_colors.sort(key=lambda s: s[0])
+        initial_colors = [t[1] for t in initial_colors]
+        note_place = [(each.x, each.y) for each in piano_keys]
+        bar_offset_x = 0
+    if note_mode == 'bars drop':
+        global distances, bar_steps, bars_drop_interval
+        distances = screen_height - piano_height
+        bar_steps = (distances / bars_drop_interval) / adjust_ratio
+    else:
+        bars_drop_interval = 0
+
+    if show_music_analysis:
+        global music_analysis_list, current_key
+        with open(music_analysis_file, encoding='utf-8-sig') as f:
+            data = f.read()
+            lines = [i for i in data.split('\n\n') if i]
+            music_analysis_list = []
+            current_key = None
+            bar_counter = 0
+            for each in lines:
+                if each:
+                    if each[:3] != 'key':
+                        current = each.split('\n')
+                        current_bar = current[0]
+                        if current_bar[0] == '+':
+                            bar_counter += eval(current_bar[1:])
+                        else:
+                            bar_counter = eval(current_bar) - 1
+                        current_chords = '\n'.join(current[1:])
+                        if current_key:
+                            current_chords = f'{key_header}{current_key}\n' + current_chords
+                        music_analysis_list.append(
+                            [bar_counter, current_chords])
+                    else:
+                        current_key = each.split('key: ')[1]
+
+
+def configkey(q):
+    return pressed(f'{config_key} + {q}')
+
+
+def configshow(content):
+    label.text = str(content)
+
+
+def switchs(q, name):
+    if configkey(q):
+        globals()[name] = not globals()[name]
+        configshow(f'{name} changes to {globals()[name]}')
+
 
 def has_load(change):
     global midi_device_load
@@ -315,6 +601,7 @@ def on_mouse_press(x, y, button, modifiers):
                     each.batch = None
         except:
             pass
+        pygame.mixer.stop()
         if mode_num in [0, 1, 2]:
             pyglet.clock.unschedule(func)
             for each in plays:
@@ -322,9 +609,7 @@ def on_mouse_press(x, y, button, modifiers):
             if mode_num == 2:
                 if play_midi_file:
                     pyglet.clock.unschedule(midi_file_play)
-                    if use_soundfont:
-                        pygame.mixer.stop()
-                    else:
+                    if not use_soundfont:
                         pygame.mixer.music.stop()
                 if show_music_analysis:
                     music_analysis_label.text = ''
@@ -346,9 +631,6 @@ def on_mouse_press(x, y, button, modifiers):
         click_mode = 1
     if play_midi.inside() & button & mouse_left and first_time:
         click_mode = 2
-
-
-current_midi_device = 'please enter midi keyboard mode at first, press ctrl to close me ~'
 
 
 @window.event
@@ -450,10 +732,13 @@ def on_draw():
             label3.draw()
         if show_music_analysis:
             music_analysis_label.draw()
-
-
-currentchord = chord([])
-playnotes = []
+    if keyboard.is_pressed(f'{config_key} + S'):
+        open_settings()
+    if keyboard.is_pressed(f'{config_key} + R'):
+        label.text = 'reload settings'
+        label.draw()
+        window.flip()
+        reload_settings()
 
 
 def redraw():
@@ -480,9 +765,6 @@ def reset_click_mode():
 def not_first():
     global first_time
     first_time = not first_time
-
-
-still_hold_pc = []
 
 
 def mode_self_pc(dt):
@@ -670,9 +952,6 @@ def mode_self_pc(dt):
             label.text = str(truecurrent)
 
 
-still_hold = []
-
-
 def piano_key_reset(dt, each):
     piano_keys[each.degree - 21].color = initial_colors[each.degree - 21]
 
@@ -836,10 +1115,6 @@ def mode_self_midi(dt):
         label_midi_device.text = current_midi_device
     if keyboard.is_pressed('ctrl'):
         label_midi_device.text = ''
-
-
-paused = False
-pause_start = 0
 
 
 def mode_show(dt):
@@ -1040,14 +1315,6 @@ def mode_show(dt):
             sys.exit(0)
 
 
-if note_mode == 'bars drop':
-    bars_drop_time = []
-    distances = screen_height - piano_height
-    bar_steps = (distances / bars_drop_interval) / adjust_ratio
-else:
-    bars_drop_interval = 0
-
-
 def midi_file_play(dt):
     if use_soundfont:
         global current_midi_audio
@@ -1201,9 +1468,13 @@ def init_self_midi():
     notenames = os.listdir(sound_path)
     notenames = [x[:x.index('.')] for x in notenames]
     if load_sound:
-        wavdic = load({i: i
-                       for i in notenames}, sound_path, sound_format,
-                      global_volume)
+        if not play_use_soundfont:
+            wavdic = load({i: i
+                           for i in notenames}, sound_path, sound_format,
+                          global_volume)
+        else:
+            wavdic = load_sf2({i: i
+                               for i in notenames}, current_sf2, global_volume)
     current_play = []
     stillplay = []
     last = current_play.copy()
@@ -1217,32 +1488,6 @@ def browse_reset():
     global off_melody
     global appears
     file_path, track_ind_get, read_result, set_bpm, off_melody, appears = None, None, None, None, 0, False
-
-
-melody_notes = []
-
-if show_music_analysis:
-    with open(music_analysis_file, encoding='utf-8-sig') as f:
-        data = f.read()
-        lines = [i for i in data.split('\n\n') if i]
-        music_analysis_list = []
-        current_key = None
-        bar_counter = 0
-        for each in lines:
-            if each:
-                if each[:3] != 'key':
-                    current = each.split('\n')
-                    current_bar = current[0]
-                    if current_bar[0] == '+':
-                        bar_counter += eval(current_bar[1:])
-                    else:
-                        bar_counter = eval(current_bar) - 1
-                    current_chords = '\n'.join(current[1:])
-                    if current_key:
-                        current_chords = f'{key_header}{current_key}\n' + current_chords
-                    music_analysis_list.append([bar_counter, current_chords])
-                else:
-                    current_key = each.split('key: ')[1]
 
 
 def init_show():
