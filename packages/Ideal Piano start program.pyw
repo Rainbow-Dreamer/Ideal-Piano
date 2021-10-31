@@ -3,8 +3,8 @@ import sys
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
-sys.path.append(abs_path)
-sys.path.append('packages')
+sys.path.insert(0, abs_path)
+sys.path.insert(0, 'packages')
 import pygame
 import pygame.midi
 import keyboard
@@ -15,6 +15,9 @@ import midiutil
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+import py
+import sf2_loader as rs
+from pydub import AudioSegment
 
 with open('packages/musicpy/__init__.py', encoding='utf-8-sig') as f:
     exec(f.read())

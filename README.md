@@ -6,7 +6,7 @@ This is a smart piano software that I started to develop in April 2020 and recen
 
 There are three modes in total: computer keyboard free play, midi keyboard free play and play midi file to analyze chords and demonstrate them in real time. In the demo mode of playing the midi file, you can choose to remove the main melody by the algorithm and listen only to the notes of the chords in the bass part. These three modes can be accessed by selecting the corresponding buttons in the upper left corner after opening Ideal Piano.
 
-In the first mode, the computer keyboard plays freely, and the default keys are in the file config.py. If you want to change the notes corresponding to the keyboard, you can change them directly in config.py and save them. This mode is mainly provided to the partners who do not have any midi keyboard can usually play to play (yes is so boring www)
+In the first mode, the computer keyboard plays freely, and the default keys are in the file config.py. If you want to change the notes corresponding to the keyboard, you can change them directly in config.py and save them. This mode is mainly provided to the partners who do not have any midi keyboard can usually play to play (yes it is just that boring www)
 
 The second mode, midi keyboard free play, is to connect a midi keyboard to your computer and then enter this mode, you can play on the midi keyboard, and the software will show you the position of the current note in the corresponding piano, and at the same time analyze in real time what chords you are currently playing (the root note plus the full expression of the chord type), and display them on the screen. You can set the path and the file type of the sound source (wav, mp3, ogg, etc.) in config.py. Previously I wanted to implement a midi keyboard shared by both DAW (arranger host) and Ideal Piano, or to play a project in DAW and display the current notes in Ideal Piano, but at the beginning it failed, always showing errors like Host error, but later I found a good solution. loopMIDI is a free software that allows you to create virtual midi ports, so you can use it to connect to the midi ports of several different software. With loopMIDI you can use a midi keyboard for both the DAW and Ideal Piano, so you can load the source you want to hear in the DAW and then play it on the midi keyboard and hear the DAW source, while Ideal Piano can display the chord type and notes you are currently playing in real time. In addition, it is also possible to play a project in the DAW and have Ideal Piano display the chord types and notes being played at the same time. The procedure is described in "Please read me first! .txt", please check it out.
 
@@ -84,16 +84,14 @@ https://github.com/Rainbow-Dreamer/musicpy
 其他的说明：
 
 1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以下载（不用注册） https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
-
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，
 显示的和弦种类名称，（原位和弦会保留其他的英文称呼，第一个是中文名称），单音和音程，选择midi文件的界面和每个设置项，更改设置的程序。
 中文补丁安装包的下载地址：https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
-
 5. 这个软件的各种参数设置都可以使用文件夹里的change_settings.exe修改或者直接到config.py里去修改，保存之后再打开软件就可以看到变化了。
+4. 2021/10/31更新: 现在可以加载SoundFont文件用来播放MIDI文件，请将设置文件里的use_soundfont设置为True，play_as_midi设置为True，设置sf2_path的文件路径即可。如果不使用SoundFont文件播放MIDI文件，暂停的功能会不起作用，因为pygame不支持暂停MIDI文件的播放，如果使用SoundFont文件，Ideal Piano会在内部使用[sf2_loader](https://github.com/Rainbow-Dreamer/sf2_loader)渲染为音频信息，然后使用pygame播放，因此可以暂停。
 
 如果有遇到任何问题，请加我的qq号2180502841来跟我说，感谢大家的支持~
 
 这个软件在实时和弦判断用到的乐理逻辑算法来自于我的另一个项目，专业乐理作曲语言musicpy里我精心设计的一个和弦判断的算法，完全按照乐理的逻辑来推测。在播放midi的模式下可以选择去除主旋律，这个去除主旋律的算法也同样来自我的项目musicpy，所以可以说这个智能钢琴软件就是musicpy的其中一个实际应用。对musicpy这个项目感兴趣的欢迎来看我的repository，链接在这里  
 https://github.com/Rainbow-Dreamer/musicpy
-
 

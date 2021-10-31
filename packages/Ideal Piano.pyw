@@ -1,6 +1,8 @@
 import musicpy as mp
 
 mouse_left = 1
+if play_as_midi and use_soundfont:
+    current_sf2 = rs.sf2_loader(sf2_path)
 
 
 class Button:
@@ -305,7 +307,10 @@ def on_mouse_press(x, y, button, modifiers):
             if mode_num == 2:
                 if play_midi_file:
                     pyglet.clock.unschedule(midi_file_play)
-                    pygame.mixer.music.stop()
+                    if use_soundfont:
+                        pygame.mixer.stop()
+                    else:
+                        pygame.mixer.music.stop()
                 if show_music_analysis:
                     music_analysis_label.text = ''
         is_click = True
@@ -434,6 +439,22 @@ def on_draw():
 
 currentchord = chord([])
 playnotes = []
+
+
+def redraw():
+    window.clear()
+    background.blit(0, 0)
+    if not draw_piano_keys:
+        image_show.draw()
+    if batch:
+        batch.draw()
+    button_go_back.draw()
+    label_midi_device.draw()
+    label2.draw()
+    if message_label:
+        label3.draw()
+    if show_music_analysis:
+        music_analysis_label.draw()
 
 
 def reset_click_mode():
@@ -934,6 +955,8 @@ def mode_show(dt):
                             str(chordtype))
 
         if keyboard.is_pressed(pause_key):
+            if play_midi_file and use_soundfont:
+                pygame.mixer.pause()
             paused = True
             pause_start = time.time()
             message_label = True
@@ -967,6 +990,8 @@ def mode_show(dt):
 
     else:
         if keyboard.is_pressed(unpause_key):
+            if play_midi_file and use_soundfont:
+                pygame.mixer.unpause()
             paused = False
             message_label = False
             pause_stop = time.time()
@@ -979,12 +1004,8 @@ def mode_show(dt):
         if show_music_analysis:
             music_analysis_label.text = ''
             show_music_analysis_list = copy(default_show_music_analysis_list)
-        label.text = f'music playing finished,\npress {repeat_key} to listen again,\nor press {exit_key} to exit'
+        label.text = f'music playing finished,\npress {repeat_key} to listen again, or press {exit_key} to exit'
         if keyboard.is_pressed(repeat_key):
-            if show_notes:
-                label.text = 'reloading, please wait...'
-            else:
-                label.text = ''
             if note_mode == 'bars' or note_mode == 'bars drop':
                 plays.clear()
                 if note_mode == 'bars drop':
@@ -993,6 +1014,8 @@ def mode_show(dt):
                 for k in range(len(piano_keys)):
                     piano_keys[k].color = initial_colors[k]
             del playls
+            label.text = ''
+            redraw()
             playls = initialize(musicsheet, unit_time, musicsheet.start_time)
             startplay = time.time()
             lastshow = None
@@ -1011,7 +1034,11 @@ else:
 
 
 def midi_file_play(dt):
-    pygame.mixer.music.play()
+    if use_soundfont:
+        global current_midi_audio
+        current_midi_audio.play()
+    else:
+        pygame.mixer.music.play()
 
 
 def initialize(musicsheet, unit_time, start_time):
@@ -1031,7 +1058,20 @@ def initialize(musicsheet, unit_time, start_time):
             os.chdir(abs_path)
         else:
             try:
-                pygame.mixer.music.load(path)
+                if use_soundfont:
+                    label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
+                    label.draw()
+                    window.flip()
+                    current_waveform = current_sf2.export_midi_file(
+                        path, get_audio=True).raw_data
+                    global current_midi_audio
+                    current_midi_audio = pygame.mixer.Sound(
+                        buffer=current_waveform)
+                    label.text = ''
+                    label.draw()
+                    window.flip()
+                else:
+                    pygame.mixer.music.load(path)
             except:
                 current_path = mp.riff_to_midi(path)
                 current_buffer = current_path.getbuffer()
@@ -1055,6 +1095,9 @@ def initialize(musicsheet, unit_time, start_time):
                     (currentstart - bars_drop_interval, currentnote))
             start += interval
     else:
+        label.text = 'Rendering current MIDI file with audio samples, please wait ...'
+        label.draw()
+        window.flip()
         try:
             for i in range(sheetlen):
                 currentnote = musicsheet.notes[i]
@@ -1094,6 +1137,9 @@ def initialize(musicsheet, unit_time, start_time):
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
             pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
+        label.text = ''
+        label.draw()
+        window.flip()
     return playls
 
 
