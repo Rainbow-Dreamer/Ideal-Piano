@@ -656,6 +656,13 @@ def on_draw():
                 label_midi_device.text = current_midi_device
             if keyboard.is_pressed('ctrl'):
                 label_midi_device.text = ''
+            if keyboard.is_pressed(f'{config_key} + S'):
+                open_settings()
+            if keyboard.is_pressed(f'{config_key} + R'):
+                label.text = 'reload settings'
+                label.draw()
+                window.flip()
+                reload_settings()
             if click_mode == 0:
                 mode_num = 0
                 label.text = 'loading sound samples, please wait...'
@@ -732,13 +739,6 @@ def on_draw():
             label3.draw()
         if show_music_analysis:
             music_analysis_label.draw()
-    if keyboard.is_pressed(f'{config_key} + S'):
-        open_settings()
-    if keyboard.is_pressed(f'{config_key} + R'):
-        label.text = 'reload settings'
-        label.draw()
-        window.flip()
-        reload_settings()
 
 
 def redraw():
@@ -1458,12 +1458,15 @@ def init_self_midi():
         pygame.mixer.set_num_channels(maxinum_channels)
         pygame.midi.init()
         midi_info = [('default', pygame.midi.get_default_input_id())]
-        midi_info += [(i, pygame.midi.get_device_info(i)) for i in range(10)]
+        midi_info += [(i, pygame.midi.get_device_info(i))
+                      for i in range(device_info_num)]
         current_midi_device += '\n'.join([str(j) for j in midi_info])
         device = pygame.midi.Input(midi_device_id)
     else:
         if device:
             device.close()
+            pygame.midi.quit()
+            pygame.midi.init()
             device = pygame.midi.Input(midi_device_id)
     notenames = os.listdir(sound_path)
     notenames = [x[:x.index('.')] for x in notenames]

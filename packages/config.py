@@ -131,6 +131,7 @@ reverse_key_settings = {j: i for i, j in key_settings.items()}
 mode = 'show'
 self_device = 'pc'
 midi_device_id = 1
+device_info_num = 10
 
 # operation key settings for pause, unpause, repeat and so on
 pause_key = 'space'
