@@ -317,9 +317,11 @@ def load_sf2(dic, sf2, volume):
 def open_settings():
     os.chdir(abs_path)
     os.chdir('tools')
-    with open('change_settings.pyw') as f:
+    with open('change_settings.pyw', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
     os.chdir(abs_path)
+    with open('packages/browse.py', encoding='utf-8-sig') as f:
+        exec(f.read(), globals(), globals())
 
 
 def reload_settings():
