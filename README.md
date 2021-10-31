@@ -32,7 +32,7 @@ Here is a preview of Ideal Piano's screen.
 
 <p align="center">Note bar drop mode</p
 
-Other notes.
+Other notes:
 
 1. it seems that some people github download failed, so I nut cloud also upload a copy, you can download directly (no registration) https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
 2. Since my software is in English, I made a Chinese patch package, which includes: the buttons in the interface, the chord type names displayed, and the chord type names.
