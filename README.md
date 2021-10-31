@@ -38,8 +38,7 @@ Other notes:
 2. Since my software is in English, I made a Chinese patch package, which includes: the buttons in the interface, the chord type names displayed, and the chord type names.
 The Chinese patch package includes: the buttons of the interface, the names of the chord types displayed, (the original chords will keep the other English names, the first one is the Chinese name), the monophonic and intervals, the interface for selecting midi files and each setting item, the procedure for changing the settings.
 The download address of the Chinese patch installation package: https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
-5. the various parameters of this software settings can be modified using the folder change_settings.exe or directly to the config.py to modify, save and then open the software to see the changes.
-4. 2021/10/31 update: Now you can load SoundFont files to play MIDI files, please set `use_soundfont` to True, `play_as_midi` to True, and then set the file path of SoundFont files using `sf2_path`. If you are not using SoundFont files to play MIDI files, the pause functionality will not work, because pygame currently does not support pausing MIDI files. If you are using SoundFont files, Ideal Piano will render the MIDI files to audio data internally using [sf2_loader](https://github.com/Rainbow-Dreamer/sf2_loader), then use pygame to play, therefore you can pause it.
+3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly to the config.py to modify, save and then open the software to see the changes.
 
 If you encounter any problems, please add my qq number 2180502841 to talk to me, thank you for your support!
 
@@ -86,8 +85,7 @@ https://github.com/Rainbow-Dreamer/musicpy
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，
 显示的和弦种类名称，（原位和弦会保留其他的英文称呼，第一个是中文名称），单音和音程，选择midi文件的界面和每个设置项，更改设置的程序。
 中文补丁安装包的下载地址：https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
-5. 这个软件的各种参数设置都可以使用文件夹里的change_settings.exe修改或者直接到config.py里去修改，保存之后再打开软件就可以看到变化了。
-4. 2021/10/31更新: 现在可以加载SoundFont文件用来播放MIDI文件，请将设置文件里的`use_soundfont`设置为True，`play_as_midi`设置为True，通过`sf2_path`设置SoundFont文件的路径即可。如果不使用SoundFont文件播放MIDI文件，暂停的功能会不起作用，因为pygame不支持暂停MIDI文件的播放，如果使用SoundFont文件，Ideal Piano会在内部使用[sf2_loader](https://github.com/Rainbow-Dreamer/sf2_loader)渲染为音频信息，然后使用pygame播放，因此可以暂停。
+3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到config.py里去修改，保存之后再打开软件就可以看到变化了。
 
 如果有遇到任何问题，请加我的qq号2180502841来跟我说，感谢大家的支持~
 
