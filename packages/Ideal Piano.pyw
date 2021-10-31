@@ -1,8 +1,9 @@
 import musicpy as mp
 
 mouse_left = 1
-if play_as_midi and use_soundfont:
+if play_use_soundfont or (play_as_midi and use_soundfont):
     current_sf2 = rs.sf2_loader(sf2_path)
+    current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
 
 
 class Button:
@@ -187,6 +188,20 @@ def get_off_sort(a):
 def load(dic, path, file_format, volume):
     wavedict = {
         i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
+        for i in dic
+    }
+    if volume != None:
+        [wavedict[x].set_volume(volume) for x in wavedict]
+    return wavedict
+
+
+def load_sf2(dic, sf2, volume):
+    wavedict = {
+        i: pygame.mixer.Sound(buffer=sf2.export_note(dic[i],
+                                                     duration=sf2_duration,
+                                                     decay=sf2_decay,
+                                                     volume=sf2_volume,
+                                                     get_audio=True).raw_data)
         for i in dic
     }
     if volume != None:
@@ -1151,7 +1166,10 @@ def init_self_pc():
         global stillplay
     global lastshow
     pygame.mixer.set_num_channels(maxinum_channels)
-    wavdic = load(notedic, sound_path, sound_format, global_volume)
+    if not play_use_soundfont:
+        wavdic = load(notedic, sound_path, sound_format, global_volume)
+    else:
+        wavdic = load_sf2(notedic, current_sf2, global_volume)
     last = []
     changed = False
     if delay:
