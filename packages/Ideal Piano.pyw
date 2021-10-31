@@ -320,6 +320,7 @@ def open_settings():
     with open('change_settings.pyw', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
     os.chdir(abs_path)
+    reload_settings()
     with open('packages/browse.py', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
 
