@@ -770,27 +770,73 @@ def not_first():
     first_time = not first_time
 
 
+def detect_config():
+    global wavdic
+    global global_volume
+    if configkey(volume_up):
+        global_volume += volume_change_unit
+        [wavdic[j].set_volume(global_volume) for j in wavdic]
+        configshow(f'volume up to {int(global_volume*100)}%')
+    if configkey(volume_down):
+        global_volume -= volume_change_unit
+        [wavdic[j].set_volume(global_volume) for j in wavdic]
+        configshow(f'volume down to {int(global_volume*100)}%')
+    switchs(change_delay, 'delay')
+    switchs(change_read_current, 'delay_only_read_current')
+    switchs(change_pause_key_clear_notes, 'pause_key_clear_notes')
+    if play_use_soundfont:
+        detect_sf2_config()
+
+
+def detect_sf2_config():
+    global wavdic
+    global global_volume
+    if configkey('1'):
+        if current_sf2.current_preset_num != 0:
+            current_change = current_sf2.program_select(
+                preset_num=current_sf2.current_preset_num - 1, correct=False)
+            current_preset = f'{current_sf2.current_preset_num} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset_num} No preset'
+            redraw()
+            label.text = f'Change SoundFont preset to {current_preset}'
+            label.draw()
+            window.flip()
+            if current_change != -1:
+                wavdic = load_sf2(notedic, current_sf2, global_volume)
+    if configkey('2'):
+        current_change = current_sf2.program_select(
+            preset_num=current_sf2.current_preset_num + 1, correct=False)
+        current_preset = f'{current_sf2.current_preset_num} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset_num} No preset'
+        redraw()
+        label.text = f'Change SoundFont preset to {current_preset}'
+        label.draw()
+        window.flip()
+        if current_change != -1:
+            wavdic = load_sf2(notedic, current_sf2, global_volume)
+    if configkey('3'):
+        if current_sf2.current_bank_num != 0:
+            current_sf2.change_bank(current_sf2.current_bank_num - 1)
+            redraw()
+            label.text = f'Change SoundFont bank to {current_sf2.current_bank_num}'
+            label.draw()
+            window.flip()
+    if configkey('4'):
+        current_sf2.change_bank(current_sf2.current_bank_num + 1)
+        redraw()
+        label.text = f'Change SoundFont bank to {current_sf2.current_bank_num}'
+        label.draw()
+        window.flip()
+
+
 def mode_self_pc(dt):
     global stillplay
     global last
     global changed
     global lastshow
     global currentchord
-    global global_volume
     if config_enable:
-        if configkey(volume_up):
-            global_volume += volume_change_unit
-            [wavdic[j].set_volume(global_volume) for j in wavdic]
-            configshow(f'volume up to {int(global_volume*100)}%')
-        if configkey(volume_down):
-            global_volume -= volume_change_unit
-            [wavdic[j].set_volume(global_volume) for j in wavdic]
-            configshow(f'volume down to {int(global_volume*100)}%')
-        switchs(change_delay, 'delay')
-        switchs(change_read_current, 'delay_only_read_current')
-        switchs(change_pause_key_clear_notes, 'pause_key_clear_notes')
+        detect_config()
     if keyboard.is_pressed(pause_key):
-        [wavdic[x].stop() for x in last]
+        pygame.mixer.pause()
         if pause_key_clear_notes:
             if delay:
                 stillplay = []
@@ -1118,6 +1164,9 @@ def mode_self_midi(dt):
         label_midi_device.text = current_midi_device
     if keyboard.is_pressed('ctrl'):
         label_midi_device.text = ''
+    if config_enable:
+        if play_use_soundfont:
+            detect_sf2_config()
 
 
 def mode_show(dt):
