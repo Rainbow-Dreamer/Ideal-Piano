@@ -35,9 +35,9 @@ if hasattr(os, 'add_dll_directory'):
 
 lib = find_library('fluidsynth') or \
     find_library('libfluidsynth') or \
+    find_library('libfluidsynth-3') or \
     find_library('libfluidsynth-2') or \
-    find_library('libfluidsynth-1') or \
-    find_library('libfluidsynth-3')
+    find_library('libfluidsynth-1')
 
 if lib is None:
     raise ImportError("Couldn't find the FluidSynth library.")
@@ -274,8 +274,8 @@ fluid_synth_set_midi_router = cfunc('fluid_synth_set_midi_router', None,
                                     ('synth', c_void_p, 1),
                                     ('router', c_void_p, 1))
 
-fluid_synth_handle_midi_event = cfunc('fluid_synth_handle_midi_event',
-                                      POINTER(c_int), ('data', c_void_p, 1),
+fluid_synth_handle_midi_event = cfunc('fluid_synth_handle_midi_event', c_int,
+                                      ('data', c_void_p, 1),
                                       ('event', c_void_p, 1))
 
 # fluid sequencer
@@ -348,7 +348,7 @@ delete_fluid_audio_driver = cfunc('delete_fluid_audio_driver', None,
 # fluid midi driver
 new_fluid_midi_driver = cfunc(
     'new_fluid_midi_driver', c_void_p, ('settings', c_void_p, 1),
-    ('handler', CFUNCTYPE(POINTER(c_int), c_void_p, c_void_p), 1),
+    ('handler', CFUNCTYPE(c_int, c_void_p, c_void_p), 1),
     ('event_handler_data', c_void_p, 1))
 
 
@@ -387,12 +387,12 @@ fluid_midi_router_rule_set_param2 = cfunc('fluid_midi_router_rule_set_param2',
 new_fluid_midi_router = cfunc(
     'new_fluid_midi_router', POINTER(fluid_midi_router_t),
     ('settings', c_void_p, 1),
-    ('handler', CFUNCTYPE(POINTER(c_int), c_void_p, c_void_p), 1),
+    ('handler', CFUNCTYPE(c_int, c_void_p, c_void_p), 1),
     ('event_handler_data', c_void_p, 1))
 
 fluid_midi_router_handle_midi_event = cfunc(
-    'fluid_midi_router_handle_midi_event', POINTER(c_int),
-    ('data', c_void_p, 1), ('event', c_void_p, 1))
+    'fluid_midi_router_handle_midi_event', c_int, ('data', c_void_p, 1),
+    ('event', c_void_p, 1))
 
 fluid_midi_router_clear_rules = cfunc(
     'fluid_midi_router_clear_rules', c_int,
