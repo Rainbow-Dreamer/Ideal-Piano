@@ -605,6 +605,7 @@ def on_mouse_press(x, y, button, modifiers):
         except:
             pass
         pygame.mixer.stop()
+        pygame.mixer.music.stop()
         if mode_num in [0, 1, 2]:
             pyglet.clock.unschedule(func)
             for each in plays:
@@ -612,8 +613,6 @@ def on_mouse_press(x, y, button, modifiers):
             if mode_num == 2:
                 if play_midi_file:
                     pyglet.clock.unschedule(midi_file_play)
-                    if not use_soundfont:
-                        pygame.mixer.music.stop()
                 if show_music_analysis:
                     music_analysis_label.text = ''
         is_click = True
@@ -1543,14 +1542,16 @@ def init_self_midi():
     last = current_play.copy()
 
 
-def browse_reset():
-    global file_path
+def browse_reset(mode=0):
+    if mode == 0:
+        global file_path
+        file_path = None
     global track_ind_get
     global read_result
     global set_bpm
     global off_melody
     global appears
-    file_path, track_ind_get, read_result, set_bpm, off_melody, appears = None, None, None, None, 0, False
+    track_ind_get, read_result, set_bpm, off_melody, appears = None, None, None, 0, False
 
 
 def init_show():
@@ -1593,7 +1594,10 @@ def init_show():
         else:
             bpm_to_use = bpm
     else:
-        browse_reset()
+        if not path:
+            browse_reset()
+        else:
+            browse_reset(1)
         return 'back'
 
     get_off_melody = off_melody
