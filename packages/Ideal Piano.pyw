@@ -31,6 +31,7 @@ screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
 pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
+pygame.mixer.set_num_channels(maxinum_channels)
 pyglet.resource.path = [abs_path]
 for each in [
         'background_image', 'piano_image', 'notes_image', 'go_back_image',
@@ -337,6 +338,7 @@ def reload_settings():
     show_delay_time = int(show_delay_time * 1000)
     pygame.mixer.quit()
     pygame.mixer.init(frequency, size, channel, buffer)
+    pygame.mixer.set_num_channels(maxinum_channels)
     pyglet.resource.path = [abs_path]
     for each in [
             'background_image', 'piano_image', 'notes_image', 'go_back_image',
@@ -787,7 +789,7 @@ def detect_config():
         detect_sf2_config()
 
 
-def detect_sf2_config():
+def detect_sf2_config(mode=0):
     global wavdic
     global global_volume
     if configkey('1'):
@@ -800,7 +802,14 @@ def detect_sf2_config():
             label.draw()
             window.flip()
             if current_change != -1:
-                wavdic = load_sf2(notedic, current_sf2, global_volume)
+                if mode == 0:
+                    wavdic = load_sf2(notedic, current_sf2, global_volume)
+                else:
+                    notenames = os.listdir(sound_path)
+                    notenames = [x[:x.index('.')] for x in notenames]
+                    wavdic = load_sf2({i: i
+                                       for i in notenames}, current_sf2,
+                                      global_volume)
     if configkey('2'):
         current_change = current_sf2.program_select(
             preset_num=current_sf2.current_preset_num + 1, correct=False)
@@ -810,7 +819,14 @@ def detect_sf2_config():
         label.draw()
         window.flip()
         if current_change != -1:
-            wavdic = load_sf2(notedic, current_sf2, global_volume)
+            if mode == 0:
+                wavdic = load_sf2(notedic, current_sf2, global_volume)
+            else:
+                notenames = os.listdir(sound_path)
+                notenames = [x[:x.index('.')] for x in notenames]
+                wavdic = load_sf2({i: i
+                                   for i in notenames}, current_sf2,
+                                  global_volume)
     if configkey('3'):
         if current_sf2.current_bank_num != 0:
             current_sf2.change_bank(current_sf2.current_bank_num - 1)
@@ -1165,7 +1181,7 @@ def mode_self_midi(dt):
         label_midi_device.text = ''
     if config_enable:
         if play_use_soundfont:
-            detect_sf2_config()
+            detect_sf2_config(1)
 
 
 def mode_show(dt):
@@ -1491,7 +1507,6 @@ def init_self_pc():
     if delay:
         global stillplay
     global lastshow
-    pygame.mixer.set_num_channels(maxinum_channels)
     if not play_use_soundfont:
         wavdic = load(notedic, sound_path, sound_format, global_volume)
     else:
@@ -1514,7 +1529,6 @@ def init_self_midi():
         device = None
         has_load(True)
         current_midi_device = 'press ctrl to close me ~\n'
-        pygame.mixer.set_num_channels(maxinum_channels)
         pygame.midi.init()
         midi_info = [('default', pygame.midi.get_default_input_id())]
         midi_info += [(i, pygame.midi.get_device_info(i))
