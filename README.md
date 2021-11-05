@@ -31,6 +31,9 @@ Here is a preview of Ideal Piano's screen.
 ![image](previews/4.jpg)
 
 <p align="center">Note bar drop mode</p
+![image](previews/5.jpg)
+
+<p align="center">You can easily change the background image</p
 
 Other notes:
 
@@ -78,6 +81,10 @@ https://github.com/Rainbow-Dreamer/musicpy
 ![image](previews/4.jpg)
 
 <p align="center">音符条下落模式</p>
+
+![image](previews/5.jpg)
+
+<p align="center">你可以轻松地改变背景图片</p
 
 其他的说明：
 
