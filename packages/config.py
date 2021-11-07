@@ -358,6 +358,8 @@ bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 173
 adjust_ratio = 62
+bar_border = 5
+bar_border_color = (100, 100, 100)
 
 # when play midi files, if you choose to merge all tracks, get_off_drums
 # set to True will not merge the drum tracks if your midi file has
@@ -387,6 +389,9 @@ black_key_color = (0, 0, 0)
 black_keys_set = [0, 30, 43.85, 28.67, 28.48]
 black_keys_set_interval = 43.75
 black_keys_set_num = 7
+
+piano_key_border = 0
+piano_key_border_color = (100, 100, 100)
 
 piano_background_image = 'resources/piano_background.png'
 
