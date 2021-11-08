@@ -338,7 +338,7 @@ def reload_settings():
     os.chdir(abs_path)
     with open('packages/config.py', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
-    global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place
+    global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place, bar_offset_x
     if play_use_soundfont or (play_as_midi and use_soundfont):
         current_sf2 = rs.sf2_loader(sf2_path)
         current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
@@ -624,13 +624,12 @@ def on_mouse_press(x, y, button, modifiers):
             pass
         pygame.mixer.stop()
         pygame.mixer.music.stop()
+        pyglet.clock.unschedule(midi_file_play)
         if mode_num in [0, 1, 2]:
             pyglet.clock.unschedule(func)
             for each in plays:
                 each.batch = None
             if mode_num == 2:
-                if play_midi_file:
-                    pyglet.clock.unschedule(midi_file_play)
                 if show_music_analysis:
                     music_analysis_label.text = ''
         is_click = True
@@ -1338,12 +1337,13 @@ def mode_show(dt):
                             str(chordtype))
 
         if keyboard.is_pressed(pause_key):
-            if play_midi_file and use_soundfont:
-                pygame.mixer.pause()
-            paused = True
-            pause_start = time.time()
-            message_label = True
-            label3.text = f'paused, press {unpause_key} to unpause'
+            if pygame.mixer.get_busy() or pygame.mixer.music.get_busy():
+                if play_midi_file and use_soundfont:
+                    pygame.mixer.pause()
+                paused = True
+                pause_start = time.time()
+                message_label = True
+                label3.text = f'paused, press {unpause_key} to unpause'
         if note_mode == 'bars':
             i = 0
             while i < len(plays):
