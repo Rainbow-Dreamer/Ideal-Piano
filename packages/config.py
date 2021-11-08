@@ -172,6 +172,7 @@ global_volume = 0.6
 # last for delay_time seconds
 delay = True
 delay_time = 3
+fadeout_ms = 100
 
 # touch interval is when the sound is still on delay, if you re-press
 # the key for the same key for that sound, the time interval between
@@ -345,6 +346,7 @@ note_mode = 'bars drop'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
+sustain_bar_color = (124, 200, 0)
 bar_y = 178
 bar_offset_x = 6
 dots_offset_x = 10
@@ -419,3 +421,5 @@ preset_num = 0
 sf2_duration = 6
 sf2_decay = 1
 sf2_volume = 100
+
+soft_pedal_volume = 0.2

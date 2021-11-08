@@ -628,7 +628,10 @@ def on_mouse_press(x, y, button, modifiers):
             pyglet.clock.unschedule(func)
             for each in plays:
                 each.batch = None
-            if mode_num == 2:
+            if mode_num == 1:
+                global delay_only_read_current
+                delay_only_read_current = True
+            elif mode_num == 2:
                 if show_music_analysis:
                     music_analysis_label.text = ''
         is_click = True
@@ -880,7 +883,7 @@ def mode_self_pc(dt):
                 inds = stillplay_obj.index(each)
                 if not stillplay[inds][2] and time.time(
                 ) - stillplay[inds][1] > touch_interval:
-                    wavdic[each].stop()
+                    wavdic[each].fadeout(fadeout_ms)
                     stillplay.pop(inds)
                     stillplay_obj.pop(inds)
             else:
@@ -949,7 +952,7 @@ def mode_self_pc(dt):
                     stillobj = stillplay[ind]
                     if time.time() - stillobj[1] > delay_time:
                         changed = True
-                        wavdic[j].stop()
+                        wavdic[j].fadeout(fadeout_ms)
                         stillplay.pop(ind)
                         stillplay_obj.pop(ind)
                     else:
@@ -957,10 +960,10 @@ def mode_self_pc(dt):
                         current.append(j)
                 else:
                     changed = True
-                    wavdic[j].stop()
+                    wavdic[j].fadeout(fadeout_ms)
             else:
                 changed = True
-                wavdic[j].stop()
+                wavdic[j].fadeout(fadeout_ms)
     last = current
     if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
@@ -1043,19 +1046,24 @@ def mode_self_midi(dt):
     global current_play
     global stillplay
     global delay_only_read_current
+    global sostenuto_pedal_on
+    global soft_pedal_volume_ratio
     current_time = time.time()
     for each in stillplay:
         if each not in current_play:
-            if current_time - each.count_time >= delay_time:
-                if load_sound:
-                    wavdic[str(each)].stop()
-                stillplay.remove(each)
-                if not delay_only_read_current:
+            if delay_only_read_current:
+                if not each.sustain_pedal_on:
+                    if current_time - each.count_time >= delay_time:
+                        if load_sound:
+                            wavdic[str(each)].fadeout(fadeout_ms)
+                        stillplay.remove(each)
+                else:
                     if draw_piano_keys:
-                        piano_keys[each.degree -
-                                   21].color = initial_colors[each.degree - 21]
+                        piano_keys[each.degree - 21].color = sustain_bar_color
                     if stillplay:
-                        currentchord = chord(stillplay)
+                        currentchord = chord(
+                            [k for k in stillplay if k.sustain_pedal_on] +
+                            current_play)
                         currentchord.notes.sort(key=lambda x: x.degree)
                         label.text = str(currentchord.notes)
                         if show_chord and any(
@@ -1074,10 +1082,31 @@ def mode_self_midi(dt):
                     else:
                         label.text = '[]'
                         label2.text = ''
-
+            else:
+                if draw_piano_keys:
+                    piano_keys[each.degree - 21].color = sustain_bar_color
+                if stillplay:
+                    currentchord = chord(stillplay)
+                    currentchord.notes.sort(key=lambda x: x.degree)
+                    label.text = str(currentchord.notes)
+                    if show_chord and any(
+                            type(t) == note for t in currentchord):
+                        chordtype = detect(currentchord, detect_mode, inv_num,
+                                           rootpitch, change_from_first,
+                                           original_first, same_note_special,
+                                           whole_detect, return_fromchord,
+                                           two_show_interval, poly_chord_first,
+                                           root_position_return_first,
+                                           alter_notes_show_degree)
+                        label2.text = str(
+                            chordtype) if not sort_invisible else get_off_sort(
+                                str(chordtype))
+                else:
+                    label.text = '[]'
+                    label2.text = ''
         else:
             each.count_time = current_time
-    if last != current_play:
+    if (not sostenuto_pedal_on) and last != current_play:
         if note_mode == 'dots':
             for k in last:
                 plays[k.degree - 21].batch = None
@@ -1112,8 +1141,9 @@ def mode_self_midi(dt):
         event = device.read(1)[0]
         data, timestamp = event
         status, note_number, velocity, note_off_velocity = data
-        current_note = degree_to_note(note_number)
         if status == 128 or (status == 144 and velocity == 0):
+            current_note = degree_to_note(note_number)
+            current_note.sustain_pedal_on = False
             # 128 is the status code of note off in midi
             if note_mode == 'dots':
                 plays[note_number - 21].batch = None
@@ -1123,6 +1153,8 @@ def mode_self_midi(dt):
             if current_note in current_play:
                 current_play.remove(current_note)
         elif status == 144:
+            current_note = degree_to_note(note_number)
+            current_note.sustain_pedal_on = False
             # 144 is the status code of note on in midi
             if note_mode == 'bars' or note_mode == 'bars drop':
                 places = note_place[current_note.degree - 21]
@@ -1155,26 +1187,45 @@ def mode_self_midi(dt):
                 current_note.count_time = current_time
                 if load_sound:
                     current_sound = wavdic[str(current_note)]
-                    current_sound.set_volume(velocity / 127)
+                    current_sound.set_volume(soft_pedal_volume_ratio *
+                                             velocity / 127)
                     current_sound.play()
-        elif status == 176 and note_number == 64:
-            if velocity >= 64:
-                if delay_only_read_current:
-                    if draw_piano_keys:
+        elif status == 176:
+            if note_number == 64:
+                if velocity >= 64:
+                    if delay_only_read_current:
+                        stillplay = copy(current_play)
+                        delay_only_read_current = False
+                else:
+                    if not delay_only_read_current:
+                        if draw_piano_keys:
+                            for each in stillplay:
+                                pyglet.clock.schedule_once(
+                                    piano_key_reset, delay_time -
+                                    (current_time - each.count_time), each)
+                        last = copy(stillplay)
+                        delay_only_read_current = True
+            elif note_number == 66:
+                if velocity >= 64:
+                    if not sostenuto_pedal_on:
+                        sostenuto_pedal_on = True
+                        for each in current_play:
+                            each.sustain_pedal_on = True
+                else:
+                    if sostenuto_pedal_on:
                         for each in stillplay:
-                            piano_keys[each.degree -
-                                       21].color = initial_colors[each.degree -
-                                                                  21]
-                delay_only_read_current = False
-            else:
-                if not delay_only_read_current:
-                    if draw_piano_keys:
-                        for each in stillplay:
-                            pyglet.clock.schedule_once(
-                                piano_key_reset,
-                                delay_time - (current_time - each.count_time),
-                                each)
-                delay_only_read_current = True
+                            each.sustain_pedal_on = False
+                        if draw_piano_keys:
+                            for each in stillplay:
+                                pyglet.clock.schedule_once(
+                                    piano_key_reset, delay_time -
+                                    (current_time - each.count_time), each)
+                        sostenuto_pedal_on = False
+            elif note_number == 67:
+                if velocity >= 64:
+                    soft_pedal_volume_ratio = soft_pedal_volume
+                else:
+                    soft_pedal_volume_ratio = 1
 
     if note_mode == 'bars' or note_mode == 'bars drop':
         i = 0
@@ -1498,8 +1549,7 @@ def initialize(musicsheet, unit_time, start_time):
                     bars_drop_time.append(
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
-        except Exception as e:
-            print(str(e))
+        except:
             pygame.mixer.music.load(path)
             play_midi_file = True
             playls.clear()
@@ -1550,6 +1600,8 @@ def init_self_midi():
     global device
     global last
     global current_midi_device
+    global sostenuto_pedal_on
+    global soft_pedal_volume_ratio
     if not midi_device_load:
         device = None
         has_load(True)
@@ -1579,6 +1631,8 @@ def init_self_midi():
     current_play = []
     stillplay = []
     last = current_play.copy()
+    sostenuto_pedal_on = False
+    soft_pedal_volume_ratio = 1
 
 
 def browse_reset(mode=0):
