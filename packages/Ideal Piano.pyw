@@ -261,8 +261,6 @@ if note_mode == 'bars drop':
 else:
     bars_drop_interval = 0
 
-melody_notes = []
-
 if show_music_analysis:
     with open(music_analysis_file, encoding='utf-8-sig') as f:
         data = f.read()
@@ -551,7 +549,8 @@ def reload_settings():
         note_place = [(each.x, each.y) for each in piano_keys]
         bar_offset_x = 0
     if note_mode == 'bars drop':
-        global distances, bar_steps, bars_drop_interval
+        global bars_drop_time, distances, bar_steps, bars_drop_interval
+        bars_drop_time = []
         distances = screen_height - piano_height
         bar_steps = (distances / bars_drop_interval) / adjust_ratio
     else:
@@ -1604,7 +1603,6 @@ def init_show():
     global musicsheet
     global unit_time
     global get_off_melody
-    global melody_notes
     global action
     global path
     global bpm_to_use
