@@ -162,7 +162,7 @@ play_interval = None
 # these are the init parameters of the mixer
 frequency = 44100
 size = -16
-channel = 1
+channel = 2
 buffer = 1024
 maxinum_channels = 100
 
