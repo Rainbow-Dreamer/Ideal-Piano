@@ -45,8 +45,7 @@ The download link of the Chinese patch installation package: https://www.jianguo
 
 If you encounter any problems, please add my qq number 2180502841 to talk to me or send emails to 2180502841@qq.com, thank you for your support!
 
-The chord logic algorithm used in this software comes from another project of mine, a chord judgment algorithm I designed in musicpy, a professional music theory composition language, which follows the logic of music theory completely. The algorithm to remove the main melody is also from my project musicpy, so you can say that this smart piano software is one of the practical applications of musicpy. If you are interested in the musicpy project, please check my repository, the link is here  
-https://github.com/Rainbow-Dreamer/musicpy
+The chord logic algorithm used in this software comes from another project of mine, a chord judgment algorithm I designed in musicpy, a professional music theory composition language, which follows the logic of music theory completely. The algorithm to remove the main melody is also from my project musicpy, so you can say that this smart piano software is one of the practical applications of musicpy. If you are interested in the musicpy project, please check my repository, the link is [here](https://github.com/Rainbow-Dreamer/musicpy)
 
 # Ideal-Piano中文版介绍
 
@@ -91,10 +90,8 @@ https://github.com/Rainbow-Dreamer/musicpy
 1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以下载（不用注册） https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，显示的和弦种类名称，单音和音程，选择midi文件的界面和每个设置项，更改设置的程序。  
 中文补丁安装包的下载地址：https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
-3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到config.py里去修改，保存之后再打开软件就可以看到变化了。
+3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`config.py`里去修改，保存之后再打开软件就可以看到变化了。
 
 如果有遇到任何问题，请加我的qq号2180502841来跟我说或者发邮件到2180502841@qq.com，感谢大家的支持~
 
-这个软件在实时和弦判断用到的乐理逻辑算法来自于我的另一个项目，专业乐理作曲语言musicpy里我精心设计的一个和弦判断的算法，完全按照乐理的逻辑来推测。在播放midi的模式下可以选择去除主旋律，这个去除主旋律的算法也同样来自我的项目musicpy，所以可以说这个智能钢琴软件就是musicpy的其中一个实际应用。对musicpy这个项目感兴趣的欢迎来看我的repository，链接在这里  
-https://github.com/Rainbow-Dreamer/musicpy
-
+这个软件在实时和弦判断用到的乐理逻辑算法来自于我的另一个项目，专业乐理作曲语言musicpy里我精心设计的一个和弦判断的算法，完全按照乐理的逻辑来推测。在播放midi的模式下可以选择去除主旋律，这个去除主旋律的算法也同样来自我的项目musicpy，所以可以说这个智能钢琴软件就是musicpy的其中一个实际应用。对musicpy这个项目感兴趣的欢迎来看我的repository，链接在[这里](https://github.com/Rainbow-Dreamer/musicpy)
