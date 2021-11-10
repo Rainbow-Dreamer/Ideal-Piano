@@ -38,9 +38,9 @@ Here is a preview of Ideal Piano's screen.
 
 Other notes:
 
-1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from (no registration needed) https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
+1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from [here](https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID)
 2. Since my software is in English, I made a Chinese patch package, which includes: the buttons of the interface, the names of the chord types displayed, the single note and intervals, the interface for selecting midi files and each setting item, the programs for changing the settings.  
-The download link of the Chinese patch installation package: https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
+The download link of the Chinese patch installation package is [here](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
 3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `config.py`, save and then open the software to see the changes.
 
 If you encounter any problems, please add my qq number 2180502841 to talk to me or send emails to 2180502841@qq.com, thank you for your support!
@@ -87,9 +87,9 @@ The chord logic algorithm used in this software comes from another project of mi
 
 其他的说明：
 
-1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以下载（不用注册） https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID
+1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID)下载
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，显示的和弦种类名称，单音和音程，选择midi文件的界面和每个设置项，更改设置的程序。  
-中文补丁安装包的下载地址：https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID
+中文补丁安装包的下载地址在[这里](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
 3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`config.py`里去修改，保存之后再打开软件就可以看到变化了。
 
 如果有遇到任何问题，请加我的qq号2180502841来跟我说或者发邮件到2180502841@qq.com，感谢大家的支持~
