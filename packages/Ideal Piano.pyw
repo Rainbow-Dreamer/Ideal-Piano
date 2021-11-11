@@ -1477,49 +1477,48 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
     start = start_time * unit_time + bars_drop_interval
     if play_as_midi:
         play_midi_file = True
-        if use_soundfont:
-            label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
-            if window_mode == 1:
-                redraw()
-            label.draw()
-            window.flip()
-        if not if_merge:
-            mp.write(musicsheet,
-                     60 / (unit_time / 4),
-                     start_time=musicsheet.start_time,
-                     name='temp.mid')
+        if window_mode == 0:
             if use_soundfont:
-                current_waveform = current_sf2.export_midi_file(
-                    'temp.mid', get_audio=True).raw_data
-                current_midi_audio = pygame.mixer.Sound(
-                    buffer=current_waveform)
-            else:
-                pygame.mixer.music.load('temp.mid')
-                os.remove('temp.mid')
-                os.chdir(abs_path)
-        else:
-            try:
+                label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
+                label.draw()
+                window.flip()
+            if not if_merge:
+                mp.write(musicsheet,
+                         60 / (unit_time / 4),
+                         start_time=musicsheet.start_time,
+                         name='temp.mid')
                 if use_soundfont:
                     current_waveform = current_sf2.export_midi_file(
-                        path, get_audio=True).raw_data
+                        'temp.mid', get_audio=True).raw_data
                     current_midi_audio = pygame.mixer.Sound(
                         buffer=current_waveform)
                 else:
-                    pygame.mixer.music.load(path)
-            except:
-                current_path = mp.riff_to_midi(path)
-                current_buffer = current_path.getbuffer()
-                try:
-                    pygame.mixer.music.load(current_path)
-                except:
-                    with open('temp.mid', 'wb') as f:
-                        f.write(current_buffer)
                     pygame.mixer.music.load('temp.mid')
                     os.remove('temp.mid')
-        if use_soundfont:
-            label.text = ''
-            label.draw()
-            window.flip()
+                    os.chdir(abs_path)
+            else:
+                try:
+                    if use_soundfont:
+                        current_waveform = current_sf2.export_midi_file(
+                            path, get_audio=True).raw_data
+                        current_midi_audio = pygame.mixer.Sound(
+                            buffer=current_waveform)
+                    else:
+                        pygame.mixer.music.load(path)
+                except:
+                    current_path = mp.riff_to_midi(path)
+                    current_buffer = current_path.getbuffer()
+                    try:
+                        pygame.mixer.music.load(current_path)
+                    except:
+                        with open('temp.mid', 'wb') as f:
+                            f.write(current_buffer)
+                        pygame.mixer.music.load('temp.mid')
+                        os.remove('temp.mid')
+            if use_soundfont:
+                label.text = ''
+                label.draw()
+                window.flip()
         pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
         for i in range(sheetlen):
             currentnote = musicsheet.notes[i]
@@ -1534,8 +1533,6 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
             start += interval
     else:
         label.text = 'Rendering current MIDI file with audio samples, please wait ...'
-        if window_mode == 1:
-            redraw()
         label.draw()
         window.flip()
         try:
@@ -1578,7 +1575,8 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
             pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
         label.text = ''
         label.draw()
-        window.flip()
+        if window_mode == 0:
+            window.flip()
     return playls
 
 
