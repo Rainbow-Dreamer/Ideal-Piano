@@ -1449,7 +1449,10 @@ def mode_show(dt):
             del playls
             label.text = ''
             redraw()
-            playls = initialize(musicsheet, unit_time, musicsheet.start_time)
+            playls = initialize(musicsheet,
+                                unit_time,
+                                musicsheet.start_time,
+                                window_mode=1)
             startplay = time.time()
             lastshow = None
             playnotes.clear()
@@ -1466,7 +1469,7 @@ def midi_file_play(dt):
         pygame.mixer.music.play()
 
 
-def initialize(musicsheet, unit_time, start_time):
+def initialize(musicsheet, unit_time, start_time, window_mode=0):
     global play_midi_file
     global current_midi_audio
     play_midi_file = False
@@ -1476,6 +1479,8 @@ def initialize(musicsheet, unit_time, start_time):
         play_midi_file = True
         if use_soundfont:
             label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
+            if window_mode == 1:
+                redraw()
             label.draw()
             window.flip()
         if not if_merge:
@@ -1529,6 +1534,8 @@ def initialize(musicsheet, unit_time, start_time):
             start += interval
     else:
         label.text = 'Rendering current MIDI file with audio samples, please wait ...'
+        if window_mode == 1:
+            redraw()
         label.draw()
         window.flip()
         try:
