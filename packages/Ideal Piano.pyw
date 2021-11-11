@@ -868,7 +868,7 @@ def mode_self_pc(dt):
     if config_enable:
         detect_config()
     if keyboard.is_pressed(pause_key):
-        pygame.mixer.pause()
+        pygame.mixer.stop()
         if pause_key_clear_notes:
             if delay:
                 stillplay = []
