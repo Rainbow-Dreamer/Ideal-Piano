@@ -17,11 +17,13 @@ mp.pygame.mixer.init(44100, -16, 2, 1024)
 mp.pygame.mixer.set_num_channels(1000)
 
 
-def play_sound(audio, mode=1):
+def play_sound(audio, mode=0):
     if mp.pygame.mixer.get_busy():
         mp.pygame.mixer.stop()
     current_audio = audio
     if mode == 0:
+        if current_audio.channels == 1:
+            current_audio = current_audio.set_channels(2)
         current_sound_object = mp.pygame.mixer.Sound(
             buffer=current_audio.raw_data)
         current_sound_object.play()
