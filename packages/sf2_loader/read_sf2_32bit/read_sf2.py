@@ -23,7 +23,7 @@ def play_sound(audio, mode=0):
     current_audio = audio
     if mode == 0:
         if current_audio.channels == 1:
-            current_audio = current_audio.set_channels(2)
+            current_audio = current_audio.set_frame_rate(44100).set_channels(2)
         current_sound_object = mp.pygame.mixer.Sound(
             buffer=current_audio.raw_data)
         current_sound_object.play()
