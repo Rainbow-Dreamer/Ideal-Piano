@@ -1280,7 +1280,7 @@ def mode_show(dt):
                             y=screen_height,
                             width=bar_width,
                             height=bar_unit * current_note.duration /
-                            (bpm_to_use / 130),
+                            (bpm / 130),
                             color=current_note.own_color
                             if use_track_colors else
                             (bar_color if color_mode == 'normal' else
@@ -1323,7 +1323,7 @@ def mode_show(dt):
                                 y=bar_y,
                                 width=bar_width,
                                 height=bar_unit * current_note.duration /
-                                (bpm_to_use / 130),
+                                (bpm / 130),
                                 color=current_note.own_color
                                 if use_track_colors else
                                 (bar_color if color_mode == 'normal' else
@@ -1664,7 +1664,7 @@ def init_show():
     global get_off_melody
     global action
     global path
-    global bpm_to_use
+    global bpm
     setup()
     path = file_path
     if action == 1:
@@ -1675,21 +1675,15 @@ def init_show():
         global interval
         play_interval = interval
         if read_result != 'error':
-            bpm2, musicsheet, start_time = read_result
+            bpm, musicsheet, start_time = read_result
             musicsheet, new_start_time = musicsheet.pitch_filter(*pitch_range)
             start_time += new_start_time
             sheetlen = len(musicsheet)
             if set_bpm:
-                bpm2 = float(set_bpm)
-
+                bpm = float(set_bpm)
         else:
             browse_reset()
             return 'back'
-
-        if bpm is None:
-            bpm_to_use = bpm2
-        else:
-            bpm_to_use = bpm
     else:
         if not path:
             browse_reset()
@@ -1703,7 +1697,6 @@ def init_show():
                                  get_off_overlap_notes, average_degree_length,
                                  melody_degree_tol)
         sheetlen = len(musicsheet)
-
     browse_reset()
     if play_interval is not None:
         interval = None
@@ -1715,10 +1708,9 @@ def init_show():
         sheetlen = play_stop + 1 - play_start
     if sheetlen == 0:
         return 'back'
-
     pygame.mixer.set_num_channels(sheetlen)
     wholenotes = musicsheet.notes
-    unit_time = 4 * 60 / bpm_to_use
+    unit_time = 4 * 60 / bpm
 
     # every object in playls has a situation flag at the index of 3,
     # 0 means has not been played yet, 1 means it has started playing,
