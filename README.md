@@ -14,7 +14,7 @@ The second mode, MIDI keyboard free play, is to connect a MIDI keyboard to your 
 
 Previously I wanted to implement a MIDI keyboard shared by both DAW (arranger host) and Ideal Piano, or to play a project in DAW and display the current notes in Ideal Piano, but at the beginning it failed, always showing errors like Host error, but later I found a good solution. loopMIDI is a free software that allows you to create virtual MIDI ports, so you can use it to connect to the MIDI ports of several different software. With loopMIDI you can use a MIDI keyboard for both the DAW and Ideal Piano, so you can load the source you want to hear in the DAW and then play it on the MIDI keyboard and hear the DAW source, while Ideal Piano can display the chord type and notes you are currently playing in real time.
 
-In addition, it is also possible to play a project in the DAW and have Ideal Piano display the chord types and notes being played at the same time. The procedure is described in `User Manuals/User Instructions (Read me first!).pdf`, please check it out.
+In addition, it is also possible to play a project in the DAW and have Ideal Piano display the chord types and notes being played at the same time. The procedure is described in `User Manuals/English/User Instructions (Read me first!).pdf`, please check it out.
 
 The third mode is to play the MIDI file to analyze the current chords in real time. After entering this mode, a file browsing box will pop up for you to select the MIDI file you want to play in Ideal Piano, and after that, you can select the MIDI track you want to play and the range you want to play (according to the percentage, for example, you can enter 0 and 50 in the range to play the first half), you can also choose the BPM (tempo of the song) to be played.
 
@@ -24,7 +24,7 @@ A special note here is that the MIDI track box can be left blank, and the progra
 
 In this mode, the selected MIDI file will be played in Ideal Piano, with the sound coming from a built-in General MIDI player by default. You can change `play_as_midi` in the settings file to `False` to make the sound coming from the sound source you set. The sound source must be a folder with audio files named after notes, like `C5.wav`. The current position of the notes on the piano will be displayed on the screen, and the chords of the notes currently played will be analyzed in real time.
 
-If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/User Instructions (Read me first!).pdf`.
+If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/English/User Instructions (Read me first!).pdf`.
 
 Since this project is entirely done by myself, my artwork is not good, so Ideal Piano can be used very smoothly if you are not very picky about the artwork.
 
@@ -76,7 +76,7 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 之前我想实现同时DAW（编曲宿主）和Ideal Piano共用一个MIDI键盘，或者DAW里面播放工程同时Ideal Piano也可以显示当前的音符， 可是在一开始遭遇了失败，一直都是显示Host error之类的错误，后来我找到了很好的解决办法。 loopMIDI这个免费软件可以做到建立虚拟MIDI端口， 因此可以用来连接多个不同的软件的MIDI端口。使用loopMIDI可以让DAW和Ideal Piano同时使用一个MIDI键盘，这样你就可以在DAW里面加载自己想听的音源， 然后在MIDI键盘上演奏，听到的是DAW的音源，与此同时Ideal Piano也可以同步地实时显示当前演奏的和弦类型和音符。
 
-除此之外，也可以实现在DAW里播放工程， 同时Ideal Piano也可以显示当下演奏的和弦类型和音符。具体的操作流程我在`User Manuals/使用须知 (请先看我!).pdf`里面写的很详细，请大家去看看。
+除此之外，也可以实现在DAW里播放工程， 同时Ideal Piano也可以显示当下演奏的和弦类型和音符。具体的操作流程我在`User Manuals/中文/使用须知 (请先看我!).pdf`里面写的很详细，请大家去看看。
 
 第三个模式，播放MIDI文件实时分析当前的和弦，进入这个模式后，会弹出一个文件浏览框让大家选择想要在Ideal Piano里播放的MIDI文件，选择完成之后， 可以选择自己想要播放的MIDI轨道，选择播放的范围（按照百分比来算，比如播放前半段就可以在范围那边写0和50），也可以选择播放的BPM（曲速）。
 
@@ -86,7 +86,7 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 在这个模式下，选择的MIDI文件会在Ideal Piano里播放，声音默认来自一个内置的General MIDI播放器。你可以把配置文件里的`play_as_midi`改为`False`让声音来自于自己设置好的音源。音源必须是一个文件夹里面是以音符为名字的音频文件，比如`C5.wav`这种。在画面上会显示当前的音符在钢琴上的位置，并且实时分析当前演奏的音符组成的和弦。
 
-如果你想要声音来自DAW的音源的话，使用loopMIDI就可以做到了，在DAW里播放工程，同时Ideal Piano可以同步接收到MIDI信号，实时分析当前的音符组成的和弦，显示音符与和弦类型在屏幕上。具体的操作流程请到`User Manuals/使用须知 (请先看我!).pdf`这个文件里看。
+如果你想要声音来自DAW的音源的话，使用loopMIDI就可以做到了，在DAW里播放工程，同时Ideal Piano可以同步接收到MIDI信号，实时分析当前的音符组成的和弦，显示音符与和弦类型在屏幕上。具体的操作流程请到`User Manuals/中文/使用须知 (请先看我!).pdf`这个文件里看。
 
 由于这个项目完全由本人一个人完成，本人的美工水平欠佳，因此只要不是对于美工很挑剔的话，Ideal Piano还是可以用的很顺畅的。
 
