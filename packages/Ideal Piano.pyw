@@ -1707,18 +1707,12 @@ def init_show():
     browse_reset()
     if play_interval is not None:
         interval = None
-
         play_start, play_stop = int(sheetlen * (play_interval[0] / 100)), int(
             sheetlen * (play_interval[1] / 100))
         if play_start == 0:
             play_start = 1
         musicsheet = musicsheet[play_start:play_stop + 1]
         sheetlen = play_stop + 1 - play_start
-    if show_change_pitch != None:
-        musicsheet = musicsheet.up(show_change_pitch)
-    if show_modulation != None:
-        musicsheet = modulation(musicsheet, eval(show_modulation[0]),
-                                eval(show_modulation[1]))
     if sheetlen == 0:
         return 'back'
 

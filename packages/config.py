@@ -123,13 +123,6 @@ key_settings = {
     'enter2': 'A#0'
 }
 
-reverse_key_settings = {j: i for i, j in key_settings.items()}
-
-# switching mode for self playing ('self'),
-# or play midi ('show'),
-# or play chords with self-configured playing chords keys settings ('chord')
-mode = 'show'
-self_device = 'pc'
 midi_device_id = 1
 device_info_num = 10
 
@@ -140,32 +133,12 @@ unpause_key = 'enter'
 exit_key = 'esc'
 pause_key_clear_notes = False
 
-# show_key set to True will show what keyboard keys you are pressing
-show_key = False
-
-# if mode is 'show', you can set musicsheet as a musicpy sentence,
-# or set the path of midi you want to play
-musicsheet = "(chd('C','maj7').set(4,1))*3"
-
-path = None
-
-# these are the number of tracks of the midi you want to play from
-track_ind = 2
-track = 1
-
-# the bpm you want to play
-bpm = None
-
-# play_interval: play the parts of the midi in this interval (percentages)
-play_interval = None
-
 # these are the init parameters of the mixer
 frequency = 44100
 size = -16
 channel = 2
 buffer = 1024
 maxinum_channels = 100
-
 global_volume = 0.6
 
 # if delay is set to True, when you are self playing, the sounds will
@@ -211,12 +184,6 @@ poly_chord_first = False
 root_position_return_first = True
 alter_notes_show_degree = True
 
-# the operations on the midi you want to play
-# show_change_pitch : a positive number: will sharp all the notes in the midi by the number; a negative number: same except flat all the notes
-# show_modulation : [scale1, scale2] perform modulation from scale1 to scale2 on the notes in the midi
-show_change_pitch = None
-show_modulation = None
-
 # if this is set to True, then you enable the config key during the playing
 config_enable = True
 
@@ -235,103 +202,36 @@ change_delay = 'd'
 change_read_current = 'c'
 change_pause_key_clear_notes = 'x'
 
-# chords types for each key if you use 'chord' mode
-# During the chord mode, if you press a root note key with a chord key,
-# then the piano will play that chord types with the root note,
-# you can set some keys for chord inversions (i.e. 1st inversion, 2nd inversion, ...),
-# and you can even set keys for reversing a chord, and the tempo and interval of the
-# chord could also be setted and changed.
-CHORDKEY = {
-    'num 0': 'maj',
-    'decimal': 'm',
-    'num 1': '7',
-    'num 2': 'maj7',
-    'num 3': 'm7',
-    'num 4': 'dim7',
-    'num 5': 'o7',
-    'num 6': 'aug',
-    'num 7': 'fifth 9th',
-    'num 8': '5(+octave)',
-    'num 9': 'mM7'
-}
-
-# keys for chord inversions and reversing
-CHORD_MODIFY = {
-    'f1': [1, 'inv'],
-    'f2': [2, 'inv'],
-    'f3': [3, 'inv'],
-    'f4': [4, 'inv'],
-    'f5': [0, 'reverse'],
-    'f6': [1, 'inv_high']
-}
-
-# chords' intervals and durations (timing unit: miliseconds)
-chord_interval = 0.3
-chord_duration = 1
-note_place = [(-5.0, 50), (10, 102), (19.6, 50), (44.2, 50), (59.0, 102),
-              (68.80000000000001, 50), (83.6, 102), (93.4, 50), (118.0, 50),
-              (132.8, 102), (142.60000000000002, 50), (157.4, 102),
-              (167.20000000000002, 50), (182.0, 102), (191.8, 50), (216.4, 50),
-              (231.20000000000002, 102), (241.0, 50), (255.8, 102),
-              (265.6, 50), (290.20000000000005, 50), (305.0, 102), (314.8, 50),
-              (329.6,
-               102), (339.40000000000003, 50), (354.20000000000005, 102),
-              (364.0, 50), (388.6, 50), (403.40000000000003, 102),
-              (413.20000000000005, 50), (428.00000000000006, 102), (437.8, 50),
-              (462.40000000000003, 50), (477.20000000000005, 102), (487.0, 50),
-              (501.80000000000007, 102), (511.6, 50), (526.4000000000001, 102),
-              (536.2, 50), (560.8000000000001, 50), (575.6, 102),
-              (585.4000000000001, 50), (600.2, 102), (610.0, 50), (634.6, 50),
-              (649.4000000000001, 102), (659.2, 50), (674.0, 102),
-              (683.8000000000001, 50), (698.6, 102), (708.4000000000001, 50),
-              (733.0, 50), (747.8000000000001, 102), (757.6, 50),
-              (772.4000000000001, 102), (782.2, 50), (806.8000000000001, 50),
-              (821.6000000000001, 102), (831.4000000000001, 50), (846.2, 102),
-              (856.0, 50), (870.8000000000001, 102), (880.6, 50), (905.2, 50),
-              (920.0000000000001, 102), (929.8000000000001, 50),
-              (944.6000000000001, 102), (954.4000000000001, 50), (979.0, 50),
-              (993.8000000000002, 102),
-              (1003.6, 50), (1018.4000000000001, 102), (1028.2, 50),
-              (1043.0, 102), (1052.8, 50), (1077.4, 50), (1092.2, 102),
-              (1102.0, 50), (1116.8, 102), (1126.6000000000001, 50),
-              (1151.2, 50), (1166.0, 102), (1175.8000000000002, 50),
-              (1190.6000000000001, 102), (1200.4, 50), (1215.2, 102),
-              (1225.0, 50), (1249.6000000000001, 50)]
+note_place = [
+    (-5.0, 50), (10, 102), (19.6, 50), (44.2, 50), (59.0, 102), (68.8, 50),
+    (83.6, 102), (93.4, 50), (118.0, 50), (132.8, 102), (142.6, 50),
+    (157.4, 102), (167.2, 50), (182.0, 102), (191.8, 50), (216.4, 50),
+    (231.2, 102), (241.0, 50), (255.8, 102), (265.6, 50), (290.2, 50),
+    (305.0, 102), (314.8, 50), (329.6, 102), (339.4, 50), (354.2, 102),
+    (364.0, 50), (388.6, 50), (403.4, 102), (413.2, 50), (428.0, 102),
+    (437.8, 50), (462.4, 50), (477.2, 102), (487.0, 50), (501.8, 102),
+    (511.6, 50), (526.4, 102), (536.2, 50), (560.8, 50), (575.6, 102),
+    (585.4, 50), (600.2, 102), (610.0, 50), (634.6, 50), (649.4, 102),
+    (659.2, 50), (674.0, 102), (683.8, 50), (698.6, 102), (708.4, 50),
+    (733.0, 50), (747.8, 102), (757.6, 50), (772.4, 102), (782.2, 50),
+    (806.8, 50), (821.6, 102), (831.4, 50), (846.2, 102), (856.0, 50),
+    (870.8, 102), (880.6, 50), (905.2, 50), (920.0, 102), (929.8, 50),
+    (944.6, 102), (954.4, 50), (979.0, 50), (993.8, 102), (1003.6, 50),
+    (1018.4, 102), (1028.2, 50), (1043.0, 102), (1052.8, 50), (1077.4, 50),
+    (1092.2, 102), (1102.0, 50), (1116.8, 102), (1126.6, 50), (1151.2, 50),
+    (1166.0, 102), (1175.8, 50), (1190.6, 102), (1200.4, 50), (1215.2, 102),
+    (1225.0, 50), (1249.6, 50)
+]
 
 # load sounds from the folders of sound paths when playing or not
 load_sound = True
 
+# show_key set to True will show what keyboard keys you are pressing
+show_key = False
+
 # detect chord types when the current notes change
 show_chord = True
 show_notes = True
-
-# names of intervals
-perfect_unison = 0
-minor_second = 1
-augmented_unison = 1
-major_second = 2
-diminished_third = 2
-minor_third = 3
-augmented_second = 3
-major_third = 4
-diminished_fourth = 4
-perfect_fourth = 5
-augmented_third = 5
-diminished_fifth = 6
-augmented_fourth = 6
-perfect_fifth = 7
-diminished_sixth = 7
-minor_sixth = 8
-augmented_fifth = 8
-major_sixth = 9
-diminished_seventh = 9
-minor_seventh = 10
-augmented_sixth = 10
-major_seventh = 11
-diminished_octave = 11
-perfect_octave = 12
-octave = 12
-augmented_seventh = 12
 
 # the parameters of the function split_melody
 melody_tol = minor_seventh
@@ -400,7 +300,7 @@ piano_background_image = 'resources/piano_background.png'
 show_music_analysis = False
 music_analysis_file = None
 music_analysis_place = (250, 500)
-key_header = '当前调性：'
+key_header = 'current key: '
 music_analysis_width = 1300
 music_analysis_fonts_size = 20
 
