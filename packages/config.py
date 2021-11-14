@@ -234,8 +234,8 @@ show_chord = True
 show_notes = True
 
 # the parameters of the function split_melody
-melody_tol = minor_seventh
-chord_tol = major_sixth
+melody_tol = 10
+chord_tol = 9
 get_off_overlap_notes = False
 average_degree_length = 8
 melody_degree_tol = 'B4'
