@@ -9,13 +9,21 @@ class note:
     def __init__(self, name, num=4, duration=0.25, volume=100, channel=None):
         self.name = name
         self.num = num
-        self.degree = standard[name] + 12 * (num + 1)
         self.duration = duration
         volume = int(volume)
         if volume > 127:
             volume = 127
         self.volume = volume
         self.channel = channel
+
+    @property
+    def degree(self):
+        return standard[self.name] + 12 * (self.num + 1)
+
+    @degree.setter
+    def degree(self, value):
+        self.name = standard_reverse[value % 12]
+        self.num = (value // 12) - 1
 
     def __str__(self):
         return f'{self.name}{self.num}'
@@ -122,13 +130,11 @@ class note:
     def reset_octave(self, num):
         temp = copy(self)
         temp.num = num
-        temp.degree = standard[temp.name] + 12 * (temp.num + 1)
         return temp
 
     def reset_pitch(self, name):
         temp = copy(self)
         temp.name = name
-        temp.degree = standard[temp.name] + 12 * (temp.num + 1)
         return temp
 
     def set_channel(self, channel):
@@ -4945,14 +4951,6 @@ def reset(self, **kwargs):
     return temp
 
 
-def reset_note(self, **kwargs):
-    temp = copy(self)
-    for i, j in kwargs.items():
-        setattr(temp, i, j)
-    temp.degree = note_to_degree(str(temp))
-    return temp
-
-
 def event(mode='controller', *args, **kwargs):
     if mode == 'controller':
         return controller_event(*args, **kwargs)
@@ -4984,8 +4982,8 @@ def event(mode='controller', *args, **kwargs):
         return track_name(*args, **kwargs)
 
 
-note.reset = reset_note
 for each in [
-        chord, piece, track, scale, drum, rest, tempo, pitch_bend, pan, volume
+        note, chord, piece, track, scale, drum, rest, tempo, pitch_bend, pan,
+        volume
 ]:
     each.reset = reset
