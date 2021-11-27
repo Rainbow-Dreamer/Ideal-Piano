@@ -1,10 +1,14 @@
 # Ideal-Piano
 
-[中文](#Ideal-Piano中文版介绍) English
+[中文](#Ideal-Piano-1) English
+
+## Introduction
 
 This is a smart piano software that I started to develop in April 2020 and recently near completion in early August. This smart piano software has some usefulness for music beginners, musicians, music lovers, etc. 
 
 The best feature of Ideal Piano is the algorithm that uses music logic to determine what chord the currently played note is composed of and display it on the screen. This algorithm is a project of my own, a music logic algorithm designed by musicpy, a music composition language library, and it works very well, including all root position chords, all kinds of chord inversions, voicings and chords which have altered notes, omissions, etc. It can determine very complicated chord compositions, and there are several parameters to adjust the priority of the music logic. (The default parameter settings are the most widely applicable)
+
+## Usage
 
 There are three modes in total: computer keyboard free play, MIDI keyboard free play and play MIDI file to analyze chords and demonstrate them in real time. In the demo mode of playing the MIDI file, you can choose to remove the main melody by the algorithm and listen only to the notes of the chords in the bass part. These three modes can be accessed by selecting the corresponding buttons in the upper left corner after opening Ideal Piano.
 
@@ -26,7 +30,11 @@ In this mode, the selected MIDI file will be played in Ideal Piano, with the sou
 
 If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/English/User Instructions (Read me first!).pdf`.
 
-Since this project is entirely done by myself, my artwork is not good, so Ideal Piano can be used very smoothly if you are not very picky about the artwork.
+## Download
+
+You can download this software for Windows and Linux from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest), currently Ideal Piano is not compatible with macOS because many dependent python packages of this software has serious existing bugs with macOS when testing, I will try to make a compatible version for it in my spare time.
+
+## Previews
 
 Here is a preview of Ideal Piano's screen.
 
@@ -49,24 +57,31 @@ Here is a preview of Ideal Piano's screen.
 ![image](previews/5.jpg)
 
 <p align="center">You can easily change the background image</p
-
-Other notes:
+## Other notes
 
 1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from [here](https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID)
 2. Since my software is in English, I made a Chinese patch package, which includes: the buttons of the interface, the names of the chord types displayed, the single note and intervals, the interface for selecting MIDI files and each setting item, the programs for changing the settings. The download link of the Chinese patch installation package is [here](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
 3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `config.py`, save and then open the software to see the changes.
 
-If you encounter any problems, please add my qq number 2180502841 to talk to me or send emails to 2180502841@qq.com, thank you for your support!
+## Summary
+
+Since this project is entirely done by myself, my artwork is not good, so Ideal Piano can be used very smoothly if you are not very picky about the artwork.
+
+If you encounter any problems when using this software, please take a look at the user manual first, if you cannot solve the problem, you can contact me by sending emails to 2180502841@qq.com or adding my qq number 2180502841, thank you for your support~
 
 The chord logic algorithm used in this software comes from another project of mine, a chord judgment algorithm I designed in musicpy, a professional music theory composition language, which follows the logic of music theory completely. The algorithm to remove the main melody is also from my project musicpy, so you can say that this smart piano software is one of the practical applications of musicpy. If you are interested in the musicpy project, please check my repository, the link is [here](https://github.com/Rainbow-Dreamer/musicpy)
 
-# Ideal-Piano中文版介绍
+# Ideal-Piano
 
 中文 [English](#Ideal-Piano)
+
+## 介绍
 
 这是一款智能钢琴软件，我在2020年的4月份开始开发，最近8月初接近完工。这款智能钢琴软件对于音乐初学者，音乐人，音乐爱好者等都有一些用处。
 
 Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏的音组成的是什么和弦，并且显示在屏幕上。这个算法是自己的一个项目， 乐理作曲语言库musicpy里面自己精心设计的一个乐理逻辑算法，判断的效果非常好，包括所有的原位和弦，各种和弦的转位，voicings 和变化音，省略音等等，可以判断非常覆杂的和弦组成，并且有多个乐理逻辑判断优先级的参数可以调整。 （默认的参数设置的适用性最广泛）
+
+## 使用
 
 这个智能钢琴软件总共有三个模式，电脑键盘自由演奏，MIDI键盘自由演奏和播放MIDI文件分析和弦并且实时演示。在播放MIDI文件演示的模式中，可以选择通过算法去除主旋律，只听低音部分的和弦的音符。这三个模式在打开Ideal Piano之后选择左上角对应的按钮就可以进入。
 
@@ -88,7 +103,11 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 如果你想要声音来自DAW的音源的话，使用loopMIDI就可以做到了，在DAW里播放工程，同时Ideal Piano可以同步接收到MIDI信号，实时分析当前的音符组成的和弦，显示音符与和弦类型在屏幕上。具体的操作流程请到`User Manuals/中文/使用须知 (请先看我!).pdf`这个文件里看。
 
-由于这个项目完全由本人一个人完成，本人的美工水平欠佳，因此只要不是对于美工很挑剔的话，Ideal Piano还是可以用的很顺畅的。
+## 下载
+
+你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows和Linux版本，目前Ideal Piano不兼容macOS，因为这个软件的许多依赖的python包在测试时与macOS之间存在严重的bug，我将在业余时间尝试为它制作一个兼容版本。
+
+## 预览
 
 以下是Ideal Piano的画面预览：
 
@@ -111,13 +130,16 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 ![image](previews/5.jpg)
 
 <p align="center">你可以轻松地改变背景图片</p
-
-其他的说明：
+## 其他说明
 
 1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DUbKo0UQhPG0CBjHwbID)下载
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，显示的和弦种类名称，单音和音程，选择MIDI文件的界面和每个设置项，更改设置的程序。中文补丁安装包的下载地址在[这里](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
 3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`config.py`里去修改，保存之后再打开软件就可以看到变化了。
 
-如果有遇到任何问题，请加我的qq号2180502841来跟我说或者发邮件到2180502841@qq.com，感谢大家的支持~
+## 总结
+
+由于这个项目完全由本人一个人完成，本人的美工水平欠佳，因此只要不是对于美工很挑剔的话，Ideal Piano还是可以用的很顺畅的。
+
+如果你在使用这个软件时有遇到任何问题，请先看使用手册，如果你无法解决问题，请发邮件到2180502841@qq.com或者加我的qq号2180502841，感谢大家的支持~
 
 这个软件在实时和弦判断用到的乐理逻辑算法来自于我的另一个项目，专业乐理作曲语言musicpy里我精心设计的一个和弦判断的算法，完全按照乐理的逻辑来推测。在播放MIDI的模式下可以选择去除主旋律，这个去除主旋律的算法也同样来自我的项目musicpy，所以可以说这个智能钢琴软件就是musicpy的其中一个实际应用。对musicpy这个项目感兴趣的欢迎来看我的repository，链接在[这里](https://github.com/Rainbow-Dreamer/musicpy)
