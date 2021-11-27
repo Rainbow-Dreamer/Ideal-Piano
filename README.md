@@ -56,7 +56,7 @@ Here is a preview of Ideal Piano's screen.
 
 ![image](previews/5.jpg)
 
-<p align="center">You can easily change the background image</p
+<p align="center">You can easily change the background image</p>
 
 ## Other notes
 
@@ -130,7 +130,7 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 ![image](previews/5.jpg)
 
-<p align="center">你可以轻松地改变背景图片</p
+<p align="center">你可以轻松地改变背景图片</p>
 
 ## 其他说明
 
