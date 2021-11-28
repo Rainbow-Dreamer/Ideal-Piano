@@ -75,6 +75,40 @@ def percentage_to_db(vol):
     return mp.math.log(abs(vol / 100), 10) * 20
 
 
+def apply_fadeout(current_chord, decay, fixed_decay, new=True):
+    if type(current_chord) == mp.piece:
+        temp = copy(current_chord)
+        if type(decay) == list:
+            for i in range(len(temp.tracks)):
+                apply_fadeout(each, decay[i], fixed_decay, False)
+        else:
+            for each in temp.tracks:
+                apply_fadeout(each, decay, fixed_decay, False)
+        return temp
+    temp = copy(current_chord) if new else current_chord
+    if fixed_decay:
+        if type(decay) == list:
+            for i in range(len(temp.notes)):
+                each = temp.notes[i]
+                if type(each) == mp.note:
+                    each.duration += decay[i]
+        else:
+            for each in temp.notes:
+                if type(each) == mp.note:
+                    each.duration += decay
+    else:
+        if type(decay) == list:
+            for i in range(len(temp.notes)):
+                each = temp.notes[i]
+                if type(each) == mp.note:
+                    each.duration += each.duration * decay[i]
+        else:
+            for each in temp.notes:
+                if type(each) == mp.note:
+                    each.duration += each.duration * decay
+    return temp
+
+
 def get_timestamps(current_chord,
                    bpm,
                    ignore_other_messages=False,
@@ -214,10 +248,10 @@ class sf2_loader:
         self.synth = fluidsynth.Synth()
         self.sfid_list = []
         self.sfid = 1
-        self.current_track = 0
+        self._current_channel = 0
         self.current_sfid = copy(self.sfid)
-        self.current_bank_num = 0
-        self.current_preset_num = 0
+        self.current_bank = 0
+        self.current_preset = 0
         self.instruments = []
         self.instruments_ind = []
         if file:
@@ -227,22 +261,36 @@ class sf2_loader:
             self.sfid_list.append(copy(self.sfid))
             self.program_select()
 
+    @property
+    def current_channel(self):
+        return self._current_channel
+
+    @current_channel.setter
+    def current_channel(self, value):
+        self._current_channel = value
+        try:
+            current_channel_info = self.synth.channel_info(value)
+        except:
+            self.program_select(value, self.sfid_list[0], 0, 0)
+            current_channel_info = self.synth.channel_info(value)
+        self.current_sfid, self.current_bank, self.current_preset, preset_name = current_channel_info
+
     def __repr__(self):
         return f'''[soundfont loader]
 loaded soundfonts: {self.file}
 soundfonts id: {self.sfid_list}
-current track: {self.current_track}
+current channel: {self.current_channel}
 current soundfont id: {self.current_sfid}
 current soundfont name: {os.path.basename(self.file[self.sfid_list.index(self.current_sfid)]) if self.file else ""}
-current bank number: {self.current_bank_num}
-current preset number: {self.current_preset_num}
+current bank number: {self.current_bank}
+current preset number: {self.current_preset}
 current preset name: {self.get_current_instrument()}'''
 
     def program_select(self,
-                       track=None,
+                       channel=None,
                        sfid=None,
-                       bank_num=None,
-                       preset_num=None,
+                       bank=None,
+                       preset=None,
                        correct=True,
                        hide_warnings=True):
         if hide_warnings:
@@ -250,30 +298,29 @@ current preset name: {self.get_current_instrument()}'''
                 capture = py.io.StdCaptureFD(out=True, in_=False)
             except:
                 pass
-        current_track = copy(self.current_track)
+        current_channel = copy(self.current_channel)
         current_sfid = copy(self.current_sfid)
-        current_bank_num = copy(self.current_bank_num)
-        current_preset_num = copy(self.current_preset_num)
-        if track is None:
-            track = self.current_track
+        current_bank = copy(self.current_bank)
+        current_preset = copy(self.current_preset)
+        if channel is None:
+            channel = self.current_channel
         if sfid is None:
             sfid = self.current_sfid
-        if bank_num is None:
-            bank_num = self.current_bank_num
+        if bank is None:
+            bank = self.current_bank
         else:
             self.instruments.clear()
-        if preset_num is None:
-            preset_num = self.current_preset_num
-        select_status = self.synth.program_select(track, sfid, bank_num,
-                                                  preset_num)
+        if preset is None:
+            preset = self.current_preset
+        select_status = self.synth.program_select(channel, sfid, bank, preset)
         if not (correct and select_status == -1):
-            self.current_track = track
+            self.current_channel = channel
             self.current_sfid = sfid
-            self.current_bank_num = bank_num
-            self.current_preset_num = preset_num
+            self.current_bank = bank
+            self.current_preset = preset
         else:
-            self.synth.program_select(current_track, current_sfid,
-                                      current_bank_num, current_preset_num)
+            self.synth.program_select(current_channel, current_sfid,
+                                      current_bank, current_preset)
         if hide_warnings:
             try:
                 capture.reset()
@@ -281,73 +328,73 @@ current preset name: {self.get_current_instrument()}'''
                 pass
         return select_status
 
-    def __lt__(self, preset_num):
-        if type(preset_num) == tuple and len(preset_num) == 2:
-            self.program_select(bank_num=preset_num[1])
-            self < preset_num[0]
+    def __lt__(self, preset):
+        if type(preset) == tuple and len(preset) == 2:
+            self.program_select(bank=preset[1])
+            self < preset[0]
         else:
-            if type(preset_num) == str:
+            if type(preset) == str:
                 if not self.instruments:
                     self.instruments, self.instruments_ind = self.get_all_instrument_names(
                         return_mode=1, get_ind=True)
-                if preset_num in self.instruments:
+                if preset in self.instruments:
                     current_ind = self.instruments_ind[self.instruments.index(
-                        preset_num)]
-                    self.program_select(preset_num=current_ind)
+                        preset)]
+                    self.program_select(preset=current_ind)
             else:
-                self.program_select(preset_num=preset_num)
+                self.program_select(preset=preset)
 
-    def __mod__(self, value):
-        self.program_select(track=value[0],
-                            bank_num=value[1],
-                            preset_num=value[2])
+    def __mod__(self, channel):
+        self.change_channel(channel)
 
-    def get_current_instrument(self, num=0):
+    def get_current_instrument(self):
         try:
-            result = self.synth.channel_info(num)[3]
+            result = self.synth.channel_info(self.current_channel)[3]
         except:
             result = ''
         return result
 
-    def preset_name(self, sfid=None, bank_num=None, preset_num=None):
+    def preset_name(self, sfid=None, bank=None, preset=None):
         if sfid is None:
             sfid = self.current_sfid
-        if bank_num is None:
-            bank_num = self.current_bank_num
-        if preset_num is None:
-            preset_num = self.current_preset_num
-        return self.synth.sfpreset_name(sfid, bank_num, preset_num)
+        if bank is None:
+            bank = self.current_bank
+        if preset is None:
+            preset = self.current_preset
+        return self.synth.sfpreset_name(sfid, bank, preset)
 
     def get_instrument_name(self,
-                            track=None,
+                            channel=None,
                             sfid=None,
-                            bank_num=None,
-                            preset_num=None,
-                            num=0,
+                            bank=None,
+                            preset=None,
                             hide_warnings=True):
-        current_track = copy(self.current_track)
+        if channel is None:
+            channel = self.current_channel
+        current_channel = copy(self.current_channel)
+        self.change_channel(channel)
         current_sfid = copy(self.current_sfid)
-        current_bank_num = copy(self.current_bank_num)
-        current_preset_num = copy(self.current_preset_num)
-        select_status = self.program_select(track,
+        current_bank = copy(self.current_bank)
+        current_preset = copy(self.current_preset)
+        select_status = self.program_select(channel,
                                             sfid,
-                                            bank_num,
-                                            preset_num,
+                                            bank,
+                                            preset,
                                             hide_warnings=hide_warnings)
-        result = self.synth.channel_info(num)[3]
-        self.program_select(current_track,
+        result = self.synth.channel_info(channel)[3]
+        self.program_select(channel,
                             current_sfid,
-                            current_bank_num,
-                            current_preset_num,
+                            current_bank,
+                            current_preset,
                             hide_warnings=hide_warnings)
+        self.change_channel(current_channel)
         if select_status != -1:
             return result
 
     def get_all_instrument_names(self,
-                                 track=None,
+                                 channel=None,
                                  sfid=None,
-                                 bank_num=None,
-                                 num=0,
+                                 bank=None,
                                  max_num=128,
                                  get_ind=False,
                                  mode=0,
@@ -358,18 +405,17 @@ current preset name: {self.get_current_instrument()}'''
                 capture = py.io.StdCaptureFD(out=True, in_=False)
             except:
                 pass
-        current_track = copy(self.current_track)
+        current_channel = copy(self.current_channel)
         current_sfid = copy(self.current_sfid)
-        current_bank_num = copy(self.current_bank_num)
-        current_preset_num = copy(self.current_preset_num)
-        self.program_select(track, sfid, bank_num, hide_warnings=False)
+        current_bank = copy(self.current_bank)
+        current_preset = copy(self.current_preset)
+        self.program_select(channel, sfid, bank, hide_warnings=False)
         result = []
         if get_ind:
             ind = []
         for i in range(max_num):
             try:
-                current_name = self.get_instrument_name(preset_num=i,
-                                                        num=num,
+                current_name = self.get_instrument_name(preset=i,
                                                         hide_warnings=False)
                 if current_name:
                     result.append(current_name)
@@ -379,10 +425,10 @@ current preset name: {self.get_current_instrument()}'''
                 pass
         if get_ind and return_mode == 0:
             result = {ind[i]: result[i] for i in range(len(result))}
-        self.program_select(current_track,
+        self.program_select(current_channel,
                             current_sfid,
-                            current_bank_num,
-                            ind[0] if mode == 1 else current_preset_num,
+                            current_bank,
+                            ind[0] if mode == 1 else current_preset,
                             hide_warnings=False)
         if hide_warnings:
             try:
@@ -395,8 +441,8 @@ current preset name: {self.get_current_instrument()}'''
             return result
 
     def all_instruments(self,
-                        max_bank_num=129,
-                        max_preset_num=128,
+                        max_bank=129,
+                        max_preset=128,
                         sfid=None,
                         hide_warnings=True):
         if hide_warnings:
@@ -408,12 +454,12 @@ current preset name: {self.get_current_instrument()}'''
         if sfid is not None:
             self.change_sfid(sfid)
         instruments = {}
-        for i in range(max_bank_num):
+        for i in range(max_bank):
             current_bank = {}
-            for j in range(max_preset_num):
+            for j in range(max_preset):
                 try:
                     current_name = self.get_instrument_name(
-                        bank_num=i, preset_num=j, hide_warnings=False)
+                        bank=i, preset=j, hide_warnings=False)
                     if current_name:
                         current_bank[j] = current_name
                 except:
@@ -429,7 +475,10 @@ current preset name: {self.get_current_instrument()}'''
                 pass
         return instruments
 
-    def change_preset(self, preset):
+    def change_preset(self, preset, channel=None):
+        if channel is not None:
+            current_channel = copy(self.current_channel)
+            self.change_channel(channel)
         if type(preset) == str:
             if not self.instruments:
                 self.instruments, self.instruments_ind = self.get_all_instrument_names(
@@ -437,35 +486,59 @@ current preset name: {self.get_current_instrument()}'''
             if preset in self.instruments:
                 current_ind = self.instruments_ind[self.instruments.index(
                     preset)]
-                self.program_select(preset_num=current_ind)
+                self.program_select(preset=current_ind)
         else:
-            self.program_select(preset_num=preset)
+            self.program_select(preset=preset)
+        if channel is not None:
+            self.change_channel(current_channel)
 
-    def change_bank(self, bank):
-        self.program_select(bank_num=bank, correct=False)
+    def change_bank(self, bank, channel=None):
+        if channel is not None:
+            current_channel = copy(self.current_channel)
+            self.change_channel(channel)
+        self.program_select(bank=bank, correct=False)
+        if channel is not None:
+            self.change_channel(current_channel)
 
-    def change_track(self, track):
-        self.program_select(track=track)
+    def change_channel(self, channel):
+        self.current_channel = channel
 
-    def change_sfid(self, sfid):
+    def change_sfid(self, sfid, channel=None):
+        if channel is not None:
+            current_channel = copy(self.current_channel)
+            self.change_channel(channel)
         self.program_select(sfid=sfid, correct=False)
+        if channel is not None:
+            self.change_channel(current_channel)
 
-    def change_soundfont(self, name):
+    def change_soundfont(self, name, channel=None):
         if name in self.file:
             ind = self.file.index(name)
-            self.change_sfid(self.sfid_list[ind])
+            self.change_sfid(self.sfid_list[ind], channel)
         else:
             names = [os.path.basename(i) for i in self.file]
             if name in names:
                 ind = names.index(name)
-                self.change_sfid(self.sfid_list[ind])
+                self.change_sfid(self.sfid_list[ind], channel)
+
+    def channel_info(self, channel=None):
+        if channel is None:
+            channel = self.current_channel
+        try:
+            result = self.synth.channel_info(channel)
+        except:
+            current_channel = copy(self.current_channel)
+            self.change_channel(channel)
+            result = self.synth.channel_info(channel)
+            self.change_channel(current_channel)
+        return result
 
     def export_note(self,
                     note_name,
                     duration=2,
                     decay=1,
                     volume=100,
-                    track=0,
+                    channel=0,
                     start_time=0,
                     sample_width=2,
                     channels=2,
@@ -485,9 +558,9 @@ current preset name: {self.get_current_instrument()}'''
         if start_time > 0:
             whole_arrays.append(
                 self.synth.get_samples(int(frame_rate * start_time)))
-        self.synth.noteon(track, note_name, volume)
+        self.synth.noteon(channel, note_name, volume)
         whole_arrays.append(self.synth.get_samples(int(frame_rate * duration)))
-        self.synth.noteoff(track, note_name)
+        self.synth.noteoff(channel, note_name)
         whole_arrays.append(self.synth.get_samples(int(frame_rate * decay)))
         audio_array = numpy.concatenate(whole_arrays, axis=None)
         current_samples = fluidsynth.raw_audio_string(audio_array)
@@ -516,7 +589,7 @@ current preset name: {self.get_current_instrument()}'''
     def export_chord(self,
                      current_chord,
                      decay=0.5,
-                     track=0,
+                     channel=0,
                      start_time=0,
                      piece_start_time=0,
                      sample_width=2,
@@ -526,28 +599,22 @@ current preset name: {self.get_current_instrument()}'''
                      format='wav',
                      bpm=80,
                      get_audio=False,
-                     fixed_decay=False,
+                     fixed_decay=True,
                      effects=None,
                      pan=None,
                      volume=None,
                      length=None,
                      extra_length=None,
                      export_args={}):
-        if type(decay) != list:
-            current_decay = [decay * i for i in current_chord.get_duration()
-                             ] if not fixed_decay else [
-                                 decay for i in range(len(current_chord.notes))
-                             ]
-        else:
-            current_decay = decay
+        if fixed_decay:
+            if type(decay) != list:
+                decay = real_time_to_bar(decay * 1000, bpm)
+            else:
+                decay = [real_time_to_bar(i * 1000, bpm) for i in decay]
         whole_length = bar_to_real_time(current_chord.bars(), bpm, 1) / 1000
-        temp = copy(current_chord)
-        whole_length_with_decay = mp.chord(temp.notes, [
-            temp.notes[i].duration + current_decay[i]
-            for i in range(len(temp.notes))
-        ], temp.interval).bars()
-        whole_length_with_decay = bar_to_real_time(whole_length_with_decay,
-                                                   bpm, 1) / 1000
+        whole_length_with_decay = bar_to_real_time(
+            apply_fadeout(current_chord, decay, fixed_decay).bars(), bpm,
+            1) / 1000
         current_chord = copy(current_chord)
         current_chord.normalize_tempo(bpm=bpm)
         if piece_start_time != 0:
@@ -597,7 +664,7 @@ current preset name: {self.get_current_instrument()}'''
                     duration=bar_to_real_time(each.duration, bpm, 1) / 1000,
                     decay=current_note_decay,
                     volume=each.volume,
-                    track=track,
+                    channel=channel,
                     start_time=0,
                     sample_width=sample_width,
                     channels=channels,
@@ -619,23 +686,23 @@ current preset name: {self.get_current_instrument()}'''
             each = current.value
             if current.event_type == 'noteon':
                 if not check_effect(each):
-                    current_channel = each.channel if each.channel is not None else track
+                    current_channel = each.channel if each.channel is not None else channel
                     self.synth.noteon(current_channel, each.degree,
                                       each.volume)
             elif current.event_type == 'noteoff':
                 if not check_effect(each):
-                    current_channel = each.channel if each.channel is not None else track
+                    current_channel = each.channel if each.channel is not None else channel
                     self.synth.noteoff(current_channel, each.degree)
             elif current.event_type == 'pitch_bend':
-                current_channel = each.channel if each.channel is not None else track
+                current_channel = each.channel if each.channel is not None else channel
                 self.synth.pitch_bend(current_channel, each.value)
             elif current.event_type == 'message':
                 if type(each) == mp.controller_event:
-                    current_channel = each.channel if each.channel is not None else track
+                    current_channel = each.channel if each.channel is not None else channel
                     self.synth.cc(current_channel, each.controller_number,
                                   each.parameter)
                 elif type(each) == mp.program_change:
-                    current_channel = each.channel if each.channel is not None else track
+                    current_channel = each.channel if each.channel is not None else channel
                     self.synth.program_change(current_channel, each.program)
             if k != current_timestamps_length - 1:
                 append_time = current_timestamps[
@@ -678,14 +745,13 @@ current preset name: {self.get_current_instrument()}'''
     def export_piece(self,
                      current_chord,
                      decay=0.5,
-                     track=0,
                      sample_width=2,
                      channels=2,
                      frame_rate=44100,
                      name=None,
                      format='wav',
                      get_audio=False,
-                     fixed_decay=False,
+                     fixed_decay=True,
                      effects=None,
                      clear_program_change=False,
                      length=None,
@@ -694,10 +760,7 @@ current preset name: {self.get_current_instrument()}'''
                      track_extra_lengths=None,
                      export_args={},
                      show_msg=False):
-        decay_is_list = False
-        decay_type = type(decay)
-        if decay_type == list or decay_type == tuple:
-            decay_is_list = True
+        decay_is_list = (type(decay) == list)
         current_chord = copy(current_chord)
         current_chord.normalize_tempo()
         current_chord.apply_start_time_to_changes(
@@ -708,11 +771,14 @@ current preset name: {self.get_current_instrument()}'''
         if length:
             whole_duration = length * 1000
         else:
-            whole_duration = current_chord.eval_time(bpm, mode='number') * 1000
+            whole_duration = apply_fadeout(current_chord, decay,
+                                           fixed_decay).eval_time(
+                                               bpm, mode='number') * 1000
             if extra_length:
                 whole_duration += extra_length * 1000
         silent_audio = AudioSegment.silent(duration=whole_duration)
         track_number = len(current_chord.tracks)
+        whole_current_channel = copy(self.current_channel)
         for i in range(track_number):
             if show_msg:
                 print(f'rendering track {i+1}/{track_number} ...')
@@ -722,41 +788,45 @@ current preset name: {self.get_current_instrument()}'''
             current_pan = current_chord.pan[i]
             current_volume = current_chord.volume[i]
             current_instrument = current_chord.instruments_numbers[i]
-            # instrument of a track of the piece type could be preset_num or [preset_num, bank_num, (track), (sfid)]
+            # instrument of a track of the piece type could be preset or [preset, bank, (channel), (sfid)]
             if type(current_instrument) == int:
                 current_instrument = [
-                    current_instrument - 1, self.current_bank_num
+                    current_instrument - 1, self.current_bank
                 ]
             else:
                 current_instrument = [current_instrument[0] - 1
                                       ] + current_instrument[1:]
 
-            current_track = copy(self.current_track)
+            current_track_channel = current_chord.channels[
+                i] if current_chord.channels else i
+            self.change_channel(current_instrument[2] if len(
+                current_instrument) > 2 else current_track_channel)
+            current_channel = copy(self.current_channel)
             current_sfid = copy(self.current_sfid)
-            current_bank_num = copy(self.current_bank_num)
-            current_preset_num = copy(self.current_preset_num)
+            current_bank = copy(self.current_bank)
+            current_preset = copy(self.current_preset)
 
-            self.program_select(track=(current_instrument[2] if
-                                       len(current_instrument) > 2 else None),
-                                sfid=(current_instrument[3] if
+            self.program_select(sfid=(current_instrument[3] if
                                       len(current_instrument) > 3 else None),
-                                bank_num=current_instrument[1],
-                                preset_num=current_instrument[0])
+                                bank=current_instrument[1],
+                                preset=current_instrument[0])
 
             current_audio = self.export_chord(
-                each, decay if not decay_is_list else decay[i], track, 0, 0,
-                sample_width, channels, frame_rate, None, format, bpm, True,
-                fixed_decay, each.effects if check_effect(each) else None,
-                current_pan, current_volume,
+                each, decay if not decay_is_list else decay[i],
+                current_channel, 0, 0, sample_width, channels, frame_rate,
+                None, format, bpm, True, fixed_decay,
+                each.effects if check_effect(each) else None, current_pan,
+                current_volume,
                 None if not track_lengths else track_lengths[i],
                 None if not track_extra_lengths else track_extra_lengths[i])
             silent_audio = silent_audio.overlay(current_audio,
                                                 position=current_start_time)
 
-            self.program_select(current_track, current_sfid, current_bank_num,
-                                current_preset_num)
+            self.program_select(current_channel, current_sfid, current_bank,
+                                current_preset)
 
         self.synth.system_reset()
+        self.change_channel(whole_current_channel)
         self.program_select()
         self.synth.get_samples(int(frame_rate * 1))
         if effects:
@@ -778,14 +848,13 @@ current preset name: {self.get_current_instrument()}'''
     def export_midi_file(self,
                          current_chord,
                          decay=0.5,
-                         track=0,
                          sample_width=2,
                          channels=2,
                          frame_rate=44100,
                          name=None,
                          format='wav',
                          get_audio=False,
-                         fixed_decay=False,
+                         fixed_decay=True,
                          effects=None,
                          clear_program_change=False,
                          instruments=None,
@@ -794,6 +863,7 @@ current preset name: {self.get_current_instrument()}'''
                          track_lengths=None,
                          track_extra_lengths=None,
                          export_args={},
+                         show_msg=False,
                          **read_args):
         current_chord = mp.read(current_chord,
                                 mode='all',
@@ -801,11 +871,11 @@ current preset name: {self.get_current_instrument()}'''
                                 **read_args)
         if instruments:
             current_chord.change_instruments(instruments)
-        result = self.export_piece(current_chord, decay, track, sample_width,
+        result = self.export_piece(current_chord, decay, sample_width,
                                    channels, frame_rate, name, format, True,
                                    fixed_decay, effects, clear_program_change,
                                    length, extra_length, track_lengths,
-                                   track_extra_lengths)
+                                   track_extra_lengths, export_args, show_msg)
 
         if name is None:
             name = f'Untitled.{format}'
@@ -819,7 +889,7 @@ current preset name: {self.get_current_instrument()}'''
                   duration=2,
                   decay=1,
                   volume=100,
-                  track=0,
+                  channel=0,
                   start_time=0,
                   sample_width=2,
                   channels=2,
@@ -830,7 +900,7 @@ current preset name: {self.get_current_instrument()}'''
                   bpm=80,
                   export_args={}):
         current_audio = self.export_note(note_name, duration, decay, volume,
-                                         track, start_time, sample_width,
+                                         channel, start_time, sample_width,
                                          channels, frame_rate, name, format,
                                          True, effects, bpm, export_args)
         play_sound(current_audio)
@@ -838,7 +908,7 @@ current preset name: {self.get_current_instrument()}'''
     def play_chord(self,
                    current_chord,
                    decay=0.5,
-                   track=0,
+                   channel=0,
                    start_time=0,
                    piece_start_time=0,
                    sample_width=2,
@@ -847,14 +917,14 @@ current preset name: {self.get_current_instrument()}'''
                    name=None,
                    format='wav',
                    bpm=80,
-                   fixed_decay=False,
+                   fixed_decay=True,
                    effects=None,
                    pan=None,
                    volume=None,
                    length=None,
                    extra_length=None,
                    export_args={}):
-        current_audio = self.export_chord(current_chord, decay, track,
+        current_audio = self.export_chord(current_chord, decay, channel,
                                           start_time, piece_start_time,
                                           sample_width, channels, frame_rate,
                                           name, format, bpm, True, fixed_decay,
@@ -865,38 +935,36 @@ current preset name: {self.get_current_instrument()}'''
     def play_piece(self,
                    current_chord,
                    decay=0.5,
-                   track=0,
                    sample_width=2,
                    channels=2,
                    frame_rate=44100,
                    name=None,
                    format='wav',
-                   fixed_decay=False,
+                   fixed_decay=True,
                    effects=None,
                    clear_program_change=False,
                    length=None,
                    extra_length=None,
                    track_lengths=None,
                    track_extra_lengths=None,
-                   export_args={}):
-        current_audio = self.export_piece(current_chord, decay, track,
-                                          sample_width, channels, frame_rate,
-                                          name, format, True, fixed_decay,
-                                          effects, clear_program_change,
-                                          length, extra_length, track_lengths,
-                                          track_extra_lengths, export_args)
+                   export_args={},
+                   show_msg=False):
+        current_audio = self.export_piece(
+            current_chord, decay, sample_width, channels, frame_rate, name,
+            format, True, fixed_decay, effects, clear_program_change, length,
+            extra_length, track_lengths, track_extra_lengths, export_args,
+            show_msg)
         play_sound(current_audio)
 
     def play_midi_file(self,
                        current_chord,
                        decay=0.5,
-                       track=0,
                        sample_width=2,
                        channels=2,
                        frame_rate=44100,
                        name=None,
                        format='wav',
-                       fixed_decay=False,
+                       fixed_decay=True,
                        effects=None,
                        clear_program_change=False,
                        instruments=None,
@@ -905,19 +973,20 @@ current preset name: {self.get_current_instrument()}'''
                        track_lengths=None,
                        track_extra_lengths=None,
                        export_args={},
+                       show_msg=False,
                        **read_args):
         current_audio = self.export_midi_file(
-            current_chord, decay, track, sample_width, channels, frame_rate,
-            name, format, True, fixed_decay, effects, clear_program_change,
+            current_chord, decay, sample_width, channels, frame_rate, name,
+            format, True, fixed_decay, effects, clear_program_change,
             instruments, length, extra_length, track_lengths,
-            track_extra_lengths, export_args, **read_args)
+            track_extra_lengths, export_args, show_msg, **read_args)
         play_sound(current_audio)
 
     def export_sound_modules(self,
-                             track=None,
+                             channel=None,
                              sfid=None,
-                             bank_num=None,
-                             preset_num=None,
+                             bank=None,
+                             preset=None,
                              start='A0',
                              stop='C8',
                              duration=6,
@@ -938,11 +1007,11 @@ current preset name: {self.get_current_instrument()}'''
             os.chdir(folder_name)
         except:
             os.chdir(folder_name)
-        current_track = copy(self.current_track)
+        current_channel = copy(self.current_channel)
         current_sfid = copy(self.current_sfid)
-        current_bank_num = copy(self.current_bank_num)
-        current_preset_num = copy(self.current_preset_num)
-        self.program_select(track, sfid, bank_num, preset_num)
+        current_bank = copy(self.current_bank)
+        current_preset = copy(self.current_preset)
+        self.program_select(channel, sfid, bank, preset)
         if type(start) != mp.note:
             start = mp.N(start)
         if type(stop) != mp.note:
@@ -960,13 +1029,13 @@ current preset name: {self.get_current_instrument()}'''
                 else:
                     current_name = name(str(current_note)) + f'.{format}'
             print(
-                f'exporting {current_note} of {current_sf2}, bank {self.current_bank_num}, preset {self.current_preset_num}'
+                f'exporting {current_note} of {current_sf2}, bank {self.current_bank}, preset {self.current_preset}'
             )
             self.export_note(current_note,
                              duration=duration,
                              decay=decay,
                              volume=volume,
-                             track=self.current_track,
+                             channel=self.current_channel,
                              sample_width=sample_width,
                              channels=channels,
                              frame_rate=frame_rate,
@@ -976,8 +1045,8 @@ current preset name: {self.get_current_instrument()}'''
                              name=current_name,
                              export_args=export_args)
         print('exporting finished')
-        self.program_select(current_track, current_sfid, current_bank_num,
-                            current_preset_num)
+        self.program_select(current_channel, current_sfid, current_bank,
+                            current_preset)
 
     def reload(self, file):
         self.file = [file]
@@ -985,10 +1054,10 @@ current preset name: {self.get_current_instrument()}'''
         self.sfid = self.synth.sfload(file)
         self.synth.system_reset()
         self.sfid_list = [copy(self.sfid)]
-        self.current_track = 0
+        self.current_channel = 0
         self.current_sfid = copy(self.sfid)
-        self.current_bank_num = 0
-        self.current_preset_num = 0
+        self.current_bank = 0
+        self.current_preset = 0
         self.program_select()
 
     def load(self, file):
