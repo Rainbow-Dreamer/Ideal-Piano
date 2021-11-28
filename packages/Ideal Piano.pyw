@@ -25,7 +25,7 @@ class ideal_piano_button:
 mouse_left = 1
 if play_use_soundfont or (play_as_midi and use_soundfont):
     current_sf2 = rs.sf2_loader(sf2_path)
-    current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
+    current_sf2.program_select(bank=bank, preset=preset)
 
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
@@ -339,7 +339,7 @@ def reload_settings():
     global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place, bar_offset_x
     if play_use_soundfont or (play_as_midi and use_soundfont):
         current_sf2 = rs.sf2_loader(sf2_path)
-        current_sf2.program_select(bank_num=bank_num, preset_num=preset_num)
+        current_sf2.program_select(bank=bank, preset=preset)
     screen_width, screen_height = screen_size
     show_delay_time = int(show_delay_time * 1000)
     pygame.mixer.quit()
@@ -810,10 +810,10 @@ def detect_sf2_config(mode=0):
     global wavdic
     global global_volume
     if configkey('1'):
-        if current_sf2.current_preset_num != 0:
+        if current_sf2.current_preset != 0:
             current_change = current_sf2.program_select(
-                preset_num=current_sf2.current_preset_num - 1, correct=False)
-            current_preset = f'{current_sf2.current_preset_num} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset_num} No preset'
+                preset=current_sf2.current_preset - 1, correct=False)
+            current_preset = f'{current_sf2.current_preset} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset} No preset'
             redraw()
             label.text = f'Change SoundFont preset to {current_preset}'
             label.draw()
@@ -829,8 +829,8 @@ def detect_sf2_config(mode=0):
                                       global_volume)
     if configkey('2'):
         current_change = current_sf2.program_select(
-            preset_num=current_sf2.current_preset_num + 1, correct=False)
-        current_preset = f'{current_sf2.current_preset_num} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset_num} No preset'
+            preset=current_sf2.current_preset + 1, correct=False)
+        current_preset = f'{current_sf2.current_preset} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset} No preset'
         redraw()
         label.text = f'Change SoundFont preset to {current_preset}'
         label.draw()
@@ -845,16 +845,16 @@ def detect_sf2_config(mode=0):
                                    for i in notenames}, current_sf2,
                                   global_volume)
     if configkey('3'):
-        if current_sf2.current_bank_num != 0:
-            current_sf2.change_bank(current_sf2.current_bank_num - 1)
+        if current_sf2.current_bank != 0:
+            current_sf2.change_bank(current_sf2.current_bank - 1)
             redraw()
-            label.text = f'Change SoundFont bank to {current_sf2.current_bank_num}'
+            label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
             label.draw()
             window.flip()
     if configkey('4'):
-        current_sf2.change_bank(current_sf2.current_bank_num + 1)
+        current_sf2.change_bank(current_sf2.current_bank + 1)
         redraw()
-        label.text = f'Change SoundFont bank to {current_sf2.current_bank_num}'
+        label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
         label.draw()
         window.flip()
 

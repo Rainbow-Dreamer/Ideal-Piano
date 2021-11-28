@@ -30,6 +30,8 @@ In this mode, the selected MIDI file will be played in Ideal Piano, with the sou
 
 If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/English/User Instructions (Read me first!).pdf`.
 
+This software also supports directly loading SoundFont files as sound source to play by keyboard and play MIDI files, please refer to changelog in `User Manuals` folder to see how to use it.
+
 ## Download
 
 You can download this software for Windows and Linux from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest), currently Ideal Piano is not compatible with macOS because many dependent python packages of this software has serious existing bugs with macOS when testing, I will try to make a compatible version for it in my spare time.
@@ -103,6 +105,8 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 在这个模式下，选择的MIDI文件会在Ideal Piano里播放，声音默认来自一个内置的General MIDI播放器。你可以把配置文件里的`play_as_midi`改为`False`让声音来自于自己设置好的音源。音源必须是一个文件夹里面是以音符为名字的音频文件，比如`C5.wav`这种。在画面上会显示当前的音符在钢琴上的位置，并且实时分析当前演奏的音符组成的和弦。
 
 如果你想要声音来自DAW的音源的话，使用loopMIDI就可以做到了，在DAW里播放工程，同时Ideal Piano可以同步接收到MIDI信号，实时分析当前的音符组成的和弦，显示音符与和弦类型在屏幕上。具体的操作流程请到`User Manuals/中文/使用须知 (请先看我!).pdf`这个文件里看。
+
+本软件也支持直接加载SoundFont文件作为音源来用键盘演奏和播放MIDI文件，请参考`User Manuals`文件夹中的更新日志以了解如何使用。
 
 ## 下载
 
