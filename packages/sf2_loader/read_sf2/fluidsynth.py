@@ -983,11 +983,21 @@ class Synth:
         status = fluid_player_play(self.player)
         return status
 
+    def play_midi_pause(self):
+        status = fluid_player_stop(self.player)
+        if status == FLUID_FAILED: return status
+        return status
+
+    def play_midi_unpause(self):
+        status = fluid_player_play(self.player)
+        return status
+
     def play_midi_stop(self):
         status = fluid_player_stop(self.player)
         if status == FLUID_FAILED: return status
         status = fluid_player_seek(self.player, 0)
         delete_fluid_player(self.player)
+        self.system_reset()
         return status
 
     def player_set_tempo(self, tempo_type, tempo):
