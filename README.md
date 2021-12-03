@@ -1,6 +1,6 @@
 # Ideal-Piano
 
-[中文](#Ideal-Piano-1) English
+English [中文](#Ideal-Piano-1)
 
 ## Introduction
 
@@ -76,7 +76,7 @@ The chord logic algorithm used in this software comes from another project of mi
 
 # Ideal-Piano
 
-中文 [English](#Ideal-Piano)
+[English](#Ideal-Piano) 中文
 
 ## 介绍
 
