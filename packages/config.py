@@ -313,7 +313,6 @@ tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
 use_default_tracks_colors = True
 pitch_range = ('A0', 'C8')
 
-use_soundfont = False
 play_use_soundfont = False
 sf2_path = 'resources/gm.sf2'
 bank = 0
