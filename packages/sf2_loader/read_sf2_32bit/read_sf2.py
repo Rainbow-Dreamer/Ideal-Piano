@@ -479,6 +479,8 @@ current preset name: {self.get_current_instrument()}'''
             result = self.synth.channel_info(self.current_channel)[3]
         else:
             result = ''
+        if isinstance(result, bytes):
+            result = result.decode('utf-8')
         return result
 
     def get_instrument_name(self,
@@ -514,6 +516,8 @@ current preset name: {self.get_current_instrument()}'''
                     current_preset,
                     hide_warnings=hide_warnings)
         if select_status != -1:
+            if isinstance(result, bytes):
+                result = result.decode('utf-8')
             return result
 
     def get_all_instrument_names(self,
