@@ -1216,6 +1216,16 @@ class sf2_player:
         self.playing = False
         if file:
             self.load(file)
+        if sys.platform == 'win32' or sys.platform == 'cygwin':
+            self.default_audio_driver = 'dsound'
+        elif sys.platform == 'linux':
+            self.default_audio_driver = 'alsa'
+        elif sys.platform == 'darwin':
+            self.default_audio_driver = 'coreaudio'
+        else:
+            self.default_audio_driver = None
+        if self.default_audio_driver:
+            self.synth.setting('audio.driver', self.default_audio_driver)
 
     def __repr__(self):
         return f'''[soundfont player]
@@ -1267,7 +1277,8 @@ soundfonts id: {self.sfid_list}'''
             self.playing = False
 
     def set_tempo(self, bpm):
-        self.synth.player_set_tempo(1, bpm)
+        if fluidsynth.fluid_player_set_tempo:
+            self.synth.player_set_tempo(1, bpm)
 
 
 reverse = effect(lambda s: s.reverse(), 'reverse')
