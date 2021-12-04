@@ -29,7 +29,8 @@ if play_use_soundfont:
     current_sf2 = rs.sf2_loader(sf2_path)
     current_sf2.change(bank=bank, preset=preset)
 if play_as_midi:
-    current_sf2_player = rs.sf2_player(sf2_path)
+    if use_soundfont:
+        current_sf2_player = rs.sf2_player(sf2_path)
 
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
@@ -345,9 +346,12 @@ def reload_settings():
         current_sf2 = rs.sf2_loader(sf2_path)
         current_sf2.change(bank=bank, preset=preset)
     if play_as_midi:
-        if current_sf2_player:
-            if sf2_path != current_sf2_player.file[-1]:
-                current_sf2_player.load(sf2_path)
+        if use_soundfont:
+            if current_sf2_player:
+                if sf2_path != current_sf2_player.file[-1]:
+                    current_sf2_player.load(sf2_path)
+            else:
+                current_sf2_player = rs.sf2_player(sf2_path)
     screen_width, screen_height = screen_size
     show_delay_time = int(show_delay_time * 1000)
     pygame.mixer.quit()
@@ -632,8 +636,9 @@ def on_mouse_press(x, y, button, modifiers):
         pygame.mixer.stop()
         pygame.mixer.music.stop()
         if play_as_midi:
-            if current_sf2_player.playing:
-                current_sf2_player.stop()
+            if use_soundfont:
+                if current_sf2_player.playing:
+                    current_sf2_player.stop()
         pyglet.clock.unschedule(midi_file_play)
         if mode_num in [0, 1, 2]:
             pyglet.clock.unschedule(func)
@@ -1401,7 +1406,10 @@ def mode_show(dt):
         if keyboard.is_pressed(pause_key):
             if play_midi_file:
                 if play_as_midi:
-                    current_sf2_player.pause()
+                    if use_soundfont:
+                        current_sf2_player.pause()
+                    else:
+                        pygame.mixer.music.pause()
             paused = True
             pause_start = time.time()
             message_label = True
@@ -1437,7 +1445,10 @@ def mode_show(dt):
         if keyboard.is_pressed(unpause_key):
             if play_midi_file:
                 if play_as_midi:
-                    current_sf2_player.unpause()
+                    if use_soundfont:
+                        current_sf2_player.unpause()
+                    else:
+                        pygame.mixer.music.unpause()
             paused = False
             message_label = False
             pause_stop = time.time()
@@ -1475,7 +1486,10 @@ def mode_show(dt):
 
 
 def midi_file_play(dt):
-    current_sf2_player.play_midi_file(current_sf2_player.current_midi_file)
+    if use_soundfont:
+        current_sf2_player.play_midi_file(current_sf2_player.current_midi_file)
+    else:
+        pygame.mixer.music.play()
 
 
 def initialize(musicsheet, unit_time, start_time, window_mode=0):
@@ -1491,18 +1505,27 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
                          60 / (unit_time / 4),
                          start_time=musicsheet.start_time,
                          name='temp.mid')
-                current_sf2_player.current_midi_file = 'temp.mid'
+                if use_soundfont:
+                    current_sf2_player.current_midi_file = 'temp.mid'
+                else:
+                    pygame.mixer.music.load('temp.mid')
                 os.remove('temp.mid')
                 os.chdir(abs_path)
             else:
                 try:
-                    current_sf2_player.current_midi_file = path
+                    if use_soundfont:
+                        current_sf2_player.current_midi_file = path
+                    else:
+                        pygame.mixer.music.load(path)
                 except:
                     current_path = mp.riff_to_midi(path)
                     current_buffer = current_path.getbuffer()
                     with open('temp.mid', 'wb') as f:
                         f.write(current_buffer)
-                    current_sf2_player.current_midi_file = 'temp.mid'
+                    if use_soundfont:
+                        current_sf2_player.current_midi_file = 'temp.mid'
+                    else:
+                        pygame.mixer.music.load('temp.mid')
                     os.remove('temp.mid')
         pyglet.clock.schedule_once(midi_file_play, bars_drop_interval)
         for i in range(sheetlen):
@@ -1539,7 +1562,10 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
         except:
-            current_sf2_player.current_midi_file = path
+            if use_soundfont:
+                current_sf2_player.current_midi_file = path
+            else:
+                pygame.mixer.music.load(path)
             play_midi_file = True
             playls.clear()
             if note_mode == 'bars drop':

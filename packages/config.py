@@ -163,7 +163,7 @@ delay_only_read_current = True
 sound_format = 'wav'
 
 # the path of the sounds folder
-sound_path = 'sounds'
+sound_path = 'resources/sounds'
 
 # when the mode is in 'show' mode, the delay time for the sounds
 show_delay_time = 1
@@ -313,6 +313,7 @@ tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
 use_default_tracks_colors = True
 pitch_range = ('A0', 'C8')
 
+use_soundfont = False
 play_use_soundfont = False
 sf2_path = 'resources/gm.sf2'
 bank = 0
