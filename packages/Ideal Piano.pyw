@@ -341,7 +341,7 @@ def reload_settings():
     os.chdir(abs_path)
     with open('packages/config.py', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
-    global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place, bar_offset_x
+    global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place, bar_offset_x, current_sf2_player
     if play_use_soundfont:
         current_sf2 = rs.sf2_loader(sf2_path)
         current_sf2.change(bank=bank, preset=preset)
@@ -1407,13 +1407,19 @@ def mode_show(dt):
             if play_midi_file:
                 if play_as_midi:
                     if use_soundfont:
-                        current_sf2_player.pause()
+                        if current_sf2_player.playing:
+                            current_sf2_player.pause()
+                            paused = True
                     else:
-                        pygame.mixer.music.pause()
-            paused = True
-            pause_start = time.time()
-            message_label = True
-            label3.text = f'paused, press {unpause_key} to unpause'
+                        if pygame.mixer.music.get_busy():
+                            pygame.mixer.music.pause()
+                            paused = True
+                else:
+                    paused = True
+            if paused:
+                pause_start = time.time()
+                message_label = True
+                label3.text = f'paused, press {unpause_key} to unpause'
         if note_mode == 'bars':
             i = 0
             while i < len(plays):
@@ -1676,6 +1682,7 @@ def init_show():
     global action
     global path
     global bpm
+    global paused
     setup()
     path = file_path
     if action == 1:
@@ -1738,6 +1745,7 @@ def init_show():
     startplay = time.time()
     lastshow = None
     finished = False
+    paused = False
     func = mode_show
 
 
