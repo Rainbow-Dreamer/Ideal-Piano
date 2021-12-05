@@ -1,6 +1,3 @@
-import musicpy as mp
-
-
 class ideal_piano_button:
     def __init__(self, img, x, y):
         self.img = pyglet.resource.image(img).get_transform()
@@ -23,6 +20,30 @@ class ideal_piano_button:
 
 
 mouse_left = 1
+map_key_dict = {
+    each.lower().lstrip('_'): value
+    for each, value in key.__dict__.items() if isinstance(value, int)
+}
+map_key_dict_reverse = {j: i for i, j in map_key_dict.items()}
+map_key_dict_reverse[59] = ';'
+map_key_dict_reverse[39] = "'"
+map_key_dict_reverse[44] = ","
+map_key_dict_reverse[46] = "."
+map_key_dict_reverse[47] = '/'
+map_key_dict_reverse[91] = '['
+map_key_dict_reverse[93] = ']'
+map_key_dict_reverse[92] = '\\'
+map_key_dict_reverse[96] = '`'
+map_key_dict_reverse[45] = '-'
+map_key_dict_reverse[61] = '='
+map_key_dict_reverse[65288] = 'backspace'
+
+map_key_dict2 = {j: i for i, j in map_key_dict_reverse.items()}
+
+pause_key = map_key_dict.setdefault(pause_key, key.SPACE)
+repeat_key_value = map_key_dict.setdefault(repeat_key, key.LCTRL)
+unpause_key_value = map_key_dict.setdefault(unpause_key, key.ENTER)
+config_key = map_key_dict.setdefault(config_key, key.LALT)
 
 current_sf2_player = None
 if play_use_soundfont:
@@ -34,7 +55,6 @@ if play_as_midi:
 
 screen_width, screen_height = screen_size
 show_delay_time = int(show_delay_time * 1000)
-pressed = keyboard.is_pressed
 pygame.mixer.init(frequency, size, channel, buffer)
 pygame.mixer.set_num_channels(maxinum_channels)
 pyglet.resource.path = [abs_path]
@@ -121,6 +141,8 @@ play_midi = ideal_piano_button(play_midi_image, *play_midi_place)
 button_play_midi = play_midi.MakeButton()
 window = pyglet.window.Window(*screen_size, caption='Ideal Piano')
 window.set_icon(icon)
+keyboard_handler = key.KeyStateHandler()
+window.push_handlers(keyboard_handler)
 
 label = pyglet.text.Label('',
                           font_name=fonts,
@@ -253,7 +275,7 @@ if draw_piano_keys:
     bar_offset_x = 0
 
 current_midi_device = 'please enter midi keyboard mode at first, press ctrl to close me ~'
-currentchord = chord([])
+currentchord = mp.chord([])
 playnotes = []
 still_hold_pc = []
 still_hold = []
@@ -327,14 +349,14 @@ def load_sf2(dic, sf2, volume):
 
 
 def open_settings():
+    keyboard_handler[config_key] = False
+    keyboard_handler[key.S] = False
     os.chdir(abs_path)
     os.chdir('tools')
-    with open('change_settings.pyw', encoding='utf-8-sig') as f:
+    with open('change_settings_inner.pyw', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
     os.chdir(abs_path)
     reload_settings()
-    with open('packages/browse.py', encoding='utf-8-sig') as f:
-        exec(f.read(), globals(), globals())
 
 
 def reload_settings():
@@ -342,6 +364,12 @@ def reload_settings():
     with open('packages/config.py', encoding='utf-8-sig') as f:
         exec(f.read(), globals(), globals())
     global current_sf2, screen_width, screen_height, show_delay_time, icon, background, batch, bottom_group, piano_bg, piano_key, play_highlight, image_show, playing, plays, go_back, button_go_back, self_play, button_play, self_midi, button_self_midi, play_midi, button_play_midi, label, label2, label3, label_midi_device, music_analysis_label, notedic, piano_height, piano_background_show, piano_keys, initial_colors, note_place, bar_offset_x, current_sf2_player
+
+    global pause_key, repeat_key_value, unpause_key_value, config_key
+    pause_key = map_key_dict.setdefault(pause_key, key.SPACE)
+    repeat_key_value = map_key_dict.setdefault(repeat_key, key.LCTRL)
+    unpause_key_value = map_key_dict.setdefault(unpause_key, key.ENTER)
+    config_key = map_key_dict.setdefault(config_key, key.LALT)
     if play_use_soundfont:
         current_sf2 = rs.sf2_loader(sf2_path)
         current_sf2.change(bank=bank, preset=preset)
@@ -594,16 +622,17 @@ def reload_settings():
                         current_key = each.split('key: ')[1]
 
 
-def configkey(q):
-    return pressed(f'{config_key} + {q}')
+def configkey(current_key):
+    return keyboard_handler[config_key] and keyboard_handler[
+        map_key_dict2[current_key]]
 
 
 def configshow(content):
     label.text = str(content)
 
 
-def switchs(q, name):
-    if configkey(q):
+def switchs(current_key, name):
+    if configkey(current_key):
         globals()[name] = not globals()[name]
         configshow(f'{name} changes to {globals()[name]}')
 
@@ -689,13 +718,13 @@ def on_draw():
         button_self_midi.draw()
         button_play_midi.draw()
         if mode_num is None:
-            if keyboard.is_pressed('shift'):
+            if keyboard_handler[key.LSHIFT]:
                 label_midi_device.text = current_midi_device
-            if keyboard.is_pressed('ctrl'):
+            if keyboard_handler[key.LCTRL]:
                 label_midi_device.text = ''
-            if keyboard.is_pressed(f'{config_key} + S'):
+            if keyboard_handler[config_key] and keyboard_handler[key.S]:
                 open_settings()
-            if keyboard.is_pressed(f'{config_key} + R'):
+            if keyboard_handler[config_key] and keyboard_handler[key.R]:
                 label.text = 'reload settings'
                 label.draw()
                 window.flip()
@@ -808,12 +837,14 @@ def detect_config():
     global wavdic
     global global_volume
     if configkey(volume_up):
-        global_volume += volume_change_unit
-        [wavdic[j].set_volume(global_volume) for j in wavdic]
+        if global_volume < 1:
+            global_volume += volume_change_unit
+            [wavdic[j].set_volume(global_volume) for j in wavdic]
         configshow(f'volume up to {int(global_volume*100)}%')
     if configkey(volume_down):
-        global_volume -= volume_change_unit
-        [wavdic[j].set_volume(global_volume) for j in wavdic]
+        if global_volume > 0:
+            global_volume -= volume_change_unit
+            [wavdic[j].set_volume(global_volume) for j in wavdic]
         configshow(f'volume down to {int(global_volume*100)}%')
     switchs(change_delay, 'delay')
     switchs(change_read_current, 'delay_only_read_current')
@@ -864,10 +895,10 @@ def detect_sf2_config(mode=0):
     if configkey('3'):
         if current_sf2.current_bank != 0:
             current_sf2.change_bank(current_sf2.current_bank - 1)
-            redraw()
-            label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
-            label.draw()
-            window.flip()
+        redraw()
+        label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
+        label.draw()
+        window.flip()
     if configkey('4'):
         current_sf2.change_bank(current_sf2.current_bank + 1)
         redraw()
@@ -884,13 +915,16 @@ def mode_self_pc(dt):
     global currentchord
     if config_enable:
         detect_config()
-    if keyboard.is_pressed(pause_key):
+    current = [
+        map_key_dict_reverse[i] for i, j in keyboard_handler.items()
+        if j and i in map_key_dict_reverse
+    ]
+    current = [i for i in current if i in wavdic]
+    if keyboard_handler[pause_key]:
         pygame.mixer.stop()
         if pause_key_clear_notes:
             if delay:
                 stillplay = []
-    current = keyboard.get_hotkey_name().split('+')
-    current = [i for i in current if i in wavdic]
     if delay:
         stillplay_obj = [x[0] for x in stillplay]
         truecurrent = current.copy()
@@ -909,7 +943,7 @@ def mode_self_pc(dt):
                 stillplay.append([each, time.time(), True])
                 stillplay_obj.append(each)
                 if note_mode == 'bars' or note_mode == 'bars drop':
-                    current_note = toNote(notedic[each])
+                    current_note = mp.toNote(notedic[each])
                     places = note_place[current_note.degree - 21]
                     current_bar = pyglet.shapes.BorderedRectangle(
                         x=places[0] + bar_offset_x,
@@ -926,7 +960,7 @@ def mode_self_pc(dt):
                     current_bar.opacity = bar_opacity
                     still_hold_pc.append([each, current_bar])
                 if draw_piano_keys:
-                    current_note = toNote(notedic[each])
+                    current_note = mp.toNote(notedic[each])
                     piano_keys[
                         current_note.degree -
                         21].color = bar_color if color_mode == 'normal' else (
@@ -937,7 +971,7 @@ def mode_self_pc(dt):
                 changed = True
                 wavdic[each].play()
                 if note_mode == 'bars' or note_mode == 'bars drop':
-                    current_note = toNote(notedic[each])
+                    current_note = mp.toNote(notedic[each])
                     places = note_place[current_note.degree - 21]
                     current_bar = pyglet.shapes.BorderedRectangle(
                         x=places[0] + bar_offset_x,
@@ -954,7 +988,7 @@ def mode_self_pc(dt):
                     current_bar.opacity = bar_opacity
                     still_hold_pc.append([each, current_bar])
                 if draw_piano_keys:
-                    current_note = toNote(notedic[each])
+                    current_note = mp.toNote(notedic[each])
                     piano_keys[
                         current_note.degree -
                         21].color = bar_color if color_mode == 'normal' else (
@@ -1018,7 +1052,7 @@ def mode_self_pc(dt):
                     piano_keys[t.degree - 21].color = initial_colors[t.degree -
                                                                      21]
         if notels:
-            currentchord = chord(notels)
+            currentchord = mp.chord(notels)
             for k in currentchord:
                 if note_mode == 'dots':
                     plays[k.degree - 21].batch = batch
@@ -1034,14 +1068,15 @@ def mode_self_pc(dt):
             if currentchord != lastshow:
                 lastshow = currentchord
                 label.text = str(currentchord.notes)
-                if show_chord and any(type(t) == note for t in currentchord):
-                    chordtype = detect(currentchord, detect_mode, inv_num,
-                                       rootpitch, change_from_first,
-                                       original_first, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first,
-                                       root_position_return_first,
-                                       alter_notes_show_degree)
+                if show_chord and any(
+                        type(t) == mp.note for t in currentchord):
+                    chordtype = mp.detect(currentchord, detect_mode, inv_num,
+                                          rootpitch, change_from_first,
+                                          original_first, same_note_special,
+                                          whole_detect, return_fromchord,
+                                          two_show_interval, poly_chord_first,
+                                          root_position_return_first,
+                                          alter_notes_show_degree)
 
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
@@ -1078,14 +1113,14 @@ def mode_self_midi(dt):
                     if draw_piano_keys:
                         piano_keys[each.degree - 21].color = sustain_bar_color
                     if stillplay:
-                        currentchord = chord(
+                        currentchord = mp.chord(
                             [k for k in stillplay if k.sustain_pedal_on] +
                             current_play)
                         currentchord.notes.sort(key=lambda x: x.degree)
                         label.text = str(currentchord.notes)
                         if show_chord and any(
-                                type(t) == note for t in currentchord):
-                            chordtype = detect(
+                                type(t) == mp.note for t in currentchord):
+                            chordtype = mp.detect(
                                 currentchord, detect_mode, inv_num, rootpitch,
                                 change_from_first, original_first,
                                 same_note_special, whole_detect,
@@ -1103,18 +1138,18 @@ def mode_self_midi(dt):
                 if draw_piano_keys:
                     piano_keys[each.degree - 21].color = sustain_bar_color
                 if stillplay:
-                    currentchord = chord(stillplay)
+                    currentchord = mp.chord(stillplay)
                     currentchord.notes.sort(key=lambda x: x.degree)
                     label.text = str(currentchord.notes)
                     if show_chord and any(
-                            type(t) == note for t in currentchord):
-                        chordtype = detect(currentchord, detect_mode, inv_num,
-                                           rootpitch, change_from_first,
-                                           original_first, same_note_special,
-                                           whole_detect, return_fromchord,
-                                           two_show_interval, poly_chord_first,
-                                           root_position_return_first,
-                                           alter_notes_show_degree)
+                            type(t) == mp.note for t in currentchord):
+                        chordtype = mp.detect(
+                            currentchord, detect_mode, inv_num, rootpitch,
+                            change_from_first, original_first,
+                            same_note_special, whole_detect, return_fromchord,
+                            two_show_interval, poly_chord_first,
+                            root_position_return_first,
+                            alter_notes_show_degree)
                         label2.text = str(
                             chordtype) if not sort_invisible else get_off_sort(
                                 str(chordtype))
@@ -1133,18 +1168,19 @@ def mode_self_midi(dt):
                 if note_mode == 'dots':
                     plays[each.degree - 21].batch = batch
 
-            currentchord = chord(
-                current_play) if delay_only_read_current else chord(stillplay)
+            currentchord = mp.chord(
+                current_play) if delay_only_read_current else mp.chord(
+                    stillplay)
             currentchord.notes.sort(key=lambda x: x.degree)
             label.text = str(currentchord.notes)
-            if show_chord and any(type(t) == note for t in currentchord):
-                chordtype = detect(currentchord, detect_mode, inv_num,
-                                   rootpitch, change_from_first,
-                                   original_first, same_note_special,
-                                   whole_detect, return_fromchord,
-                                   two_show_interval, poly_chord_first,
-                                   root_position_return_first,
-                                   alter_notes_show_degree)
+            if show_chord and any(type(t) == mp.note for t in currentchord):
+                chordtype = mp.detect(currentchord, detect_mode, inv_num,
+                                      rootpitch, change_from_first,
+                                      original_first, same_note_special,
+                                      whole_detect, return_fromchord,
+                                      two_show_interval, poly_chord_first,
+                                      root_position_return_first,
+                                      alter_notes_show_degree)
 
                 label2.text = str(
                     chordtype) if not sort_invisible else get_off_sort(
@@ -1262,10 +1298,10 @@ def mode_self_midi(dt):
                 plays.append(current_bar)
                 still_hold.remove(k)
 
-    if keyboard.is_pressed('shift'):
+    if keyboard_handler[key.LSHIFT]:
         global current_midi_device
         label_midi_device.text = current_midi_device
-    if keyboard.is_pressed('ctrl'):
+    if keyboard_handler[key.LCTRL]:
         label_midi_device.text = ''
     if config_enable:
         if play_use_soundfont:
@@ -1391,31 +1427,30 @@ def mode_show(dt):
                 lastshow = playnotes
                 if show_notes:
                     label.text = str(playnotes)
-                if show_chord and any(type(t) == note for t in playnotes):
-                    chordtype = detect(playnotes, detect_mode, inv_num,
-                                       rootpitch, change_from_first,
-                                       original_first, same_note_special,
-                                       whole_detect, return_fromchord,
-                                       two_show_interval, poly_chord_first,
-                                       root_position_return_first,
-                                       alter_notes_show_degree)
+                if show_chord and any(type(t) == mp.note for t in playnotes):
+                    chordtype = mp.detect(playnotes, detect_mode, inv_num,
+                                          rootpitch, change_from_first,
+                                          original_first, same_note_special,
+                                          whole_detect, return_fromchord,
+                                          two_show_interval, poly_chord_first,
+                                          root_position_return_first,
+                                          alter_notes_show_degree)
                     label2.text = str(
                         chordtype) if not sort_invisible else get_off_sort(
                             str(chordtype))
 
-        if keyboard.is_pressed(pause_key):
+        if keyboard_handler[pause_key]:
             if play_midi_file:
-                if play_as_midi:
-                    if use_soundfont:
-                        if current_sf2_player.playing:
-                            current_sf2_player.pause()
-                            paused = True
-                    else:
-                        if pygame.mixer.music.get_busy():
-                            pygame.mixer.music.pause()
-                            paused = True
+                if use_soundfont:
+                    if current_sf2_player.playing:
+                        current_sf2_player.pause()
+                        paused = True
                 else:
-                    paused = True
+                    if pygame.mixer.music.get_busy():
+                        pygame.mixer.music.pause()
+                        paused = True
+            else:
+                paused = True
             if paused:
                 pause_start = time.time()
                 message_label = True
@@ -1448,13 +1483,12 @@ def mode_show(dt):
                 i += 1
 
     else:
-        if keyboard.is_pressed(unpause_key):
+        if keyboard_handler[unpause_key_value]:
             if play_midi_file:
-                if play_as_midi:
-                    if use_soundfont:
-                        current_sf2_player.unpause()
-                    else:
-                        pygame.mixer.music.unpause()
+                if use_soundfont:
+                    current_sf2_player.unpause()
+                else:
+                    pygame.mixer.music.unpause()
             paused = False
             message_label = False
             pause_stop = time.time()
@@ -1467,8 +1501,8 @@ def mode_show(dt):
         if show_music_analysis:
             music_analysis_label.text = ''
             show_music_analysis_list = copy(default_show_music_analysis_list)
-        label.text = f'music playing finished,\npress {repeat_key} to listen again, or press {exit_key} to exit'
-        if keyboard.is_pressed(repeat_key):
+        label.text = f'music playing finished,\npress {repeat_key} to listen again'
+        if keyboard_handler[repeat_key_value]:
             if note_mode == 'bars' or note_mode == 'bars drop':
                 plays.clear()
                 if note_mode == 'bars drop':
@@ -1487,8 +1521,6 @@ def mode_show(dt):
             lastshow = None
             playnotes.clear()
             finished = False
-        if keyboard.is_pressed(exit_key):
-            sys.exit(0)
 
 
 def midi_file_play(dt):
@@ -1657,18 +1689,6 @@ def init_self_midi():
     soft_pedal_volume_ratio = 1
 
 
-def browse_reset(mode=0):
-    if mode == 0:
-        global file_path
-        file_path = None
-    global track_ind_get
-    global read_result
-    global set_bpm
-    global off_melody
-    global appears
-    track_ind_get, read_result, set_bpm, off_melody, appears = None, None, None, 0, False
-
-
 def init_show():
     global playls
     global startplay
@@ -1683,14 +1703,21 @@ def init_show():
     global path
     global bpm
     global paused
-    setup()
-    path = file_path
+    global if_merge
+    browse.setup()
+    path = browse.file_path
+    action = browse.action
+    read_result = browse.read_result
+    sheetlen = browse.sheetlen
+    set_bpm = browse.set_bpm
+    off_melody = browse.off_melody
+    if_merge = browse.if_merge
     if action == 1:
         action = 0
-        browse_reset()
         return 'back'
     if path and read_result:
         global interval
+        interval = browse.interval
         play_interval = interval
         if read_result != 'error':
             bpm, musicsheet, start_time = read_result
@@ -1700,22 +1727,15 @@ def init_show():
             if set_bpm:
                 bpm = float(set_bpm)
         else:
-            browse_reset()
             return 'back'
     else:
-        if not path:
-            browse_reset()
-        else:
-            browse_reset(1)
         return 'back'
 
-    get_off_melody = off_melody
-    if get_off_melody:
+    if off_melody:
         musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol,
                                  get_off_overlap_notes, average_degree_length,
                                  melody_degree_tol)
         sheetlen = len(musicsheet)
-    browse_reset()
     if play_interval is not None:
         interval = None
         play_start, play_stop = int(sheetlen * (play_interval[0] / 100)), int(
@@ -1746,7 +1766,6 @@ def init_show():
     lastshow = None
     finished = False
     paused = False
-    func = mode_show
 
 
 def update(dt):

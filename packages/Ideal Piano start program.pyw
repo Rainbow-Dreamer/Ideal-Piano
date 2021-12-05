@@ -7,9 +7,9 @@ sys.path.insert(0, abs_path)
 sys.path.insert(0, 'packages')
 import pygame
 import pygame.midi
-import keyboard
 import time
 import pyglet
+from pyglet.window import key
 import mido
 import midiutil
 from tkinter import *
@@ -18,13 +18,11 @@ from tkinter import filedialog
 import py
 import sf2_loader as rs
 from pydub import AudioSegment
-
-with open('packages/musicpy/__init__.py', encoding='utf-8-sig') as f:
-    exec(f.read())
-os.chdir(abs_path)
+import browse
+import musicpy as mp
+from ast import literal_eval
 with open('packages/config.py', encoding='utf-8-sig') as f:
     exec(f.read())
-with open('packages/browse.py', encoding='utf-8-sig') as f:
-    exec(f.read())
+
 with open('packages/Ideal Piano.pyw', encoding='utf-8-sig') as f:
     exec(f.read())

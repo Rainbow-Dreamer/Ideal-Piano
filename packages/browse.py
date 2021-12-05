@@ -2,15 +2,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 import time
-
-file_path = None
-action = 0
-track_ind_get = None
-interval = None
-read_result = None
-sheetlen = None
-set_bpm = None
-off_melody = 0
+import musicpy as mp
+import os
 
 
 class Root(Tk):
@@ -100,7 +93,7 @@ class Root(Tk):
             else:
                 read_mode = 'find'
             if not if_merge:
-                read_result = read(file_path, track_ind_get, read_mode)
+                read_result = mp.read(file_path, track_ind_get, read_mode)
                 whole_notes = read_result[1]
                 for each in whole_notes:
                     each.own_color = bar_color
@@ -108,24 +101,25 @@ class Root(Tk):
                                                start_time=read_result[2])
             else:
                 try:
-                    all_tracks = read(file_path,
-                                      track_ind_get,
-                                      mode='all',
-                                      get_off_drums=get_off_drums,
-                                      to_piece=True)
+                    all_tracks = mp.read(file_path,
+                                         track_ind_get,
+                                         mode='all',
+                                         get_off_drums=get_off_drums,
+                                         to_piece=True)
                 except:
-                    all_tracks = read(file_path,
-                                      track_ind_get,
-                                      mode='all',
-                                      get_off_drums=get_off_drums,
-                                      to_piece=True,
-                                      split_channels=True)
+                    all_tracks = mp.read(file_path,
+                                         track_ind_get,
+                                         mode='all',
+                                         get_off_drums=get_off_drums,
+                                         to_piece=True,
+                                         split_channels=True)
                 all_tracks.normalize_tempo()
                 all_tracks = [(all_tracks.bpm, all_tracks.tracks[i],
                                all_tracks.start_times[i])
                               for i in range(len(all_tracks.tracks))]
-                pitch_bends = concat([
-                    i[1].split(pitch_bend, get_time=True) for i in all_tracks
+                pitch_bends = mp.concat([
+                    i[1].split(mp.pitch_bend, get_time=True)
+                    for i in all_tracks
                 ])
                 for each in all_tracks:
                     each[1].clear_pitch_bend('all')
@@ -253,12 +247,18 @@ class Root(Tk):
             self.filename_label.place(x=60, y=50, width=2000, height=30)
 
 
-appears = False
-
-
 def setup():
-    global appears
-    if not appears:
-        appears = True
-        root = Root()
-        root.mainloop()
+    with open('packages/config.py', encoding='utf-8-sig') as f:
+        exec(f.read(), globals(), globals())
+    global file_path, action, track_ind_get, interval, read_result, sheetlen, set_bpm, off_melody, if_merge
+    file_path = None
+    action = 0
+    track_ind_get = None
+    interval = None
+    read_result = None
+    sheetlen = None
+    set_bpm = None
+    off_melody = 0
+    if_merge = False
+    root = Root()
+    root.mainloop()

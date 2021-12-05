@@ -94,33 +94,7 @@ key_settings = {
     'f9': 'G#6',
     'f10': 'A6',
     'f11': 'A#6',
-    'f12': 'B6',
-    'insert': 'B0',
-    'home': 'C1',
-    'page up': 'C#1',
-    'delete': 'D1',
-    'end': 'D#1',
-    'page down': 'E1',
-    'up': 'F1',
-    'left': 'F#1',
-    'down': 'G1',
-    'right': 'G#1',
-    'num 0': 'A1',
-    'decimal': 'C4',
-    'num 1': 'C#4',
-    'num 2': 'D4',
-    'num 3': 'D#4',
-    'num 4': 'E4',
-    'num 5': 'F4',
-    'num 6': 'F#4',
-    'num 7': 'G4',
-    'num 8': 'G#4',
-    'num 9': 'A4',
-    'num /': 'A#4',
-    '*': 'B4',
-    'num -': 'C5',
-    'plus': 'A0',
-    'enter2': 'A#0'
+    'f12': 'B6'
 }
 
 midi_device_id = 1
@@ -130,7 +104,6 @@ device_info_num = 10
 pause_key = 'space'
 repeat_key = 'ctrl'
 unpause_key = 'enter'
-exit_key = 'esc'
 pause_key_clear_notes = False
 
 # these are the init parameters of the mixer
