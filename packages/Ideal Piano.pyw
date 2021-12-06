@@ -1,3 +1,7 @@
+sys.path.append('tools')
+from change_settings_inner import config_window
+
+
 class ideal_piano_button:
     def __init__(self, img, x, y):
         self.img = pyglet.resource.image(img).get_transform()
@@ -352,10 +356,8 @@ def open_settings():
     keyboard_handler[config_key] = False
     keyboard_handler[key.S] = False
     os.chdir(abs_path)
-    os.chdir('tools')
-    with open('change_settings_inner.pyw', encoding='utf-8-sig') as f:
-        exec(f.read(), globals(), globals())
-    os.chdir(abs_path)
+    current_config_window = config_window()
+    current_config_window.mainloop()
     reload_settings()
 
 

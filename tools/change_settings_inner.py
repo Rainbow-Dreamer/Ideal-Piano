@@ -1,6 +1,7 @@
-with open('../packages/config.py', encoding='utf-8-sig') as f:
-    text = f.read()
-    exec(text)
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from ast import literal_eval
 
 
 def get_all_config_options(text):
@@ -19,7 +20,7 @@ def get_all_config_options(text):
 
 
 def change(var, new, is_str=True):
-    text = open('../packages/config.py', encoding='utf-8').read()
+    text = open('packages/config.py', encoding='utf-8').read()
     text_ls = list(text)
     var_len = len(var) + 1
     var_ind = text.index('\n' + var + ' ') + var_len
@@ -38,12 +39,15 @@ def change(var, new, is_str=True):
         text_ls[var_ind:next_var_ind] = f" = '{new}'"
     else:
         text_ls[var_ind:next_var_ind] = f" = {new}"
-    with open('../packages/config.py', 'w', encoding='utf-8') as f:
+    with open('packages/config.py', 'w', encoding='utf-8') as f:
         f.write(''.join(text_ls))
 
 
 class config_window(Tk):
     def __init__(self):
+        with open('packages/config.py', encoding='utf-8-sig') as f:
+            text = f.read()
+            exec(text, globals(), globals())
         super(config_window, self).__init__()
         self.title("Settings")
         self.minsize(800, 600)
@@ -237,7 +241,3 @@ class config_window(Tk):
                 changed = True
         if changed:
             self.show_saved()
-
-
-current_config_window = config_window()
-current_config_window.mainloop()
