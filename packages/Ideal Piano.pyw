@@ -839,14 +839,18 @@ def detect_config():
     global wavdic
     global global_volume
     if configkey(volume_up):
-        if global_volume < 1:
+        if global_volume + volume_change_unit <= 1:
             global_volume += volume_change_unit
-            [wavdic[j].set_volume(global_volume) for j in wavdic]
+        else:
+            global_volume = 1
+        [wavdic[j].set_volume(global_volume) for j in wavdic]
         configshow(f'volume up to {int(global_volume*100)}%')
     if configkey(volume_down):
-        if global_volume > 0:
+        if global_volume - volume_change_unit >= 0:
             global_volume -= volume_change_unit
-            [wavdic[j].set_volume(global_volume) for j in wavdic]
+        else:
+            global_volume = 0
+        [wavdic[j].set_volume(global_volume) for j in wavdic]
         configshow(f'volume down to {int(global_volume*100)}%')
     switchs(change_delay, 'delay')
     switchs(change_read_current, 'delay_only_read_current')
@@ -1734,9 +1738,9 @@ def init_show():
         return 'back'
 
     if off_melody:
-        musicsheet = split_chord(musicsheet, 'hold', melody_tol, chord_tol,
-                                 get_off_overlap_notes, average_degree_length,
-                                 melody_degree_tol)
+        musicsheet = mp.split_chord(musicsheet, 'hold', melody_tol, chord_tol,
+                                    get_off_overlap_notes,
+                                    average_degree_length, melody_degree_tol)
         sheetlen = len(musicsheet)
     if play_interval is not None:
         interval = None

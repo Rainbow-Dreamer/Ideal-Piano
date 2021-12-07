@@ -168,7 +168,7 @@ volume_up = '='
 volume_down = '-'
 
 # volume change of each volume up/down
-volume_change_unit = 0.05
+volume_change_unit = 0.01
 
 # if delay is set to True before you press, then it will change to False, if False before then set to True
 change_delay = 'd'
