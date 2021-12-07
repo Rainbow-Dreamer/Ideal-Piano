@@ -34,7 +34,7 @@ This software also supports directly loading SoundFont files as sound source to 
 
 ## Download
 
-You can download this software for Windows and Linux from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest), currently Ideal Piano is not compatible with macOS because many dependent python packages of this software has serious existing bugs with macOS when testing, I will try to make a compatible version for it in my spare time.
+You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
 
 ## Previews
 
@@ -110,7 +110,7 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 ## 下载
 
-你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows和Linux版本，目前Ideal Piano不兼容macOS，因为这个软件的许多依赖的python包在测试时与macOS之间存在严重的bug，我将在业余时间尝试为它制作一个兼容版本。
+你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows, Linux和macOS版本。
 
 ## 预览
 
