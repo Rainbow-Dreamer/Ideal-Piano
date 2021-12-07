@@ -161,7 +161,7 @@ alter_notes_show_degree = True
 config_enable = True
 
 # if you press the config key with the following keys, those keys will be able to adjust settings in realtime.
-config_key = 'ctrl'
+config_key = 'lctrl'
 
 # volume change keys
 volume_up = '='
