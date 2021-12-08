@@ -1,5 +1,6 @@
 sys.path.append('tools')
 from change_settings_inner import config_window
+from copy import deepcopy as copy
 
 
 class ideal_piano_button:
