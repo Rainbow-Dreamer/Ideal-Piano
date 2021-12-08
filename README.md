@@ -4,9 +4,11 @@ English [中文](#Ideal-Piano-1)
 
 ## Introduction
 
-This is a smart piano software that I started to develop in April 2020 and recently near completion in early August. This smart piano software has some usefulness for music beginners, musicians, music lovers, etc. 
+This is a smart piano software that I started to develop in April 2020 and recently near completion in early August. This smart piano software has some usefulness for music beginners, musicians, music lovers, etc.
 
 The best feature of Ideal Piano is the algorithm that uses music logic to determine what chord the currently played note is composed of and display it on the screen. This algorithm is a project of my own, a music logic algorithm designed by musicpy, a music composition language library, and it works very well, including all root position chords, all kinds of chord inversions, voicings and chords which have altered notes, omissions, etc. It can determine very complicated chord compositions, and there are several parameters to adjust the priority of the music logic. (The default parameter settings are the most widely applicable)
+
+This piano software currently has Windows, Linux and macOS version.
 
 ## Usage
 
@@ -35,6 +37,24 @@ This software also supports directly loading SoundFont files as sound source to 
 ## Download
 
 You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
+
+Note1: for Linux version,  to use SoundFont files as instruments in this software, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
+
+````
+sudo apt-get install fluidsynth
+````
+
+If there are errors playing MIDI files using default settings, you may also need to install freepats by running
+
+````
+sudo apt-get install freepats
+````
+
+Note2: for macOS version, due to an existing bug of pygame's mixer that it cannot pause MIDI file playing on macOS, before the pygame's developers fix this bug, the default settings of playing MIDI files cannot pause for the macOS version. If you want to pause and unpause MIDI files when playing for macOS version, you can switch to use fluidsynth to play MIDI files in Ideal Piano by changing `use_soundfont` to True in the settings file, and then install fluidsynth on macOS, it is pretty easy, you can use homebrew to install fluidsynth by running this line in the terminal
+
+``````
+brew install fluidsynth
+``````
 
 ## Previews
 
