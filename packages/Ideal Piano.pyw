@@ -1606,10 +1606,7 @@ def initialize(musicsheet, unit_time, start_time, window_mode=0):
                         (currentstart - bars_drop_interval, currentnote))
                 start += interval
         except:
-            if use_soundfont:
-                current_sf2_player.current_midi_file = path
-            else:
-                pygame.mixer.music.load(path)
+            pygame.mixer.music.load(path)
             play_midi_file = True
             playls.clear()
             if note_mode == 'bars drop':
