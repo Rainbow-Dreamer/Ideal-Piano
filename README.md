@@ -38,16 +38,16 @@ This software also supports directly loading SoundFont files as sound source to 
 
 You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
 
-Note1: for Linux version,  to use SoundFont files as instruments in this software, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
-
-````
-sudo apt-get install fluidsynth
-````
-
-If there are errors playing MIDI files using default settings, you may also need to install freepats by running
+Note1: for Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. On Ubuntu you can run
 
 ````
 sudo apt-get install freepats
+````
+
+If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
+
+````
+sudo apt-get install fluidsynth
 ````
 
 Note2: for macOS version, due to an existing bug of pygame's mixer that it cannot pause MIDI file playing on macOS, before the pygame's developers fix this bug, the default settings of playing MIDI files cannot pause for the macOS version. If you want to pause and unpause MIDI files when playing for macOS version, you can switch to use fluidsynth to play MIDI files in Ideal Piano by changing `use_soundfont` to True in the settings file, and then install fluidsynth on macOS, it is pretty easy, you can use homebrew to install fluidsynth by running this line in the terminal
@@ -134,19 +134,19 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows, Linux和macOS版本。
 
-注1：对于Linux版本，要在本软件中使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以参考[这里](https://github.com/FluidSynth/fluidsynth/wiki/Download)不同Linux发行版本的安装命令。对于Ubuntu，它是
-
-````
-sudo apt-get install fluidsynth
-````
-
-如果使用默认设置播放MIDI文件时出现错误，你可能还需要安装freepats，方法是运行
+注意1：对于Linux版本，使用默认设置播放MIDI文件需要安装freepats，这是pygame的mixer music模块用来播放MIDI文件的默认MIDI声音集。在Ubuntu上，你可以运行
 
 ````
 sudo apt-get install freepats
 ````
 
-注2：对于macOS版本，由于pygame的mixer存在一个bug，即在macOS上不能暂停播放MIDI文件，在pygame的开发者修复这个bug之前，macOS版本播放MIDI文件的默认设置不能暂停。如果你想在macOS版本上播放MIDI文件时暂停和取消暂停，你可以在Ideal Piano的设置文件中把`use_soundfont`改为True，改用fluidsynth来播放MIDI文件，然后在macOS上安装fluidsynth，这很简单，你可以用homebrew在terminal运行这一行来安装fluidsynth
+如果你想在Linux版本中使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以参考[这里](https://github.com/FluidSynth/fluidsynth/wiki/Download)了解不同Linux发行版的安装命令。对于Ubuntu，它是
+
+````
+sudo apt-get install fluidsynth
+````
+
+注意2：对于macOS版本，由于pygame的mixer存在一个bug，即在macOS上不能暂停播放MIDI文件，在pygame的开发者修复这个bug之前，macOS版本播放MIDI文件的默认设置不能暂停。如果你想在macOS版本上播放MIDI文件时暂停和取消暂停，你可以在Ideal Piano的设置文件中把`use_soundfont`改为True，改用fluidsynth来播放MIDI文件，然后在macOS上安装fluidsynth，这很简单，你可以用homebrew在terminal运行这一行来安装fluidsynth
 
 ``````
 brew install fluidsynth
