@@ -104,6 +104,8 @@ The chord logic algorithm used in this software comes from another project of mi
 
 Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏的音组成的是什么和弦，并且显示在屏幕上。这个算法是自己的一个项目， 乐理作曲语言库musicpy里面自己精心设计的一个乐理逻辑算法，判断的效果非常好，包括所有的原位和弦，各种和弦的转位，voicings 和变化音，省略音等等，可以判断非常覆杂的和弦组成，并且有多个乐理逻辑判断优先级的参数可以调整。 （默认的参数设置的适用性最广泛）
 
+这个钢琴软件现在有Windows, Linux 和 macOS版本。
+
 ## 使用
 
 这个智能钢琴软件总共有三个模式，电脑键盘自由演奏，MIDI键盘自由演奏和播放MIDI文件分析和弦并且实时演示。在播放MIDI文件演示的模式中，可以选择通过算法去除主旋律，只听低音部分的和弦的音符。这三个模式在打开Ideal Piano之后选择左上角对应的按钮就可以进入。
@@ -131,6 +133,24 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 ## 下载
 
 你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows, Linux和macOS版本。
+
+注1：对于Linux版本，要在本软件中使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以参考[这里](https://github.com/FluidSynth/fluidsynth/wiki/Download)不同Linux发行版本的安装命令。对于Ubuntu，它是
+
+````
+sudo apt-get install fluidsynth
+````
+
+如果使用默认设置播放MIDI文件时出现错误，你可能还需要安装freepats，方法是运行
+
+````
+sudo apt-get install freepats
+````
+
+注2：对于macOS版本，由于pygame的mixer存在一个bug，即在macOS上不能暂停播放MIDI文件，在pygame的开发者修复这个bug之前，macOS版本播放MIDI文件的默认设置不能暂停。如果你想在macOS版本上播放MIDI文件时暂停和取消暂停，你可以在Ideal Piano的设置文件中把`use_soundfont`改为True，改用fluidsynth来播放MIDI文件，然后在macOS上安装fluidsynth，这很简单，你可以用homebrew在terminal运行这一行来安装fluidsynth
+
+``````
+brew install fluidsynth
+``````
 
 ## 预览
 
