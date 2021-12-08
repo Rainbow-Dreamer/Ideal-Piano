@@ -1720,9 +1720,7 @@ def init_show():
         action = 0
         return 'back'
     if path and read_result:
-        global interval
-        interval = browse.interval
-        play_interval = interval
+        play_interval = browse.interval
         if read_result != 'error':
             bpm, musicsheet, start_time = read_result
             musicsheet, new_start_time = musicsheet.pitch_filter(*pitch_range)
@@ -1741,7 +1739,6 @@ def init_show():
                                     average_degree_length, melody_degree_tol)
         sheetlen = len(musicsheet)
     if play_interval is not None:
-        interval = None
         play_start, play_stop = int(sheetlen * (play_interval[0] / 100)), int(
             sheetlen * (play_interval[1] / 100))
         if play_start == 0:
