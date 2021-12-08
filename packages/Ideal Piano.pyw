@@ -1764,7 +1764,7 @@ def init_show():
     if show_music_analysis:
         global show_music_analysis_list
         show_music_analysis_list = [[
-            add_to_last_index(musicsheet.interval, each[0]), each[1]
+            mp.add_to_last_index(musicsheet.interval, each[0]), each[1]
         ] for each in music_analysis_list]
         global default_show_music_analysis_list
         default_show_music_analysis_list = copy(show_music_analysis_list)
