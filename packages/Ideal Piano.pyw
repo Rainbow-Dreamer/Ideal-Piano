@@ -545,7 +545,7 @@ class piano_window(pyglet.window.Window):
                             self.not_first()
                             pyglet.clock.schedule_interval(
                                 self.func, 1 / piano_config.fps)
-                    except Exception as e:
+                    except:
                         current_piano_engine.has_load(False)
                         pygame.midi.quit()
                         current_piano_engine.current_midi_device += f'\n{language_patch.ideal_piano_language_dict["error message"]}: {e}'
@@ -1617,7 +1617,8 @@ class piano_engine:
                                    piano_config.global_volume)
             else:
                 self.wavdic = load_sf2({i: i
-                                        for i in notenames}, current_sf2,
+                                        for i in notenames},
+                                       current_piano_window.current_sf2,
                                        piano_config.global_volume)
         self.current_play = []
         self.stillplay = []
