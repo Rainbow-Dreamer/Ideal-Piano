@@ -1075,6 +1075,35 @@ class piano_engine:
                     current_piano_window.label.text = '[]'
                     current_piano_window.label2.text = ''
 
+        self._read_device_midi_events()
+
+        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+            i = 0
+            while i < len(self.plays):
+                each = self.plays[i]
+                each.y += current_piano_window.bar_steps
+                if each.y >= current_piano_window.screen_height:
+                    each.batch = None
+                    del self.plays[i]
+                    continue
+                i += 1
+            for k in self.still_hold:
+                current_hold_note, current_bar = k
+                if current_hold_note in self.current_play:
+                    current_bar.height += piano_config.bar_hold_increase
+                else:
+                    self.plays.append(current_bar)
+                    self.still_hold.remove(k)
+
+        if current_piano_window.keyboard_handler[key.LSHIFT]:
+            current_piano_window.label_midi_device.text = self.current_midi_device
+        if current_piano_window.keyboard_handler[key.LCTRL]:
+            current_piano_window.label_midi_device.text = ''
+        if piano_config.config_enable:
+            if piano_config.play_use_soundfont:
+                self.detect_sf2_config(1)
+
+    def _read_device_midi_events(self):
         if self.device.poll():
             event = self.device.read(1)[0]
             data, timestamp = event
@@ -1174,32 +1203,6 @@ class piano_engine:
                         self.soft_pedal_volume_ratio = piano_config.soft_pedal_volume
                     else:
                         self.soft_pedal_volume_ratio = 1
-
-        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-            i = 0
-            while i < len(self.plays):
-                each = self.plays[i]
-                each.y += current_piano_window.bar_steps
-                if each.y >= current_piano_window.screen_height:
-                    each.batch = None
-                    del self.plays[i]
-                    continue
-                i += 1
-            for k in self.still_hold:
-                current_hold_note, current_bar = k
-                if current_hold_note in self.current_play:
-                    current_bar.height += piano_config.bar_hold_increase
-                else:
-                    self.plays.append(current_bar)
-                    self.still_hold.remove(k)
-
-        if current_piano_window.keyboard_handler[key.LSHIFT]:
-            current_piano_window.label_midi_device.text = self.current_midi_device
-        if current_piano_window.keyboard_handler[key.LCTRL]:
-            current_piano_window.label_midi_device.text = ''
-        if piano_config.config_enable:
-            if piano_config.play_use_soundfont:
-                self.detect_sf2_config(1)
 
     def mode_show(self, dt):
         if not self.paused:
