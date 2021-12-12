@@ -1,3 +1,5 @@
+import random
+
 if sys.platform == 'darwin':
     current_test = tk.Tk()
     current_test.withdraw()
@@ -361,6 +363,7 @@ class piano_window(pyglet.window.Window):
                     group=self.piano_key,
                     border=piano_config.piano_key_border,
                     border_color=piano_config.piano_key_border_color)
+                current_piano_key.current_color = None
                 self.piano_keys.append(current_piano_key)
                 self.initial_colors.append(
                     (current_piano_key.x, piano_config.white_key_color))
@@ -374,6 +377,7 @@ class piano_window(pyglet.window.Window):
                 group=self.piano_key,
                 border=piano_config.piano_key_border,
                 border_color=piano_config.piano_key_border_color)
+            first_black_key.current_color = None
             self.piano_keys.append(first_black_key)
             self.initial_colors.append(
                 (first_black_key.x, piano_config.black_key_color))
@@ -381,17 +385,18 @@ class piano_window(pyglet.window.Window):
             for j in range(piano_config.black_keys_set_num):
                 for k in piano_config.black_keys_set:
                     current_start += k
-                    self.piano_keys.append(
-                        pyglet.shapes.BorderedRectangle(
-                            x=current_start,
-                            y=piano_config.black_key_y,
-                            width=piano_config.black_key_width,
-                            height=piano_config.black_key_height,
-                            color=piano_config.black_key_color,
-                            batch=self.batch,
-                            group=self.piano_key,
-                            border=piano_config.piano_key_border,
-                            border_color=piano_config.piano_key_border_color))
+                    current_piano_key = pyglet.shapes.BorderedRectangle(
+                        x=current_start,
+                        y=piano_config.black_key_y,
+                        width=piano_config.black_key_width,
+                        height=piano_config.black_key_height,
+                        color=piano_config.black_key_color,
+                        batch=self.batch,
+                        group=self.piano_key,
+                        border=piano_config.piano_key_border,
+                        border_color=piano_config.piano_key_border_color)
+                    current_piano_key.current_color = None
+                    self.piano_keys.append(current_piano_key)
                     self.initial_colors.append(
                         (current_start, piano_config.black_key_color))
                 current_start += piano_config.black_keys_set_interval
@@ -816,11 +821,18 @@ class piano_engine:
                         self.still_hold_pc.append([each, current_bar])
                     if piano_config.draw_piano_keys:
                         current_note = mp.toNote(self.notedic[each])
-                        current_piano_window.piano_keys[
-                            current_note.degree -
-                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else (
-                                random.randint(0, 255), random.randint(0, 255),
-                                random.randint(0, 255))
+                        current_piano_key = current_piano_window.piano_keys[
+                            current_note.degree - 21]
+                        if piano_config.color_mode == 'normal':
+                            current_piano_key.color = piano_config.bar_color
+                        else:
+                            if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                                current_piano_key.color = current_bar.color
+                            else:
+                                current_piano_key.color = (random.randint(
+                                    0, 255), random.randint(
+                                        0, 255), random.randint(0, 255))
+                        current_piano_key.current_color = current_piano_key.color
             else:
                 if each not in self.last:
                     self.changed = True
@@ -848,9 +860,7 @@ class piano_engine:
                         current_note = mp.toNote(self.notedic[each])
                         current_piano_window.piano_keys[
                             current_note.degree -
-                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else (
-                                random.randint(0, 255), random.randint(0, 255),
-                                random.randint(0, 255))
+                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_bar.color
         for j in self.last:
             if j not in current:
 
@@ -910,11 +920,9 @@ class piano_engine:
                 self.currentchord = mp.chord(notels)
                 for k in self.currentchord:
                     if piano_config.draw_piano_keys:
-                        current_piano_window.piano_keys[
-                            k.degree -
-                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else (
-                                random.randint(0, 255), random.randint(0, 255),
-                                random.randint(0, 255))
+                        current_piano_key = current_piano_window.piano_keys[
+                            k.degree - 21]
+                        current_piano_key.color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_piano_key.current_color
 
             if notels:
                 self.currentchord.notes.sort(key=lambda x: x.degree)
@@ -1107,11 +1115,17 @@ class piano_engine:
                     ) if piano_config.opacity_change_by_velocity else piano_config.bar_opacity
                     self.still_hold.append([current_note, current_bar])
                 if piano_config.draw_piano_keys:
-                    current_piano_window.piano_keys[
-                        current_note.degree -
-                        21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else (
-                            random.randint(0, 255), random.randint(0, 255),
-                            random.randint(0, 255))
+                    current_piano_key = current_piano_window.piano_keys[
+                        current_note.degree - 21]
+                    if piano_config.color_mode == 'normal':
+                        current_piano_key.color = piano_config.bar_color
+                    else:
+                        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                            current_piano_key.color = current_bar.color
+                        else:
+                            current_piano_key.color = (random.randint(0, 255),
+                                                       random.randint(0, 255),
+                                                       random.randint(0, 255))
                 if current_note not in self.current_play:
                     self.current_play.append(current_note)
                     if current_note not in self.stillplay:
@@ -1268,6 +1282,9 @@ class piano_engine:
                                     current_note.volume / 127
                                 ) if piano_config.opacity_change_by_velocity else piano_config.bar_opacity
                                 self.plays.append(current_bar)
+                                current_piano_window.piano_keys[
+                                    current_note.degree -
+                                    21].current_color = current_bar.color
                     elif situation == 1:
                         if currentime >= stop_time:
                             if not self.play_midi_file:
@@ -1286,19 +1303,29 @@ class piano_engine:
                     if piano_config.draw_piano_keys and piano_config.note_mode != 'bars drop':
                         if self.lastshow:
                             for each in self.lastshow:
-                                current_piano_window.piano_keys[
-                                    each.degree -
-                                    21].color = current_piano_window.initial_colors[
-                                        each.degree - 21]
+                                if each not in self.playnotes:
+                                    current_piano_window.piano_keys[
+                                        each.degree -
+                                        21].color = current_piano_window.initial_colors[
+                                            each.degree - 21]
                         for i in self.playnotes:
-                            current_piano_window.piano_keys[
-                                i.degree -
-                                21].color = i.own_color if piano_config.use_track_colors else (
-                                    piano_config.bar_color
-                                    if piano_config.color_mode == 'normal' else
-                                    (random.randint(0, 255),
-                                     random.randint(0, 255),
-                                     random.randint(0, 255)))
+                            current_piano_key = current_piano_window.piano_keys[
+                                i.degree - 21]
+                            if piano_config.use_track_colors:
+                                current_piano_key.color = i.own_color
+                            else:
+                                if piano_config.color_mode == 'normal':
+                                    current_piano_key.color = piano_config.bar_color
+                                else:
+                                    if piano_config.note_mode == 'bars':
+                                        current_piano_key.color = current_piano_key.current_color
+                                    else:
+                                        if current_piano_key.current_color != current_piano_key.color:
+                                            current_piano_key.color = (
+                                                random.randint(0, 255),
+                                                random.randint(0, 255),
+                                                random.randint(0, 255))
+                                            current_piano_key.current_color = current_piano_key.color
 
                     self.lastshow = self.playnotes
                     if piano_config.show_notes:
