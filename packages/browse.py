@@ -1,30 +1,34 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import time
 import musicpy as mp
 import os
+import sys
+import piano_config
+import importlib
 
 
-class Root(Tk):
-    def __init__(self):
-        super(Root, self).__init__()
-        self.title("Choose Midi Files")
+class browse_window(tk.Tk):
+    def __init__(self, parent, browse_dict):
+        super(browse_window, self).__init__()
+        self.parent = parent
+        self.browse_dict = browse_dict
+        self.title(self.browse_dict['choose'])
         self.minsize(200, 300)
+
         if sys.platform == 'win32':
             self.wm_iconbitmap('resources/piano.ico')
         elif sys.platform == 'linux':
             self.tk.call('wm', 'iconphoto', self._w,
-                         PhotoImage(file='resources/piano_icon.png'))
-        elif sys.platform == 'darwin':
-            self.iconphoto(True, PhotoImage(file='resources/piano_icon.png'))
+                         tk.PhotoImage(file='resources/piano_icon.png'))
 
         self.labelFrame = ttk.LabelFrame(self,
-                                         text="midi files",
+                                         text=self.browse_dict['MIDI files'],
                                          borderwidth=70)
         self.labelFrame.grid(padx=200, pady=100, row=0)
         self.button_a = ttk.Button(self.labelFrame,
-                                   text="Go Back",
+                                   text=self.browse_dict['go back'],
                                    command=self.go_back)
         self.button_a.grid(row=1, column=0)
 
@@ -37,7 +41,7 @@ class Root(Tk):
 
     def make_button(self):
         self.button = ttk.Button(self.labelFrame,
-                                 text="Choose A Midi File",
+                                 text=self.browse_dict['choose MIDI file'],
                                  command=self.fileDialog)
         self.button.grid(row=2, column=0)
 
@@ -59,60 +63,57 @@ class Root(Tk):
         self.make_button()
 
     def go_back(self):
-        global action
-        action = 1
+        self.parent.action = 1
         self.destroy()
 
     def quit_normal(self):
-        global track_ind_get
-        global interval
-        global read_result
-        global sheetlen
-        global set_bpm
-        global off_melody
-        global if_merge
         if self.out_of_index.place_info():
             self.out_of_index.place_forget()
         if self.no_notes1.place_info():
             self.no_notes1.place_forget()
-        set_bpm = self.check_bpm.get()
-        off_melody = self.if_melody.get()
-        if_merge = self.if_merge_all_tracks.get()
+        self.parent.set_bpm = self.check_bpm.get()
+        self.parent.off_melody = self.if_melody.get()
+        self.parent.if_merge = self.if_merge_all_tracks.get()
         try:
-            track_ind_get = int(self.choose_track_ind.get())
+            self.parent.track_ind_get = int(self.choose_track_ind.get())
         except:
             pass
         try:
-            interval = (int(self.interval_from.get()),
-                        int(self.interval_to.get()))
+            self.parent.interval = (int(self.interval_from.get()),
+                                    int(self.interval_to.get()))
         except:
             pass
         try:
-            if track_ind_get is not None:
+            if self.parent.track_ind_get is not None:
                 read_mode = ''
             else:
                 read_mode = 'find'
-            if not if_merge:
-                read_result = mp.read(file_path, track_ind_get, read_mode)
-                whole_notes = read_result[1]
+            if not self.parent.if_merge:
+                self.parent.read_result = mp.read(self.parent.file_path,
+                                                  self.parent.track_ind_get,
+                                                  read_mode)
+                whole_notes = self.parent.read_result[1]
                 for each in whole_notes:
-                    each.own_color = bar_color
-                read_result[1].normalize_tempo(read_result[0],
-                                               start_time=read_result[2])
+                    each.own_color = piano_config.bar_color
+                self.parent.read_result[1].normalize_tempo(
+                    self.parent.read_result[0],
+                    start_time=self.parent.read_result[2])
             else:
                 try:
-                    all_tracks = mp.read(file_path,
-                                         track_ind_get,
-                                         mode='all',
-                                         get_off_drums=get_off_drums,
-                                         to_piece=True)
+                    all_tracks = mp.read(
+                        self.parent.file_path,
+                        self.parent.track_ind_get,
+                        mode='all',
+                        get_off_drums=piano_config.get_off_drums,
+                        to_piece=True)
                 except:
-                    all_tracks = mp.read(file_path,
-                                         track_ind_get,
-                                         mode='all',
-                                         get_off_drums=get_off_drums,
-                                         to_piece=True,
-                                         split_channels=True)
+                    all_tracks = mp.read(
+                        self.parent.file_path,
+                        self.parent.track_ind_get,
+                        mode='all',
+                        get_off_drums=piano_config.get_off_drums,
+                        to_piece=True,
+                        split_channels=True)
                 all_tracks.normalize_tempo()
                 all_tracks = [(all_tracks.bpm, all_tracks.tracks[i],
                                all_tracks.start_times[i])
@@ -126,10 +127,10 @@ class Root(Tk):
                 start_time_ls = [j[2] for j in all_tracks]
                 first_track_ind = start_time_ls.index(min(start_time_ls))
                 all_tracks.insert(0, all_tracks.pop(first_track_ind))
-                if use_track_colors:
+                if piano_config.use_track_colors:
                     color_num = len(all_tracks)
                     import random
-                    if not use_default_tracks_colors:
+                    if not piano_config.use_default_tracks_colors:
                         colors = []
                         for i in range(color_num):
                             current_color = tuple(
@@ -140,7 +141,7 @@ class Root(Tk):
                                     [random.randint(0, 255) for j in range(3)])
                             colors.append(current_color)
                     else:
-                        colors = tracks_colors
+                        colors = piano_config.tracks_colors
                         colors_len = len(colors)
                         if colors_len < color_num:
                             for k in range(color_num - colors_len):
@@ -159,7 +160,7 @@ class Root(Tk):
                 for i in range(len(all_tracks)):
                     current = all_tracks[i]
                     current_track = current[1]
-                    if use_track_colors:
+                    if piano_config.use_track_colors:
                         current_color = colors[i]
                         for each in current_track:
                             each.own_color = current_color
@@ -167,17 +168,17 @@ class Root(Tk):
                         all_track_notes &= (current_track, current[2] -
                                             first_track_start_time)
                 all_track_notes += pitch_bends
-                if set_bpm != '':
-                    tempo = float(set_bpm)
-                read_result = tempo, all_track_notes, first_track_start_time
+                if self.parent.set_bpm != '':
+                    tempo = float(self.parent.set_bpm)
+                self.parent.read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
             print(str(e))
-            read_result = 'error'
+            self.parent.read_result = 'error'
 
-        if read_result != 'error':
-            sheetlen = len(read_result[1])
-            if sheetlen == 0:
+        if self.parent.read_result != 'error':
+            self.parent.sheetlen = len(self.parent.read_result[1])
+            if self.parent.sheetlen == 0:
                 self.no_notes1.place(x=-50, y=160, width=200, height=20)
             else:
                 self.destroy()
@@ -186,18 +187,17 @@ class Root(Tk):
 
     def make_error_labels(self):
         self.no_notes1 = ttk.Label(self.labelFrame,
-                                   text='this track has no music notes')
+                                   text=self.browse_dict['no notes'])
         self.out_of_index = ttk.Label(self.labelFrame,
-                                      text='track number is out of index')
+                                      text=self.browse_dict['out of index'])
 
     def fileDialog(self):
-        global file_path
         self.filename = filedialog.askopenfilename(
             initialdir=self.last_place,
-            title="Choose A Midi File",
-            filetypes=(("midi files", "*.mid"), ("all files", "*.*")))
+            title=self.browse_dict['choose MIDI file'],
+            filetypes=(("MIDI files", "*.mid"), ("all files", "*.*")))
         if '.mid' in self.filename or '.MID' in self.filename:
-            file_path = self.filename
+            self.parent.file_path = self.filename
             memory = self.filename[:self.filename.rindex('/') + 1]
             with open('browse memory.txt', 'w') as f:
                 f.write(memory)
@@ -208,19 +208,21 @@ class Root(Tk):
                                      command=self.quit_normal)
             self.button.grid(row=2, column=0)
             self.button2 = ttk.Button(self.labelFrame,
-                                      text="CANCEL",
+                                      text=self.browse_dict['cancel'],
                                       command=self.redo)
             self.button2.grid(row=3, column=0)
-            self.choose_track_ind_text = ttk.Label(self.labelFrame,
-                                                   text='trackind:')
+            self.choose_track_ind_text = ttk.Label(
+                self.labelFrame, text=self.browse_dict['trackind'])
             self.choose_track_ind_text.grid(row=4, column=0)
             self.choose_track_ind = ttk.Entry(self.labelFrame, width=5)
             self.choose_track_ind.grid(row=4, column=1)
-            self.from_text = ttk.Label(self.labelFrame, text='from')
+            self.from_text = ttk.Label(self.labelFrame,
+                                       text=self.browse_dict['from'])
             self.from_text.grid(row=6, column=0)
             self.interval_from = ttk.Entry(self.labelFrame, width=5)
             self.interval_from.grid(row=6, column=1)
-            self.to_text = ttk.Label(self.labelFrame, text='to')
+            self.to_text = ttk.Label(self.labelFrame,
+                                     text=self.browse_dict['to'])
             self.to_text.grid(row=6, column=2)
             self.interval_to = ttk.Entry(self.labelFrame, width=5)
             self.interval_to.grid(row=6, column=3)
@@ -228,37 +230,36 @@ class Root(Tk):
             self.check_bpm_text.grid(row=7, column=0)
             self.check_bpm = ttk.Entry(self.labelFrame, width=5)
             self.check_bpm.grid(row=7, column=1)
-            self.if_melody = IntVar()
-            self.main_melody = ttk.Checkbutton(
-                self.labelFrame,
-                text='main melody off when show chords',
-                variable=self.if_melody)
+            self.if_melody = tk.IntVar()
+            self.main_melody = ttk.Checkbutton(self.labelFrame,
+                                               text=self.browse_dict['melody'],
+                                               variable=self.if_melody)
             self.main_melody.place(x=-60, y=180, width=300, height=30)
-            self.if_merge_all_tracks = IntVar()
+            self.if_merge_all_tracks = tk.IntVar()
             self.merge_all_tracks = ttk.Checkbutton(
                 self.labelFrame,
-                text='merge all tracks',
+                text=self.browse_dict['merge'],
                 variable=self.if_merge_all_tracks)
             self.merge_all_tracks.place(x=100, y=0, width=125, height=30)
             self.make_error_labels()
-            current_filename = os.path.basename(file_path)
+            current_filename = os.path.basename(self.parent.file_path)
             self.filename_label = ttk.Label(
-                self, text=f'file name: {current_filename}')
+                self,
+                text=f'{self.browse_dict["file name"]}: {current_filename}')
             self.filename_label.place(x=60, y=50, width=2000, height=30)
 
 
-def setup():
-    with open('packages/config.py', encoding='utf-8-sig') as f:
-        exec(f.read(), globals(), globals())
-    global file_path, action, track_ind_get, interval, read_result, sheetlen, set_bpm, off_melody, if_merge
-    file_path = None
-    action = 0
-    track_ind_get = None
-    interval = None
-    read_result = None
-    sheetlen = None
-    set_bpm = None
-    off_melody = 0
-    if_merge = False
-    root = Root()
-    root.mainloop()
+class setup:
+    def __init__(self, browse_dict):
+        importlib.reload(piano_config)
+        self.file_path = None
+        self.action = 0
+        self.track_ind_get = None
+        self.interval = None
+        self.read_result = None
+        self.sheetlen = None
+        self.set_bpm = None
+        self.off_melody = 0
+        self.if_merge = False
+        self.current_browse_window = browse_window(self, browse_dict)
+        self.current_browse_window.mainloop()

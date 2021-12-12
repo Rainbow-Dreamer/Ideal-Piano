@@ -111,7 +111,7 @@ frequency = 44100
 size = -16
 channel = 2
 buffer = 1024
-maxinum_channels = 100
+max_num_channels = 100
 global_volume = 0.6
 
 # if delay is set to True, when you are self playing, the sounds will
@@ -296,3 +296,7 @@ sf2_decay = 1
 sf2_volume = 100
 
 soft_pedal_volume = 0.2
+
+render_as_audio = False
+
+language = 'English'
