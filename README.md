@@ -14,9 +14,9 @@ This piano software currently has Windows, Linux and macOS version.
 
 There are three modes in total: computer keyboard free play, MIDI keyboard free play and play MIDI file to analyze chords and demonstrate them in real time. In the demo mode of playing the MIDI file, you can choose to remove the main melody by the algorithm and listen only to the notes of the chords in the bass part. These three modes can be accessed by selecting the corresponding buttons in the upper left corner after opening Ideal Piano.
 
-The first mode, computer keyboard free play, the default keys are in the file `config.py`, if you want to change the notes corresponding to the keyboard, you can change them directly in `config.py` and save them. This mode is mainly provided to someone who do not have any MIDI keyboard to play in spare time.
+The first mode, computer keyboard free play, the default keys are in the file `piano_config.py`, if you want to change the notes corresponding to the keyboard, you can change them directly in `piano_config.py` and save them. This mode is mainly provided to someone who do not have any MIDI keyboard to play in spare time.
 
-The second mode, MIDI keyboard free play, is to connect a MIDI keyboard to your computer and then enter this mode, you can play on the MIDI keyboard, and the software will show you the position of the current note in the corresponding piano, and at the same time analyze in real time what chords you are currently playing (the root note plus the full expression of the chord type), and display them on the screen. You can set the path and the file type of the sound source (wav, mp3, ogg, etc.) in `config.py`.
+The second mode, MIDI keyboard free play, is to connect a MIDI keyboard to your computer and then enter this mode, you can play on the MIDI keyboard, and the software will show you the position of the current note in the corresponding piano, and at the same time analyze in real time what chords you are currently playing (the root note plus the full expression of the chord type), and display them on the screen. You can set the path and the file type of the sound source (wav, mp3, ogg, etc.) in `piano_config.py`.
 
 Previously I wanted to implement a MIDI keyboard shared by both DAW (arranger host) and Ideal Piano, or to play a project in DAW and display the current notes in Ideal Piano, but at the beginning it failed, always showing errors like Host error, but later I found a good solution. loopMIDI is a free software that allows you to create virtual MIDI ports, so you can use it to connect to the MIDI ports of several different software. With loopMIDI you can use a MIDI keyboard for both the DAW and Ideal Piano, so you can load the source you want to hear in the DAW and then play it on the MIDI keyboard and hear the DAW source, while Ideal Piano can display the chord type and notes you are currently playing in real time.
 
@@ -84,7 +84,7 @@ Here is a preview of Ideal Piano's screen.
 
 1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from [here](https://www.jianguoyun.com/p/DZN6-TAQhPG0CBifnp0E)
 2. Since my software is in English, I made a Chinese patch package, which includes: the buttons of the interface, the names of the chord types displayed, the single note and intervals, the interface for selecting MIDI files and each setting item, the programs for changing the settings. The download link of the Chinese patch installation package is [here](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
-3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `config.py`, save and then open the software to see the changes.
+3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `piano_config.py`, save and then open the software to see the changes.
 
 ## Summary
 
@@ -110,9 +110,9 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 这个智能钢琴软件总共有三个模式，电脑键盘自由演奏，MIDI键盘自由演奏和播放MIDI文件分析和弦并且实时演示。在播放MIDI文件演示的模式中，可以选择通过算法去除主旋律，只听低音部分的和弦的音符。这三个模式在打开Ideal Piano之后选择左上角对应的按钮就可以进入。
 
-第一个模式，电脑键盘自由演奏，默认的键位在`config.py`这个文件里，如果想要改变键盘对应的音符，直接在`config.py`里改然后保存即可。这个模式主要提供给没有任何MIDI键盘的小伙伴平时可以弹着玩。
+第一个模式，电脑键盘自由演奏，默认的键位在`piano_config.py`这个文件里，如果想要改变键盘对应的音符，直接在`piano_config.py`里改然后保存即可。这个模式主要提供给没有任何MIDI键盘的小伙伴平时可以弹着玩。
 
-第二个模式，MIDI键盘自由演奏，接上MIDI键盘到电脑，然后进入这个模式，就可以在MIDI键盘上演奏，并且软件里同时会显示你当前弹的音在对应的钢琴的位置， 同时实时分析你当前弹下的音组成的是什么和弦（根音加上和弦类型的完整表述），并且显示在屏幕上。音源可以自己在`config.py`里设置路径和音源的文件类型 （wav, mp3, ogg等等）。
+第二个模式，MIDI键盘自由演奏，接上MIDI键盘到电脑，然后进入这个模式，就可以在MIDI键盘上演奏，并且软件里同时会显示你当前弹的音在对应的钢琴的位置， 同时实时分析你当前弹下的音组成的是什么和弦（根音加上和弦类型的完整表述），并且显示在屏幕上。音源可以自己在`piano_config.py`里设置路径和音源的文件类型 （wav, mp3, ogg等等）。
 
 之前我想实现同时DAW（编曲宿主）和Ideal Piano共用一个MIDI键盘，或者DAW里面播放工程同时Ideal Piano也可以显示当前的音符， 可是在一开始遭遇了失败，一直都是显示Host error之类的错误，后来我找到了很好的解决办法。 loopMIDI这个免费软件可以做到建立虚拟MIDI端口， 因此可以用来连接多个不同的软件的MIDI端口。使用loopMIDI可以让DAW和Ideal Piano同时使用一个MIDI键盘，这样你就可以在DAW里面加载自己想听的音源， 然后在MIDI键盘上演奏，听到的是DAW的音源，与此同时Ideal Piano也可以同步地实时显示当前演奏的和弦类型和音符。
 
@@ -180,7 +180,7 @@ brew install fluidsynth
 
 1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DZN6-TAQhPG0CBifnp0E)下载
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，变成中文的内容包括：界面的按钮，显示的和弦种类名称，单音和音程，选择MIDI文件的界面和每个设置项，更改设置的程序。中文补丁安装包的下载地址在[这里](https://www.jianguoyun.com/p/DabhR74QhPG0CBi3vrID)
-3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`config.py`里去修改，保存之后再打开软件就可以看到变化了。
+3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`piano_config.py`里去修改，保存之后再打开软件就可以看到变化了。
 
 ## 总结
 
