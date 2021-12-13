@@ -220,9 +220,6 @@ class piano_window(pyglet.window.Window):
                                                    y=0,
                                                    batch=self.batch,
                                                    group=self.piano_bg)
-        self.playing = get_image(piano_config.notes_image)
-        self.playing.width /= piano_config.notes_resize_num
-        self.playing.height /= piano_config.notes_resize_num
 
         current_piano_engine.plays = []
         if piano_config.note_mode == 'bars drop':
@@ -562,7 +559,7 @@ class piano_window(pyglet.window.Window):
 
                 elif self.mode_num == 2:
                     if not self.open_browse_window:
-                        init_result = current_piano_engine.init_show()
+                        init_result = current_piano_engine.init_midi_show()
                         if init_result == 'back':
                             self.mode_num = 4
                         else:
@@ -718,27 +715,20 @@ class piano_engine:
         current_sf2 = current_piano_window.current_sf2
         if self.configkey('1'):
             if current_sf2.current_preset != 0:
-                current_change = current_sf2.change(
-                    preset=current_sf2.current_preset - 1, correct=False)
-                current_preset = f'{current_sf2.current_preset} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset} No preset'
-                current_piano_window.redraw()
-                current_piano_window.label.text = f'Change SoundFont preset to {current_preset}'
-                current_piano_window.label.draw()
-                current_piano_window.flip()
-                if current_change != -1:
-                    if mode == 0:
-                        self.wavdic = load_sf2(self.notedic, current_sf2,
-                                               piano_config.global_volume)
-                    else:
-                        notenames = os.listdir(piano_config.sound_path)
-                        notenames = [x[:x.index('.')] for x in notenames]
-                        self.wavdic = load_sf2({i: i
-                                                for i in notenames},
-                                               current_sf2,
-                                               piano_config.global_volume)
+                self._change_sf2_instrument(-1)
         if self.configkey('2'):
+            self._change_sf2_instrument(1)
+        if self.configkey('3'):
+            if current_sf2.current_bank != 0:
+                self._change_sf2_instrument(-1, 1)
+        if self.configkey('4'):
+            self._change_sf2_instrument(1, 1)
+
+    def _change_sf2_instrument(self, step, mode=0):
+        current_sf2 = current_piano_window.current_sf2
+        if mode == 0:
             current_change = current_sf2.change(
-                preset=current_sf2.current_preset + 1, correct=False)
+                preset=current_sf2.current_preset + step, correct=False)
             current_preset = f'{current_sf2.current_preset} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset} No preset'
             current_piano_window.redraw()
             current_piano_window.label.text = f'Change SoundFont preset to {current_preset}'
@@ -754,19 +744,285 @@ class piano_engine:
                     self.wavdic = load_sf2({i: i
                                             for i in notenames}, current_sf2,
                                            piano_config.global_volume)
-        if self.configkey('3'):
-            if current_sf2.current_bank != 0:
-                current_sf2.change_bank(current_sf2.current_bank - 1)
+        else:
+            current_sf2.change_bank(current_sf2.current_bank + step)
             current_piano_window.redraw()
             current_piano_window.label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
             current_piano_window.label.draw()
             current_piano_window.flip()
-        if self.configkey('4'):
-            current_sf2.change_bank(current_sf2.current_bank + 1)
-            current_piano_window.redraw()
-            current_piano_window.label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
+
+    def midi_file_play(self, dt):
+        if piano_config.use_soundfont:
+            if piano_config.render_as_audio:
+                self.current_midi_audio.play()
+            else:
+                current_piano_window.current_sf2_player.play_midi_file(
+                    current_piano_window.current_sf2_player.current_midi_file)
+        else:
+            pygame.mixer.music.play()
+
+    def _detect_chord(self, current_chord):
+        return mp.detect(
+            current_chord, piano_config.detect_mode, piano_config.inv_num,
+            piano_config.rootpitch, piano_config.change_from_first,
+            piano_config.original_first, piano_config.same_note_special,
+            piano_config.whole_detect, piano_config.return_fromchord,
+            piano_config.two_show_interval, piano_config.poly_chord_first,
+            piano_config.root_position_return_first,
+            piano_config.alter_notes_show_degree)
+
+    def init_self_pc(self):
+        if not piano_config.play_use_soundfont:
+            self.wavdic = load(self.notedic, piano_config.sound_path,
+                               piano_config.sound_format,
+                               piano_config.global_volume)
+        else:
+            self.wavdic = load_sf2(self.notedic,
+                                   current_piano_window.current_sf2,
+                                   piano_config.global_volume)
+        self.last = []
+        self.changed = False
+        if piano_config.delay:
+            self.stillplay = []
+        self.lastshow = None
+
+    def init_self_midi(self):
+        if not self.midi_device_load:
+            self.device = None
+            self.has_load(True)
+            self.current_midi_device = language_patch.ideal_piano_language_dict[
+                'close']
+            pygame.midi.init()
+            midi_info = [(language_patch.ideal_piano_language_dict['default'],
+                          pygame.midi.get_default_input_id())]
+            midi_info += [(i, pygame.midi.get_device_info(i))
+                          for i in range(piano_config.device_info_num)]
+            self.current_midi_device += '\n'.join([str(j) for j in midi_info])
+            self.device = pygame.midi.Input(piano_config.midi_device_id)
+        else:
+            if self.device:
+                self.device.close()
+                pygame.midi.quit()
+                pygame.midi.init()
+                self.device = pygame.midi.Input(piano_config.midi_device_id)
+        notenames = os.listdir(piano_config.sound_path)
+        notenames = [x[:x.index('.')] for x in notenames]
+        if piano_config.load_sound:
+            if not piano_config.play_use_soundfont:
+                self.wavdic = load({i: i
+                                    for i in notenames},
+                                   piano_config.sound_path,
+                                   piano_config.sound_format,
+                                   piano_config.global_volume)
+            else:
+                self.wavdic = load_sf2({i: i
+                                        for i in notenames},
+                                       current_piano_window.current_sf2,
+                                       piano_config.global_volume)
+        self.current_play = []
+        self.stillplay = []
+        self.last = self.current_play.copy()
+        self.sostenuto_pedal_on = False
+        self.soft_pedal_volume_ratio = 1
+
+    def init_midi_show(self):
+        current_piano_window.open_browse_window = True
+        current_setup = browse.setup(language_patch.browse_language_dict)
+        current_piano_window.open_browse_window = False
+        self.path = current_setup.file_path
+        self.action = current_setup.action
+        read_result = current_setup.read_result
+        self.sheetlen = current_setup.sheetlen
+        set_bpm = current_setup.set_bpm
+        self.off_melody = current_setup.off_melody
+        self.if_merge = current_setup.if_merge
+        play_interval = current_setup.interval
+        if self.action == 1:
+            self.action = 0
+            return 'back'
+        if self.path and read_result:
+            if read_result != 'error':
+                self.bpm, self.musicsheet, start_time = read_result
+                self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
+                    *piano_config.pitch_range)
+                start_time += new_start_time
+                self.sheetlen = len(self.musicsheet)
+                if set_bpm:
+                    self.bpm = float(set_bpm)
+            else:
+                return 'back'
+        else:
+            return 'back'
+
+        if self.off_melody:
+            self.musicsheet = mp.split_chord(
+                self.musicsheet, 'hold', piano_config.melody_tol,
+                piano_config.chord_tol, piano_config.get_off_overlap_notes,
+                piano_config.average_degree_length,
+                piano_config.melody_degree_tol)
+            self.sheetlen = len(self.musicsheet)
+        if play_interval is not None:
+            play_start, play_stop = int(
+                self.sheetlen * (play_interval[0] / 100)), int(
+                    self.sheetlen * (play_interval[1] / 100))
+            if play_start == 0:
+                play_start = 1
+            self.musicsheet = self.musicsheet[play_start:play_stop + 1]
+            self.sheetlen = play_stop + 1 - play_start
+        if self.sheetlen == 0:
+            return 'back'
+        pygame.mixer.set_num_channels(self.sheetlen)
+        self.wholenotes = self.musicsheet.notes
+        self.unit_time = 4 * 60 / self.bpm
+
+        # every object in playls has a situation flag at the index of 3,
+        # 0 means has not been played yet, 1 means it has started playing,
+        # 2 means it has stopped playing
+        self.musicsheet.start_time = start_time
+        self.playls = self.initialize(self.musicsheet, self.unit_time,
+                                      start_time)
+        if piano_config.show_music_analysis:
+            self.show_music_analysis_list = [[
+                mp.add_to_last_index(self.musicsheet.interval, each[0]),
+                each[1]
+            ] for each in current_piano_window.music_analysis_list]
+            self.default_show_music_analysis_list = copy(
+                self.show_music_analysis_list)
+        self.startplay = time.time()
+        self.lastshow = None
+        self.finished = False
+        self.paused = False
+
+    def initialize(self, musicsheet, unit_time, start_time, window_mode=0):
+        self.play_midi_file = False
+        playls = []
+        start = start_time * unit_time + current_piano_window.bars_drop_interval
+        if piano_config.play_as_midi:
+            self.play_midi_file = True
+            if window_mode == 0:
+                if piano_config.use_soundfont and piano_config.render_as_audio:
+                    current_piano_window.label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
+                    current_piano_window.label.draw()
+                    current_piano_window.flip()
+                if not self.if_merge:
+                    mp.write(musicsheet,
+                             60 / (unit_time / 4),
+                             start_time=musicsheet.start_time,
+                             name='temp.mid')
+                    if piano_config.use_soundfont:
+                        if piano_config.render_as_audio:
+                            current_waveform = current_piano_window.current_sf2.export_midi_file(
+                                'temp.mid', get_audio=True).raw_data
+                            self.current_midi_audio = pygame.mixer.Sound(
+                                buffer=current_waveform)
+                        else:
+                            current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
+                    else:
+                        pygame.mixer.music.load('temp.mid')
+                else:
+                    try:
+                        if piano_config.use_soundfont:
+                            if piano_config.render_as_audio:
+                                current_waveform = current_piano_window.current_sf2.export_midi_file(
+                                    self.path, get_audio=True).raw_data
+                                self.current_midi_audio = pygame.mixer.Sound(
+                                    buffer=current_waveform)
+                            else:
+                                pygame.mixer.music.load(self.path)
+                                pygame.mixer.music.unload()
+                                current_piano_window.current_sf2_player.current_midi_file = self.path
+                        else:
+                            pygame.mixer.music.load(self.path)
+                    except:
+                        current_path = mp.riff_to_midi(self.path)
+                        current_buffer = current_path.getbuffer()
+                        with open('temp.mid', 'wb') as f:
+                            f.write(current_buffer)
+                        if piano_config.use_soundfont:
+                            if piano_config.render_as_audio:
+                                current_waveform = current_piano_window.current_sf2.export_midi_file(
+                                    'temp.mid', get_audio=True).raw_data
+                                self.current_midi_audio = pygame.mixer.Sound(
+                                    buffer=current_waveform)
+                            else:
+                                current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
+                        else:
+                            pygame.mixer.music.load('temp.mid')
+            if piano_config.use_soundfont and piano_config.render_as_audio:
+                current_piano_window.label.text = ''
+                current_piano_window.label.draw()
+                current_piano_window.flip()
+            pyglet.clock.schedule_once(self.midi_file_play,
+                                       current_piano_window.bars_drop_interval)
+            for i in range(self.sheetlen):
+                currentnote = musicsheet.notes[i]
+                duration = unit_time * currentnote.duration
+                interval = unit_time * musicsheet.interval[i]
+                currentstart = start
+                currentstop = start + duration
+                playls.append(
+                    [0, currentstart, currentstop, 0, i, currentnote])
+                if piano_config.note_mode == 'bars drop':
+                    self.bars_drop_time.append(
+                        (currentstart -
+                         current_piano_window.bars_drop_interval, currentnote))
+                start += interval
+        else:
+            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                'sample']
             current_piano_window.label.draw()
             current_piano_window.flip()
+            try:
+                for i in range(self.sheetlen):
+                    currentnote = musicsheet.notes[i]
+                    currentwav = pygame.mixer.Sound(
+                        f'{piano_config.sound_path}/{currentnote}.{piano_config.sound_format}'
+                    )
+                    duration = unit_time * currentnote.duration
+                    interval = unit_time * musicsheet.interval[i]
+                    currentstart = start
+                    currentstop = start + duration
+                    note_volume = currentnote.volume / 127
+                    note_volume *= piano_config.global_volume
+                    currentwav.set_volume(note_volume)
+                    playls.append([
+                        currentwav, currentstart, currentstop, 0, i,
+                        currentnote
+                    ])
+                    if piano_config.note_mode == 'bars drop':
+                        self.bars_drop_time.append(
+                            (currentstart -
+                             current_piano_window.bars_drop_interval,
+                             currentnote))
+                    start += interval
+            except:
+                pygame.mixer.music.load(self.path)
+                self.play_midi_file = True
+                playls.clear()
+                if piano_config.note_mode == 'bars drop':
+                    self.bars_drop_time.clear()
+                start = start_time * unit_time + current_piano_window.bars_drop_interval
+                for i in range(self.sheetlen):
+                    currentnote = musicsheet.notes[i]
+                    duration = unit_time * currentnote.duration
+                    interval = unit_time * musicsheet.interval[i]
+                    currentstart = start
+                    currentstop = start + duration
+                    playls.append(
+                        [0, currentstart, currentstop, 0, i, currentnote])
+                    if piano_config.note_mode == 'bars drop':
+                        self.bars_drop_time.append(
+                            (currentstart -
+                             current_piano_window.bars_drop_interval,
+                             currentnote))
+                    start += interval
+                pyglet.clock.schedule_once(
+                    midi_file_play, current_piano_window.bars_drop_interval)
+            current_piano_window.label.text = ''
+            current_piano_window.label.draw()
+            if window_mode == 0:
+                current_piano_window.flip()
+        return playls
 
     def mode_self_pc(self, dt):
         if piano_config.config_enable:
@@ -1432,279 +1688,6 @@ class piano_engine:
             self.lastshow = None
             self.playnotes.clear()
             self.finished = False
-
-    def midi_file_play(self, dt):
-        if piano_config.use_soundfont:
-            if piano_config.render_as_audio:
-                self.current_midi_audio.play()
-            else:
-                current_piano_window.current_sf2_player.play_midi_file(
-                    current_piano_window.current_sf2_player.current_midi_file)
-        else:
-            pygame.mixer.music.play()
-
-    def initialize(self, musicsheet, unit_time, start_time, window_mode=0):
-        self.play_midi_file = False
-        playls = []
-        start = start_time * unit_time + current_piano_window.bars_drop_interval
-        if piano_config.play_as_midi:
-            self.play_midi_file = True
-            if window_mode == 0:
-                if piano_config.use_soundfont and piano_config.render_as_audio:
-                    current_piano_window.label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
-                    current_piano_window.label.draw()
-                    current_piano_window.flip()
-                if not self.if_merge:
-                    mp.write(musicsheet,
-                             60 / (unit_time / 4),
-                             start_time=musicsheet.start_time,
-                             name='temp.mid')
-                    if piano_config.use_soundfont:
-                        if piano_config.render_as_audio:
-                            current_waveform = current_piano_window.current_sf2.export_midi_file(
-                                'temp.mid', get_audio=True).raw_data
-                            self.current_midi_audio = pygame.mixer.Sound(
-                                buffer=current_waveform)
-                        else:
-                            current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
-                    else:
-                        pygame.mixer.music.load('temp.mid')
-                else:
-                    try:
-                        if piano_config.use_soundfont:
-                            if piano_config.render_as_audio:
-                                current_waveform = current_piano_window.current_sf2.export_midi_file(
-                                    self.path, get_audio=True).raw_data
-                                self.current_midi_audio = pygame.mixer.Sound(
-                                    buffer=current_waveform)
-                            else:
-                                pygame.mixer.music.load(self.path)
-                                pygame.mixer.music.unload()
-                                current_piano_window.current_sf2_player.current_midi_file = self.path
-                        else:
-                            pygame.mixer.music.load(self.path)
-                    except:
-                        current_path = mp.riff_to_midi(self.path)
-                        current_buffer = current_path.getbuffer()
-                        with open('temp.mid', 'wb') as f:
-                            f.write(current_buffer)
-                        if piano_config.use_soundfont:
-                            if piano_config.render_as_audio:
-                                current_waveform = current_piano_window.current_sf2.export_midi_file(
-                                    'temp.mid', get_audio=True).raw_data
-                                self.current_midi_audio = pygame.mixer.Sound(
-                                    buffer=current_waveform)
-                            else:
-                                current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
-                        else:
-                            pygame.mixer.music.load('temp.mid')
-            if piano_config.use_soundfont and piano_config.render_as_audio:
-                current_piano_window.label.text = ''
-                current_piano_window.label.draw()
-                current_piano_window.flip()
-            pyglet.clock.schedule_once(self.midi_file_play,
-                                       current_piano_window.bars_drop_interval)
-            for i in range(self.sheetlen):
-                currentnote = musicsheet.notes[i]
-                duration = unit_time * currentnote.duration
-                interval = unit_time * musicsheet.interval[i]
-                currentstart = start
-                currentstop = start + duration
-                playls.append(
-                    [0, currentstart, currentstop, 0, i, currentnote])
-                if piano_config.note_mode == 'bars drop':
-                    self.bars_drop_time.append(
-                        (currentstart -
-                         current_piano_window.bars_drop_interval, currentnote))
-                start += interval
-        else:
-            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
-                'sample']
-            current_piano_window.label.draw()
-            current_piano_window.flip()
-            try:
-                for i in range(self.sheetlen):
-                    currentnote = musicsheet.notes[i]
-                    currentwav = pygame.mixer.Sound(
-                        f'{piano_config.sound_path}/{currentnote}.{piano_config.sound_format}'
-                    )
-                    duration = unit_time * currentnote.duration
-                    interval = unit_time * musicsheet.interval[i]
-                    currentstart = start
-                    currentstop = start + duration
-                    note_volume = currentnote.volume / 127
-                    note_volume *= piano_config.global_volume
-                    currentwav.set_volume(note_volume)
-                    playls.append([
-                        currentwav, currentstart, currentstop, 0, i,
-                        currentnote
-                    ])
-                    if piano_config.note_mode == 'bars drop':
-                        self.bars_drop_time.append(
-                            (currentstart -
-                             current_piano_window.bars_drop_interval,
-                             currentnote))
-                    start += interval
-            except:
-                pygame.mixer.music.load(self.path)
-                self.play_midi_file = True
-                playls.clear()
-                if piano_config.note_mode == 'bars drop':
-                    self.bars_drop_time.clear()
-                start = start_time * unit_time + current_piano_window.bars_drop_interval
-                for i in range(self.sheetlen):
-                    currentnote = musicsheet.notes[i]
-                    duration = unit_time * currentnote.duration
-                    interval = unit_time * musicsheet.interval[i]
-                    currentstart = start
-                    currentstop = start + duration
-                    playls.append(
-                        [0, currentstart, currentstop, 0, i, currentnote])
-                    if piano_config.note_mode == 'bars drop':
-                        self.bars_drop_time.append(
-                            (currentstart -
-                             current_piano_window.bars_drop_interval,
-                             currentnote))
-                    start += interval
-                pyglet.clock.schedule_once(
-                    midi_file_play, current_piano_window.bars_drop_interval)
-            current_piano_window.label.text = ''
-            current_piano_window.label.draw()
-            if window_mode == 0:
-                current_piano_window.flip()
-        return playls
-
-    def init_self_pc(self):
-        if not piano_config.play_use_soundfont:
-            self.wavdic = load(self.notedic, piano_config.sound_path,
-                               piano_config.sound_format,
-                               piano_config.global_volume)
-        else:
-            self.wavdic = load_sf2(self.notedic,
-                                   current_piano_window.current_sf2,
-                                   piano_config.global_volume)
-        self.last = []
-        self.changed = False
-        if piano_config.delay:
-            self.stillplay = []
-        self.lastshow = None
-
-    def init_self_midi(self):
-        if not self.midi_device_load:
-            self.device = None
-            self.has_load(True)
-            self.current_midi_device = language_patch.ideal_piano_language_dict[
-                'close']
-            pygame.midi.init()
-            midi_info = [(language_patch.ideal_piano_language_dict['default'],
-                          pygame.midi.get_default_input_id())]
-            midi_info += [(i, pygame.midi.get_device_info(i))
-                          for i in range(piano_config.device_info_num)]
-            self.current_midi_device += '\n'.join([str(j) for j in midi_info])
-            self.device = pygame.midi.Input(piano_config.midi_device_id)
-        else:
-            if self.device:
-                self.device.close()
-                pygame.midi.quit()
-                pygame.midi.init()
-                self.device = pygame.midi.Input(piano_config.midi_device_id)
-        notenames = os.listdir(piano_config.sound_path)
-        notenames = [x[:x.index('.')] for x in notenames]
-        if piano_config.load_sound:
-            if not piano_config.play_use_soundfont:
-                self.wavdic = load({i: i
-                                    for i in notenames},
-                                   piano_config.sound_path,
-                                   piano_config.sound_format,
-                                   piano_config.global_volume)
-            else:
-                self.wavdic = load_sf2({i: i
-                                        for i in notenames},
-                                       current_piano_window.current_sf2,
-                                       piano_config.global_volume)
-        self.current_play = []
-        self.stillplay = []
-        self.last = self.current_play.copy()
-        self.sostenuto_pedal_on = False
-        self.soft_pedal_volume_ratio = 1
-
-    def init_show(self):
-        current_piano_window.open_browse_window = True
-        current_setup = browse.setup(language_patch.browse_language_dict)
-        current_piano_window.open_browse_window = False
-        self.path = current_setup.file_path
-        self.action = current_setup.action
-        read_result = current_setup.read_result
-        self.sheetlen = current_setup.sheetlen
-        set_bpm = current_setup.set_bpm
-        self.off_melody = current_setup.off_melody
-        self.if_merge = current_setup.if_merge
-        play_interval = current_setup.interval
-        if self.action == 1:
-            self.action = 0
-            return 'back'
-        if self.path and read_result:
-            if read_result != 'error':
-                self.bpm, self.musicsheet, start_time = read_result
-                self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
-                    *piano_config.pitch_range)
-                start_time += new_start_time
-                self.sheetlen = len(self.musicsheet)
-                if set_bpm:
-                    self.bpm = float(set_bpm)
-            else:
-                return 'back'
-        else:
-            return 'back'
-
-        if self.off_melody:
-            self.musicsheet = mp.split_chord(
-                self.musicsheet, 'hold', piano_config.melody_tol,
-                piano_config.chord_tol, piano_config.get_off_overlap_notes,
-                piano_config.average_degree_length,
-                piano_config.melody_degree_tol)
-            self.sheetlen = len(self.musicsheet)
-        if play_interval is not None:
-            play_start, play_stop = int(
-                self.sheetlen * (play_interval[0] / 100)), int(
-                    self.sheetlen * (play_interval[1] / 100))
-            if play_start == 0:
-                play_start = 1
-            self.musicsheet = self.musicsheet[play_start:play_stop + 1]
-            self.sheetlen = play_stop + 1 - play_start
-        if self.sheetlen == 0:
-            return 'back'
-        pygame.mixer.set_num_channels(self.sheetlen)
-        self.wholenotes = self.musicsheet.notes
-        self.unit_time = 4 * 60 / self.bpm
-
-        # every object in playls has a situation flag at the index of 3,
-        # 0 means has not been played yet, 1 means it has started playing,
-        # 2 means it has stopped playing
-        self.musicsheet.start_time = start_time
-        self.playls = self.initialize(self.musicsheet, self.unit_time,
-                                      start_time)
-        if piano_config.show_music_analysis:
-            self.show_music_analysis_list = [[
-                mp.add_to_last_index(self.musicsheet.interval, each[0]),
-                each[1]
-            ] for each in current_piano_window.music_analysis_list]
-            self.default_show_music_analysis_list = copy(
-                self.show_music_analysis_list)
-        self.startplay = time.time()
-        self.lastshow = None
-        self.finished = False
-        self.paused = False
-
-    def _detect_chord(self, current_chord):
-        return mp.detect(
-            current_chord, piano_config.detect_mode, piano_config.inv_num,
-            piano_config.rootpitch, piano_config.change_from_first,
-            piano_config.original_first, piano_config.same_note_special,
-            piano_config.whole_detect, piano_config.return_fromchord,
-            piano_config.two_show_interval, piano_config.poly_chord_first,
-            piano_config.root_position_return_first,
-            piano_config.alter_notes_show_degree)
 
 
 current_piano_engine = piano_engine()
