@@ -1104,19 +1104,19 @@ class piano_engine:
 
     def _pc_set_piano_key_color(self, each, current_bar=None):
         current_note = mp.toNote(self.notedic[each])
-        current_piano_key = current_piano_window.piano_keys[
-            current_note.degree - 21]
+        current_piano_key = current_piano_window.piano_keys[current_note.degree
+                                                            - 21]
         if piano_config.color_mode == 'normal':
             current_piano_key.color = piano_config.bar_color
         else:
             if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
                 current_piano_key.color = current_bar.color
             else:
-                current_piano_key.color = (random.randint(
-                    0, 255), random.randint(
-                        0, 255), random.randint(0, 255))
-        current_piano_key.current_color = current_piano_key.color        
-    
+                current_piano_key.color = (random.randint(0, 255),
+                                           random.randint(0, 255),
+                                           random.randint(0, 255))
+        current_piano_key.current_color = current_piano_key.color
+
     def _pc_read_stillplay_notes(self):
         for j in self.last:
             if j not in self.current:
@@ -1556,18 +1556,18 @@ class piano_engine:
                     str(chordtype))
 
     def _midi_show_set_piano_key_color(self, current_note):
-        current_piano_key = current_piano_window.piano_keys[
-            current_note.degree - 21]
+        current_piano_key = current_piano_window.piano_keys[current_note.degree
+                                                            - 21]
         if piano_config.use_track_colors:
             current_piano_key.color = current_note.own_color
         else:
             if piano_config.color_mode == 'normal':
                 current_piano_key.color = piano_config.bar_color
             else:
-                current_piano_key.color = (random.randint(
-                    0, 255), random.randint(
-                        0, 255), random.randint(0, 255))
-    
+                current_piano_key.color = (random.randint(0, 255),
+                                           random.randint(0, 255),
+                                           random.randint(0, 255))
+
     def _midi_show_playing_read_pc_keyboard_key(self):
         if current_piano_window.keyboard_handler[
                 current_piano_window.pause_key]:
