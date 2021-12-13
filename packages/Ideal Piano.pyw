@@ -716,16 +716,16 @@ class piano_engine:
         current_sf2 = current_piano_window.current_sf2
         if self.configkey('1'):
             if current_sf2.current_preset != 0:
-                self._change_sf2_instrument(-1)
+                self._change_sf2_instrument(-1, audio_mode=mode)
         if self.configkey('2'):
-            self._change_sf2_instrument(1)
+            self._change_sf2_instrument(1, audio_mode=mode)
         if self.configkey('3'):
             if current_sf2.current_bank != 0:
-                self._change_sf2_instrument(-1, 1)
+                self._change_sf2_instrument(-1, 1, audio_mode=mode)
         if self.configkey('4'):
-            self._change_sf2_instrument(1, 1)
+            self._change_sf2_instrument(1, 1, audio_mode=mode)
 
-    def _change_sf2_instrument(self, step, mode=0):
+    def _change_sf2_instrument(self, step, mode=0, audio_mode=0):
         current_sf2 = current_piano_window.current_sf2
         if mode == 0:
             current_change = current_sf2.change(
@@ -736,7 +736,7 @@ class piano_engine:
             current_piano_window.label.draw()
             current_piano_window.flip()
             if current_change != -1:
-                if mode == 0:
+                if audio_mode == 0:
                     self.wavdic = load_sf2(self.notedic, current_sf2,
                                            piano_config.global_volume)
                 else:
@@ -1442,6 +1442,33 @@ class piano_engine:
         elif piano_config.note_mode == 'bars drop':
             self._midi_show_draw_notes_hit_key_bars_drop_mode()
 
+    def _midi_show_play_current_note(self, nownote, k):
+        current_sound, start_time, stop_time, situation, number, current_note = nownote
+        if situation != 2:
+            if situation == 0:
+                if self.currentime >= start_time:
+                    if not self.play_midi_file:
+                        current_sound.play()
+                    nownote[3] = 1
+                    if piano_config.show_music_analysis:
+                        if self.show_music_analysis_list:
+                            current_music_analysis = self.show_music_analysis_list[
+                                0]
+                            if k == current_music_analysis[0]:
+                                current_piano_window.music_analysis_label.text = current_music_analysis[
+                                    1]
+                                del self.show_music_analysis_list[0]
+                    if piano_config.note_mode == 'bars':
+                        self._midi_show_draw_notes_bars_mode(current_note)
+            elif situation == 1:
+                if self.currentime >= stop_time:
+                    if not self.play_midi_file:
+                        current_sound.fadeout(
+                            current_piano_window.show_delay_time)
+                    nownote[3] = 2
+                    if k == self.sheetlen - 1:
+                        self.finished = True
+
     def _midi_show_draw_notes_bars_drop_mode(self):
         if self.bars_drop_time:
             j = 0
@@ -1499,33 +1526,6 @@ class piano_engine:
         self.plays.append(current_bar)
         current_piano_window.piano_keys[current_note.degree -
                                         21].current_color = current_bar.color
-
-    def _midi_show_play_current_note(self, nownote, k):
-        current_sound, start_time, stop_time, situation, number, current_note = nownote
-        if situation != 2:
-            if situation == 0:
-                if self.currentime >= start_time:
-                    if not self.play_midi_file:
-                        current_sound.play()
-                    nownote[3] = 1
-                    if piano_config.show_music_analysis:
-                        if self.show_music_analysis_list:
-                            current_music_analysis = self.show_music_analysis_list[
-                                0]
-                            if k == current_music_analysis[0]:
-                                current_piano_window.music_analysis_label.text = current_music_analysis[
-                                    1]
-                                del self.show_music_analysis_list[0]
-                    if piano_config.note_mode == 'bars':
-                        self._midi_show_draw_notes_bars_mode(current_note)
-            elif situation == 1:
-                if self.currentime >= stop_time:
-                    if not self.play_midi_file:
-                        current_sound.fadeout(
-                            current_piano_window.show_delay_time)
-                    nownote[3] = 2
-                    if k == self.sheetlen - 1:
-                        self.finished = True
 
     def _midi_show_display_piano_keys_color(self):
         self.playnotes.sort(key=lambda x: x.degree)
