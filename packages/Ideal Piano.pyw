@@ -485,115 +485,120 @@ class piano_window(pyglet.window.Window):
             self.batch.draw()
         self.go_back_button.draw()
         self.label_midi_device.draw()
-        self.draw_window()
-
-    def draw_window(self):
         if self.first_time:
-            self.self_play_button.draw()
-            self.self_midi_button.draw()
-            self.play_midi_button.draw()
-            if self.mode_num is None:
-                if self.keyboard_handler[key.LSHIFT]:
-                    self.label_midi_device.text = current_piano_engine.current_midi_device
-                if self.keyboard_handler[key.LCTRL]:
-                    self.label_midi_device.text = ''
-                if self.keyboard_handler[
-                        self.config_key] and self.keyboard_handler[key.S]:
-                    self.open_settings()
-                if self.keyboard_handler[
-                        self.config_key] and self.keyboard_handler[key.R]:
-                    self.label.text = language_patch.ideal_piano_language_dict[
-                        'reload']
-                    self.label.draw()
-                    self.flip()
-                    self.reload_settings()
-                if self.click_mode == 0:
-                    self.mode_num = 0
-                    self.label.text = language_patch.ideal_piano_language_dict[
-                        'load']
-                    self.label.draw()
-                elif self.click_mode == 1:
-                    self.mode_num = 1
-                    self.label.text = language_patch.ideal_piano_language_dict[
-                        'load']
-                    self.label.draw()
-                elif self.click_mode == 2:
-                    self.mode_num = 2
+            self._draw_window_first_time()
+        else:
+            self._draw_window()
 
-            else:
-                if self.mode_num == 0:
-                    current_piano_engine.init_self_pc()
+    def _draw_window_first_time(self):
+        self.self_play_button.draw()
+        self.self_midi_button.draw()
+        self.play_midi_button.draw()
+        if self.mode_num is None:
+            self._main_window_read_click_mode()
+        else:
+            self._main_window_enter_mode()
+    
+    def _main_window_read_click_mode(self):
+        if self.keyboard_handler[key.LSHIFT]:
+            self.label_midi_device.text = current_piano_engine.current_midi_device
+        if self.keyboard_handler[key.LCTRL]:
+            self.label_midi_device.text = ''
+        if self.keyboard_handler[
+                self.config_key] and self.keyboard_handler[key.S]:
+            self.open_settings()
+        if self.keyboard_handler[
+                self.config_key] and self.keyboard_handler[key.R]:
+            self.label.text = language_patch.ideal_piano_language_dict[
+                'reload']
+            self.label.draw()
+            self.flip()
+            self.reload_settings()
+        if self.click_mode == 0:
+            self.mode_num = 0
+            self.label.text = language_patch.ideal_piano_language_dict[
+                'load']
+            self.label.draw()
+        elif self.click_mode == 1:
+            self.mode_num = 1
+            self.label.text = language_patch.ideal_piano_language_dict[
+                'load']
+            self.label.draw()
+        elif self.click_mode == 2:
+            self.mode_num = 2
+        
+    
+    def _main_window_enter_mode(self):
+        if self.mode_num == 0:
+            current_piano_engine.init_self_pc()
+            self.label.text = language_patch.ideal_piano_language_dict[
+                'finished']
+            self.label.draw()
+            self.func = current_piano_engine.mode_self_pc
+            self.not_first()
+            pyglet.clock.schedule_interval(self.func,
+                                           1 / piano_config.fps)
+        elif self.mode_num == 1:
+            try:
+                current_piano_engine.init_self_midi()
+                if not current_piano_engine.device:
+                    self.label.text = language_patch.ideal_piano_language_dict[
+                        'no MIDI input']
+                    self.mode_num = 3
+                    self.reset_click_mode()
+                    self.label.draw()
+                else:
                     self.label.text = language_patch.ideal_piano_language_dict[
                         'finished']
                     self.label.draw()
-                    self.func = current_piano_engine.mode_self_pc
+                    self.func = current_piano_engine.mode_self_midi
                     self.not_first()
-                    pyglet.clock.schedule_interval(self.func,
-                                                   1 / piano_config.fps)
-                elif self.mode_num == 1:
-                    try:
-                        current_piano_engine.init_self_midi()
-                        if not current_piano_engine.device:
-                            self.label.text = language_patch.ideal_piano_language_dict[
-                                'no MIDI input']
-                            self.mode_num = 3
-                            self.reset_click_mode()
-                            self.label.draw()
-                        else:
-                            self.label.text = language_patch.ideal_piano_language_dict[
-                                'finished']
-                            self.label.draw()
-                            self.func = current_piano_engine.mode_self_midi
-                            self.not_first()
-                            pyglet.clock.schedule_interval(
-                                self.func, 1 / piano_config.fps)
-                    except:
-                        current_piano_engine.has_load(False)
-                        pygame.midi.quit()
-                        current_piano_engine.current_midi_device += f'\n{language_patch.ideal_piano_language_dict["error message"]}: {e}'
-                        self.label.text = language_patch.ideal_piano_language_dict[
-                            'no MIDI input']
-                        self.mode_num = 3
-                        self.reset_click_mode()
-                        self.label.draw()
+                    pyglet.clock.schedule_interval(
+                        self.func, 1 / piano_config.fps)
+            except:
+                current_piano_engine.has_load(False)
+                pygame.midi.quit()
+                current_piano_engine.current_midi_device += f'\n{language_patch.ideal_piano_language_dict["error message"]}: {e}'
+                self.label.text = language_patch.ideal_piano_language_dict[
+                    'no MIDI input']
+                self.mode_num = 3
+                self.reset_click_mode()
+                self.label.draw()
+        elif self.mode_num == 2:
+            if not self.open_browse_window:
+                init_result = current_piano_engine.init_midi_show()
+                if init_result == 'back':
+                    self.mode_num = 4
+                else:
+                    self.func = current_piano_engine.mode_show
+                    self.not_first()
+                    pyglet.clock.schedule_interval(
+                        self.func, 1 / piano_config.fps)
+        elif self.mode_num == 3:
+            time.sleep(1)
+            self.label.text = ''
+            self.mode_num = None
+        elif self.mode_num == 4:
+            self.label.text = ''
+            self.mode_num = None
+            self.reset_click_mode()                
+    
+    def _draw_window(self):
+        if self.is_click:
+            self.is_click = False
+            self.not_first()
+            self.label.text = ''
+            self.label2.text = ''
 
-                elif self.mode_num == 2:
-                    if not self.open_browse_window:
-                        init_result = current_piano_engine.init_midi_show()
-                        if init_result == 'back':
-                            self.mode_num = 4
-                        else:
-                            self.func = current_piano_engine.mode_show
-                            self.not_first()
-                            pyglet.clock.schedule_interval(
-                                self.func, 1 / piano_config.fps)
-
-                elif self.mode_num == 3:
-                    time.sleep(1)
-                    self.label.text = ''
-                    self.mode_num = None
-                elif self.mode_num == 4:
-                    self.label.text = ''
-                    self.mode_num = None
-                    self.reset_click_mode()
-
-        else:
-
-            if self.is_click:
-                self.is_click = False
-                self.not_first()
-                self.label.text = ''
-                self.label2.text = ''
-
-                pyglet.clock.unschedule(self.func)
-                self.mode_num = None
-            self.label.draw()
-            self.label2.draw()
-            if self.message_label:
-                self.label3.draw()
-            if piano_config.show_music_analysis:
-                self.music_analysis_label.draw()
-
+            pyglet.clock.unschedule(self.func)
+            self.mode_num = None
+        self.label.draw()
+        self.label2.draw()
+        if self.message_label:
+            self.label3.draw()
+        if piano_config.show_music_analysis:
+            self.music_analysis_label.draw()        
+    
     def redraw(self):
         self.clear()
         self.background.blit(0, 0)
