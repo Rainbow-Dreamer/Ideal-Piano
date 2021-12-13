@@ -926,5 +926,6 @@ ideal_piano_language_dict = {
     'repeat': '音乐播放完毕, 按{repeat_key}键重新听一遍',
     'sample': '正在使用音频采样渲染当前MIDI文件，请稍等',
     'close': '按ctrl可以关掉我哦~\n',
-    'default': '默认'
+    'default': '默认',
+    'soundfont': '正在使用SoundFont渲染当前MIDI文件，请稍等'
 }

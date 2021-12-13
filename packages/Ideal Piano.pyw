@@ -920,7 +920,8 @@ class piano_engine:
         self.play_midi_file = True
         if window_mode == 0:
             if piano_config.use_soundfont and piano_config.render_as_audio:
-                current_piano_window.label.text = 'Rendering current MIDI file with SoundFont, please wait ...'
+                current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                    'soundfont']
                 current_piano_window.label.draw()
                 current_piano_window.flip()
             if not self.if_merge:

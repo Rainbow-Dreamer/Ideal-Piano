@@ -33,5 +33,6 @@ ideal_piano_language_dict = {
     'sample':
     'Rendering current MIDI file with audio samples, please wait ...',
     'close': 'press ctrl to close me ~\n',
-    'default': 'default'
+    'default': 'default',
+    'soundfont': 'Rendering current MIDI file with SoundFont, please wait ...'
 }
