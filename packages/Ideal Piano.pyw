@@ -551,7 +551,7 @@ class piano_window(pyglet.window.Window):
                     self.not_first()
                     pyglet.clock.schedule_interval(self.func,
                                                    1 / piano_config.fps)
-            except:
+            except Exception as e:
                 current_piano_engine.has_load(False)
                 pygame.midi.quit()
                 current_piano_engine.current_midi_device += f'\n{language_patch.ideal_piano_language_dict["error message"]}: {e}'
