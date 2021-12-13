@@ -766,6 +766,11 @@ class piano_engine:
         else:
             pygame.mixer.music.play()
 
+    def piano_key_reset(self, dt, each):
+        current_piano_window.piano_keys[
+            each.degree -
+            21].color = current_piano_window.initial_colors[each.degree - 21]    
+    
     def _detect_chord(self, current_chord):
         return mp.detect(
             current_chord, piano_config.detect_mode, piano_config.inv_num,
@@ -1017,56 +1022,50 @@ class piano_engine:
             self.start += interval        
     
     def mode_self_pc(self, dt):
+        self._pc_read_pc_keyboard_special_key()
+        self._pc_read_pc_keyboard_key()
+        self._pc_read_stillplay_notes()
+        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+            self._pc_move_note_bar()
+        if self.changed:
+            self._pc_update_notes()
+
+    def _pc_read_pc_keyboard_special_key(self):
         if piano_config.config_enable:
             self.detect_config()
-        current = [
-            current_piano_window.map_key_dict_reverse[i]
-            for i, j in current_piano_window.keyboard_handler.items()
-            if j and i in current_piano_window.map_key_dict_reverse
-        ]
-        current = [i for i in current if i in self.wavdic]
         if current_piano_window.keyboard_handler[
                 current_piano_window.pause_key]:
             pygame.mixer.stop()
             if piano_config.pause_key_clear_notes:
                 if piano_config.delay:
-                    self.stillplay = []
+                    self.stillplay = []        
+    
+    def _pc_read_pc_keyboard_key(self):
+        self.current = [
+            current_piano_window.map_key_dict_reverse[i]
+            for i, j in current_piano_window.keyboard_handler.items()
+            if j and i in current_piano_window.map_key_dict_reverse
+        ]
+        self.current = [i for i in self.current if i in self.wavdic]
         if piano_config.delay:
-            stillplay_obj = [x[0] for x in self.stillplay]
-            truecurrent = current.copy()
-        for each in current:
+            self.stillplay_obj = [x[0] for x in self.stillplay]
+            self.truecurrent = self.current.copy()
+        for each in self.current:
             if piano_config.delay:
-                if each in stillplay_obj:
-                    inds = stillplay_obj.index(each)
+                if each in self.stillplay_obj:
+                    inds = self.stillplay_obj.index(each)
                     if not self.stillplay[inds][2] and time.time(
                     ) - self.stillplay[inds][1] > piano_config.touch_interval:
                         self.wavdic[each].fadeout(piano_config.fadeout_ms)
                         self.stillplay.pop(inds)
-                        stillplay_obj.pop(inds)
+                        self.stillplay_obj.pop(inds)
                 else:
                     self.changed = True
                     self.wavdic[each].play()
                     self.stillplay.append([each, time.time(), True])
-                    stillplay_obj.append(each)
+                    self.stillplay_obj.append(each)
                     if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-                        current_note = mp.toNote(self.notedic[each])
-                        places = current_piano_window.note_place[
-                            current_note.degree - 21]
-                        current_bar = pyglet.shapes.BorderedRectangle(
-                            x=places[0] + current_piano_window.bar_offset_x,
-                            y=piano_config.bar_y,
-                            width=piano_config.bar_width,
-                            height=piano_config.bar_height,
-                            color=piano_config.bar_color
-                            if piano_config.color_mode == 'normal' else
-                            (random.randint(0, 255), random.randint(0, 255),
-                             random.randint(0, 255)),
-                            batch=current_piano_window.batch,
-                            group=current_piano_window.play_highlight,
-                            border=piano_config.bar_border,
-                            border_color=piano_config.bar_border_color)
-                        current_bar.opacity = piano_config.bar_opacity
-                        self.still_hold_pc.append([each, current_bar])
+                        self._pc_draw_note_bar(each)
                     if piano_config.draw_piano_keys:
                         current_note = mp.toNote(self.notedic[each])
                         current_piano_key = current_piano_window.piano_keys[
@@ -1086,118 +1085,117 @@ class piano_engine:
                     self.changed = True
                     self.wavdic[each].play()
                     if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-                        current_note = mp.toNote(self.notedic[each])
-                        places = current_piano_window.note_place[
-                            current_note.degree - 21]
-                        current_bar = pyglet.shapes.BorderedRectangle(
-                            x=places[0] + current_piano_window.bar_offset_x,
-                            y=piano_config.bar_y,
-                            width=piano_config.bar_width,
-                            height=piano_config.bar_height,
-                            color=piano_config.bar_color
-                            if piano_config.color_mode == 'normal' else
-                            (random.randint(0, 255), random.randint(0, 255),
-                             random.randint(0, 255)),
-                            batch=current_piano_window.batch,
-                            group=current_piano_window.play_highlight,
-                            border=piano_config.bar_border,
-                            border_color=piano_config.bar_border_color)
-                        current_bar.opacity = piano_config.bar_opacity
-                        self.still_hold_pc.append([each, current_bar])
+                        self._pc_draw_note_bar(each)
                     if piano_config.draw_piano_keys:
                         current_note = mp.toNote(self.notedic[each])
                         current_piano_window.piano_keys[
                             current_note.degree -
-                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_bar.color
+                            21].color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_bar.color        
+    
+    def _pc_draw_note_bar(self, each):
+        current_note = mp.toNote(self.notedic[each])
+        places = current_piano_window.note_place[
+            current_note.degree - 21]
+        current_bar = pyglet.shapes.BorderedRectangle(
+            x=places[0] + current_piano_window.bar_offset_x,
+            y=piano_config.bar_y,
+            width=piano_config.bar_width,
+            height=piano_config.bar_height,
+            color=piano_config.bar_color
+            if piano_config.color_mode == 'normal' else
+            (random.randint(0, 255), random.randint(0, 255),
+             random.randint(0, 255)),
+            batch=current_piano_window.batch,
+            group=current_piano_window.play_highlight,
+            border=piano_config.bar_border,
+            border_color=piano_config.bar_border_color)
+        current_bar.opacity = piano_config.bar_opacity
+        self.still_hold_pc.append([each, current_bar])          
+    
+    def _pc_read_stillplay_notes(self):
         for j in self.last:
-            if j not in current:
-
+            if j not in self.current:
                 if piano_config.delay:
-                    if j in stillplay_obj:
-                        ind = stillplay_obj.index(j)
+                    if j in self.stillplay_obj:
+                        ind = self.stillplay_obj.index(j)
                         stillobj = self.stillplay[ind]
                         if time.time() - stillobj[1] > piano_config.delay_time:
                             self.changed = True
                             self.wavdic[j].fadeout(piano_config.fadeout_ms)
                             self.stillplay.pop(ind)
-                            stillplay_obj.pop(ind)
+                            self.stillplay_obj.pop(ind)
                         else:
                             self.stillplay[ind][2] = False
-                            current.append(j)
+                            self.current.append(j)
                     else:
                         self.changed = True
                         self.wavdic[j].fadeout(piano_config.fadeout_ms)
                 else:
                     self.changed = True
                     self.wavdic[j].fadeout(piano_config.fadeout_ms)
-        self.last = current
-        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-            i = 0
-            while i < len(self.plays):
-                each = self.plays[i]
-                each.y += piano_config.bar_steps
-                if each.y >= current_piano_window.screen_height:
-                    each.batch = None
-                    del self.plays[i]
-                    continue
-                i += 1
-            for k in self.still_hold_pc:
-                current_hold_note, current_bar = k
-                if current_hold_note in truecurrent:
-                    current_bar.height += piano_config.bar_hold_increase
-                else:
-                    self.plays.append(current_bar)
-                    self.still_hold_pc.remove(k)
-        if self.changed:
-            self.changed = False
-            if piano_config.delay:
-                if piano_config.delay_only_read_current:
-                    notels = [self.notedic[t] for t in truecurrent]
-                else:
-                    notels = [self.notedic[t] for t in stillplay_obj]
+        self.last = self.current        
+    
+    def _pc_move_note_bar(self):
+        i = 0
+        while i < len(self.plays):
+            each = self.plays[i]
+            each.y += piano_config.bar_steps
+            if each.y >= current_piano_window.screen_height:
+                each.batch = None
+                del self.plays[i]
+                continue
+            i += 1
+        for k in self.still_hold_pc:
+            current_hold_note, current_bar = k
+            if current_hold_note in self.truecurrent:
+                current_bar.height += piano_config.bar_hold_increase
             else:
-                notels = [self.notedic[t] for t in self.last]
-            if piano_config.draw_piano_keys:
-                if self.lastshow:
-                    for t in self.lastshow:
-                        current_piano_window.piano_keys[
-                            t.degree -
-                            21].color = current_piano_window.initial_colors[
-                                t.degree - 21]
-            if notels:
-                self.currentchord = mp.chord(notels)
-                for k in self.currentchord:
-                    if piano_config.draw_piano_keys:
-                        current_piano_key = current_piano_window.piano_keys[
-                            k.degree - 21]
-                        current_piano_key.color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_piano_key.current_color
-
-            if notels:
-                self.currentchord.notes.sort(key=lambda x: x.degree)
-                if self.currentchord != self.lastshow:
-                    self.lastshow = self.currentchord
-                    current_piano_window.label.text = str(
-                        self.currentchord.notes)
-                    if piano_config.show_chord and any(
-                            type(t) == mp.note for t in self.currentchord):
-                        chordtype = self._detect_chord(self.currentchord)
-
-                        current_piano_window.label2.text = str(
-                            chordtype
-                        ) if not piano_config.sort_invisible else get_off_sort(
-                            str(chordtype))
+                self.plays.append(current_bar)
+                self.still_hold_pc.remove(k)        
+    
+    def _pc_update_notes(self):
+        self.changed = False
+        if piano_config.delay:
+            if piano_config.delay_only_read_current:
+                notels = [self.notedic[t] for t in self.truecurrent]
             else:
-                self.lastshow = notels
-                current_piano_window.label.text = str(notels)
-                current_piano_window.label2.text = ''
-            if piano_config.show_key:
-                current_piano_window.label.text = str(truecurrent)
+                notels = [self.notedic[t] for t in self.stillplay_obj]
+        else:
+            notels = [self.notedic[t] for t in self.last]
+        if piano_config.draw_piano_keys:
+            if self.lastshow:
+                for t in self.lastshow:
+                    current_piano_window.piano_keys[
+                        t.degree -
+                        21].color = current_piano_window.initial_colors[
+                            t.degree - 21]
+        if notels:
+            self.currentchord = mp.chord(notels)
+            for k in self.currentchord:
+                if piano_config.draw_piano_keys:
+                    current_piano_key = current_piano_window.piano_keys[
+                        k.degree - 21]
+                    current_piano_key.color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_piano_key.current_color
+            self.currentchord.notes.sort(key=lambda x: x.degree)
+            if self.currentchord != self.lastshow:
+                self.lastshow = self.currentchord
+                current_piano_window.label.text = str(
+                    self.currentchord.notes)
+                if piano_config.show_chord and any(
+                        type(t) == mp.note for t in self.currentchord):
+                    chordtype = self._detect_chord(self.currentchord)
 
-    def piano_key_reset(self, dt, each):
-        current_piano_window.piano_keys[
-            each.degree -
-            21].color = current_piano_window.initial_colors[each.degree - 21]
-
+                    current_piano_window.label2.text = str(
+                        chordtype
+                    ) if not piano_config.sort_invisible else get_off_sort(
+                        str(chordtype))
+        else:
+            self.lastshow = notels
+            current_piano_window.label.text = str(notels)
+            current_piano_window.label2.text = ''
+        if piano_config.show_key:
+            current_piano_window.label.text = str(self.truecurrent)        
+    
     def mode_self_midi(self, dt):
         self._midi_keyboard_read_stillplay_notes()
         self._midi_keyboard_update_notes()
