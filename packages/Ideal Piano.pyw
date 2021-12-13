@@ -1208,12 +1208,12 @@ class piano_engine:
         self._midi_keyboard_read_pc_keyboard_key()
 
     def _midi_keyboard_read_stillplay_notes(self):
-        current_time = time.time()
+        self.current_time = time.time()
         for each in self.stillplay:
             if each not in self.current_play:
                 if piano_config.delay_only_read_current:
                     if not each.sustain_pedal_on:
-                        if current_time - each.count_time >= piano_config.delay_time:
+                        if self.current_time - each.count_time >= piano_config.delay_time:
                             if piano_config.load_sound:
                                 self.wavdic[str(each)].fadeout(
                                     piano_config.fadeout_ms)
@@ -1264,7 +1264,7 @@ class piano_engine:
                         current_piano_window.label.text = '[]'
                         current_piano_window.label2.text = ''
             else:
-                each.count_time = current_time
+                each.count_time = self.current_time
 
     def _midi_keyboard_update_notes(self):
         if (not self.sostenuto_pedal_on) and self.last != self.current_play:
@@ -1295,7 +1295,7 @@ class piano_engine:
             data, timestamp = event
             status, note_number, velocity, note_off_velocity = data
             if status == 128 or (status == 144 and velocity == 0):
-                current_note = degree_to_note(note_number)
+                current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
                 # 128 is the status code of note off in midi
                 if piano_config.draw_piano_keys and piano_config.delay_only_read_current:
@@ -1306,7 +1306,7 @@ class piano_engine:
                 if current_note in self.current_play:
                     self.current_play.remove(current_note)
             elif status == 144:
-                current_note = degree_to_note(note_number)
+                current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
                 # 144 is the status code of note on in midi
                 if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
@@ -1345,7 +1345,7 @@ class piano_engine:
                     self.current_play.append(current_note)
                     if current_note not in self.stillplay:
                         self.stillplay.append(current_note)
-                    current_note.count_time = current_time
+                    current_note.count_time = self.current_time
                     if piano_config.load_sound:
                         current_sound = self.wavdic[str(current_note)]
                         current_sound.set_volume(self.soft_pedal_volume_ratio *
@@ -1364,7 +1364,8 @@ class piano_engine:
                                     pyglet.clock.schedule_once(
                                         piano_key_reset,
                                         piano_config.delay_time -
-                                        (current_time - each.count_time), each)
+                                        (self.current_time - each.count_time),
+                                        each)
                             self.last = copy(self.stillplay)
                             piano_config.delay_only_read_current = True
                 elif note_number == 66:
@@ -1382,7 +1383,8 @@ class piano_engine:
                                     pyglet.clock.schedule_once(
                                         piano_key_reset,
                                         piano_config.delay_time -
-                                        (current_time - each.count_time), each)
+                                        (self.current_time - each.count_time),
+                                        each)
                             self.sostenuto_pedal_on = False
                 elif note_number == 67:
                     if velocity >= 64:
