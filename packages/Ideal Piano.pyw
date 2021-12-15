@@ -871,9 +871,7 @@ class piano_engine:
             play_start, play_stop = int(
                 self.sheetlen * (play_interval[0] / 100)), int(
                     self.sheetlen * (play_interval[1] / 100))
-            if play_start == 0:
-                play_start = 1
-            self.musicsheet = self.musicsheet[play_start:play_stop + 1]
+            self.musicsheet = self.musicsheet[play_start:play_stop]
             self.sheetlen = play_stop + 1 - play_start
         if self.sheetlen == 0:
             return 'back'
