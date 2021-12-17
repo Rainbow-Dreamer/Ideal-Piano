@@ -125,7 +125,7 @@ def inversion_from(a, b, num=False, mode=0):
     for j in range(1, N):
         temp = b.inversion_highest(j)
         if [x.name for x in temp.notes] == [y.name for y in a.notes]:
-            return f'/{b[j].name}(转到最高音)' if not num else f'第{j}转位(转到最高音)'
+            return f'/{b[j-1].name}(转到最高音)' if not num else f'第{j}转位(转到最高音)'
     return f'could not get chord {a.notes} from a single inversion of chord {b.notes}, you could try sort_from' if mode == 0 else None
 
 
