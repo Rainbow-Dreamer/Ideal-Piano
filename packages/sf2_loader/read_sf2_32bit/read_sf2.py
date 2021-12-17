@@ -71,9 +71,9 @@ def percentage_to_db(vol):
 
 
 def apply_fadeout(current_chord, decay, fixed_decay, new=True):
-    if type(current_chord) == mp.piece:
+    if isinstance(current_chord, mp.piece):
         temp = copy(current_chord)
-        if type(decay) == list:
+        if isinstance(decay, list):
             for i in range(len(temp.tracks)):
                 apply_fadeout(each, decay[i], fixed_decay, False)
         else:
@@ -82,24 +82,24 @@ def apply_fadeout(current_chord, decay, fixed_decay, new=True):
         return temp
     temp = copy(current_chord) if new else current_chord
     if fixed_decay:
-        if type(decay) == list:
+        if isinstance(decay, list):
             for i in range(len(temp.notes)):
                 each = temp.notes[i]
-                if type(each) == mp.note:
+                if isinstance(each, mp.note):
                     each.duration += decay[i]
         else:
             for each in temp.notes:
-                if type(each) == mp.note:
+                if isinstance(each, mp.note):
                     each.duration += decay
     else:
-        if type(decay) == list:
+        if isinstance(decay, list):
             for i in range(len(temp.notes)):
                 each = temp.notes[i]
-                if type(each) == mp.note:
+                if isinstance(each, mp.note):
                     each.duration += each.duration * decay[i]
         else:
             for each in temp.notes:
-                if type(each) == mp.note:
+                if isinstance(each, mp.note):
                     each.duration += each.duration * decay
     return temp
 
@@ -111,14 +111,14 @@ def get_timestamps(current_chord,
                    volume=None):
     for i in range(len(current_chord.notes)):
         current = current_chord.notes[i]
-        if type(current) == mp.pitch_bend and current.start_time is None:
-            current.start_time = sum(current_chord.interval[:i]) + 1
+        if isinstance(current, mp.pitch_bend) and current.start_time is None:
+            current.start_time = sum(current_chord.interval[:i])
     noteon_part = [
         general_event(
             'noteon',
             bar_to_real_time(sum(current_chord.interval[:i]), bpm, 1) / 1000,
             current_chord.notes[i]) for i in range(len(current_chord.notes))
-        if type(current_chord.notes[i]) == mp.note
+        if isinstance(current_chord.notes[i], mp.note)
     ]
     noteoff_part = [
         general_event(
@@ -127,12 +127,12 @@ def get_timestamps(current_chord,
                 sum(current_chord.interval[:i]) +
                 current_chord.notes[i].duration, bpm, 1) / 1000,
             current_chord.notes[i]) for i in range(len(current_chord.notes))
-        if type(current_chord.notes[i]) == mp.note
+        if isinstance(current_chord.notes[i], mp.note)
     ]
     pitch_bend_part = [
         general_event('pitch_bend',
-                      bar_to_real_time(i.start_time - 1, bpm, 1) / 1000, i)
-        for i in current_chord.notes if type(i) == mp.pitch_bend
+                      bar_to_real_time(i.start_time, bpm, 1) / 1000, i)
+        for i in current_chord.notes if isinstance(i, mp.pitch_bend)
     ]
     result = noteon_part + noteoff_part + pitch_bend_part
     if not ignore_other_messages:
@@ -146,7 +146,7 @@ def get_timestamps(current_chord,
         pan_part = [
             general_event(
                 'message',
-                bar_to_real_time(i.start_time - 1, bpm, 1) / 1000,
+                bar_to_real_time(i.start_time, bpm, 1) / 1000,
                 mp.controller_event(channel=i.channel,
                                     controller_number=10,
                                     parameter=i.value)) for i in pan
@@ -156,7 +156,7 @@ def get_timestamps(current_chord,
         volume_part = [
             general_event(
                 'message',
-                bar_to_real_time(i.start_time - 1, bpm, 1) / 1000,
+                bar_to_real_time(i.start_time, bpm, 1) / 1000,
                 mp.controller_event(channel=i.channel,
                                     controller_number=7,
                                     parameter=i.value)) for i in volume
@@ -190,9 +190,8 @@ def process_effect(sound, effects, **kwargs):
 def set_effect(sound, *effects):
     if len(effects) == 1:
         current_effect = effects[0]
-        types = type(current_effect)
-        if types != effect:
-            if types == effect_chain:
+        if not isinstance(current_effect, effect):
+            if isinstance(current_effect, effect_chain):
                 effects = current_effect.effects
             else:
                 effects = list(current_effect)
@@ -205,8 +204,8 @@ def set_effect(sound, *effects):
 
 
 def check_effect(sound):
-    return hasattr(sound, 'effects') and type(
-        sound.effects) == list and sound.effects
+    return hasattr(sound, 'effects') and isinstance(sound.effects,
+                                                    list) and sound.effects
 
 
 def adsr_func(sound, attack, decay, sustain, release):
@@ -376,7 +375,7 @@ current preset name: {self.get_current_instrument()}'''
         else:
             bank = current_bank
         if preset is not None:
-            if type(preset) == str:
+            if isinstance(preset, str):
                 instruments, instruments_ind = self.get_all_instrument_names(
                     sfid=current_sfid,
                     bank=current_bank,
@@ -414,7 +413,7 @@ current preset name: {self.get_current_instrument()}'''
             self.synth.sfont_select(channel, self.sfid_list[0])
             current_channel_info = self.find_channel_info(channel)
         current_sfid, current_bank, current_preset = current_channel_info
-        if type(preset) == str:
+        if isinstance(preset, str):
             instruments, instruments_ind = self.get_all_instrument_names(
                 sfid=current_sfid,
                 bank=current_bank,
@@ -466,7 +465,7 @@ current preset name: {self.get_current_instrument()}'''
                 self.change_sfid(self.sfid_list[ind], channel)
 
     def __lt__(self, preset):
-        if type(preset) == tuple and len(preset) == 2:
+        if isinstance(preset, tuple) and len(preset) == 2:
             self.change(preset=preset[0], bank=preset[1])
         else:
             self.change(preset=preset)
@@ -660,7 +659,7 @@ current preset name: {self.get_current_instrument()}'''
                     bpm=80,
                     export_args={}):
         whole_arrays = []
-        if type(note_name) != mp.note:
+        if not isinstance(note_name, mp.note):
             current_note = mp.N(note_name)
         else:
             current_note = note_name
@@ -715,7 +714,7 @@ current preset name: {self.get_current_instrument()}'''
                      extra_length=None,
                      export_args={}):
         if fixed_decay:
-            if type(decay) != list:
+            if not isinstance(decay, list):
                 decay = real_time_to_bar(decay * 1000, bpm)
             else:
                 decay = [real_time_to_bar(i * 1000, bpm) for i in decay]
@@ -807,14 +806,14 @@ current preset name: {self.get_current_instrument()}'''
                 current_channel = each.channel if each.channel is not None else channel
                 self.synth.pitch_bend(current_channel, each.value)
             elif current.event_type == 'message':
-                if type(each) == mp.controller_event:
+                if isinstance(each, mp.controller_event):
                     current_channel = each.channel if each.channel is not None else channel
                     if each.controller_number == 0 and current_channel not in channel_dict:
                         channel_dict[current_channel] = self.channel_info(
                             current_channel)
                     self.synth.cc(current_channel, each.controller_number,
                                   each.parameter)
-                elif type(each) == mp.program_change:
+                elif isinstance(each, mp.program_change):
                     current_channel = each.channel if each.channel is not None else channel
                     if not self.valid_channel(current_channel):
                         self.change_sfid(self.sfid_list[0], current_channel)
@@ -883,7 +882,7 @@ current preset name: {self.get_current_instrument()}'''
                      track_extra_lengths=None,
                      export_args={},
                      show_msg=False):
-        decay_is_list = (type(decay) == list)
+        decay_is_list = (isinstance(decay, list))
         current_chord = copy(current_chord)
         current_chord.normalize_tempo()
         current_chord.apply_start_time_to_changes(
@@ -919,7 +918,7 @@ current preset name: {self.get_current_instrument()}'''
                 self.change_sfid(self.sfid_list[0], current_channel)
                 current_sfid, current_bank, current_preset = self.channel_info(
                     current_channel)
-            if type(current_instrument) == int:
+            if isinstance(current_instrument, int):
                 current_instrument = [current_instrument - 1, current_bank]
             else:
                 current_instrument = [current_instrument[0] - 1
@@ -1129,9 +1128,9 @@ current preset name: {self.get_current_instrument()}'''
         current_bank = copy(self.current_bank)
         current_preset = copy(self.current_preset)
         self.change(channel, sfid, bank, preset)
-        if type(start) != mp.note:
+        if not isinstance(start, mp.note):
             start = mp.N(start)
-        if type(stop) != mp.note:
+        if not isinstance(stop, mp.note):
             stop = mp.N(stop)
         current_sf2 = self.file[self.sfid_list.index(self.current_sfid)]
         if not show_full_path:
@@ -1141,7 +1140,7 @@ current preset name: {self.get_current_instrument()}'''
             if name is None:
                 current_name = None
             else:
-                if type(name) == list:
+                if isinstance(name, list):
                     current_name = name[i] + f'.{format}'
                 else:
                     current_name = name(str(current_note)) + f'.{format}'
@@ -1283,6 +1282,11 @@ soundfonts id: {self.sfid_list}'''
     def set_tempo(self, bpm):
         if fluidsynth.fluid_player_set_tempo:
             self.synth.player_set_tempo(1, bpm)
+
+    def set_default_audio_driver(self, driver):
+        self.default_audio_driver = driver
+        if self.default_audio_driver:
+            self.synth.setting('audio.driver', self.default_audio_driver)
 
 
 reverse = effect(lambda s: s.reverse(), 'reverse')
