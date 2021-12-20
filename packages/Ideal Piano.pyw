@@ -998,6 +998,10 @@ class piano_engine:
             current_piano_window.flip()
 
     def _midi_show_init_note_list(self, musicsheet, unit_time, playls, mode=0):
+        musicsheet.clear_pitch_bend('all')
+        self.musicsheet = musicsheet
+        self.wholenotes = self.musicsheet.notes
+        self.sheetlen = len(self.musicsheet)
         for i in range(self.sheetlen):
             currentnote = musicsheet.notes[i]
             duration = unit_time * currentnote.duration

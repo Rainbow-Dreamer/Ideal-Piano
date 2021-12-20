@@ -98,7 +98,8 @@ class browse_window(tk.Tk):
                 normalize_result = self.parent.read_result[1].normalize_tempo(
                     self.parent.read_result[0],
                     start_time=self.parent.read_result[2])
-                self.parent.read_result[2] = normalize_result[1]
+                if normalize_result:
+                    self.parent.read_result[2] = normalize_result[1]
             else:
                 try:
                     all_tracks = mp.read(
