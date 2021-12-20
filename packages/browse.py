@@ -48,7 +48,7 @@ class browse_window(tk.Tk):
     def redo(self):
         self.button.destroy()
         self.button2.destroy()
-        self.no_notes1.destroy()
+        self.no_notes.destroy()
         self.choose_track_ind_text.destroy()
         self.choose_track_ind.destroy()
         self.from_text.destroy()
@@ -69,8 +69,8 @@ class browse_window(tk.Tk):
     def quit_normal(self):
         if self.out_of_index.place_info():
             self.out_of_index.place_forget()
-        if self.no_notes1.place_info():
-            self.no_notes1.place_forget()
+        if self.no_notes.place_info():
+            self.no_notes.place_forget()
         self.parent.set_bpm = self.check_bpm.get()
         self.parent.off_melody = self.if_melody.get()
         self.parent.if_merge = self.if_merge_all_tracks.get()
@@ -180,16 +180,17 @@ class browse_window(tk.Tk):
 
         if self.parent.read_result != 'error':
             self.parent.sheetlen = len(self.parent.read_result[1])
-            if self.parent.sheetlen == 0:
-                self.no_notes1.place(x=-50, y=160, width=200, height=20)
+            if all(not isinstance(i, mp.note)
+                   for i in self.parent.read_result[1].notes):
+                self.no_notes.place(x=-50, y=160, width=200, height=20)
             else:
                 self.destroy()
         else:
             self.out_of_index.place(x=-50, y=160, width=200, height=20)
 
     def make_error_labels(self):
-        self.no_notes1 = ttk.Label(self.labelFrame,
-                                   text=self.browse_dict['no notes'])
+        self.no_notes = ttk.Label(self.labelFrame,
+                                  text=self.browse_dict['no notes'])
         self.out_of_index = ttk.Label(self.labelFrame,
                                       text=self.browse_dict['out of index'])
 
