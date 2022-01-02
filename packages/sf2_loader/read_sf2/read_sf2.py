@@ -980,10 +980,7 @@ current preset name: {self.get_current_instrument()}'''
                          export_args={},
                          show_msg=False,
                          **read_args):
-        current_chord = mp.read(current_chord,
-                                mode='all',
-                                to_piece=True,
-                                **read_args)
+        current_chord = mp.read(current_chord, **read_args)
         if instruments:
             current_chord.change_instruments(instruments)
         result = self.export_piece(current_chord, decay, sample_width,
