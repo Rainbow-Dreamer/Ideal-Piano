@@ -156,6 +156,7 @@ class browse_window(tk.Tk):
             all_track_notes += pitch_bends
             if self.parent.set_bpm != '':
                 tempo = float(self.parent.set_bpm)
+            first_track_start_time += all_track_notes.start_time
             self.parent.read_result = tempo, all_track_notes, first_track_start_time
 
         except Exception as e:
