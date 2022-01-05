@@ -6,7 +6,6 @@ import musicpy as mp
 
 
 class note:
-
     def __init__(self, name, num=4, duration=0.25, volume=100, channel=None):
         if name not in standard:
             raise ValueError(
@@ -153,7 +152,6 @@ class note:
 
 class chord:
     ''' This class can contain a chord with many notes played simultaneously and either has intervals, the default interval is 0.'''
-
     def __init__(self,
                  notes,
                  duration=None,
@@ -970,7 +968,10 @@ class chord:
 
     def add(self, note1=None, mode='tail', start=0, duration=0.25):
         if len(self) == 0:
-            return note1
+            result = copy(note1)
+            if start != 0:
+                result.start_time += start
+            return result
         temp = copy(self)
         if isinstance(note1, int):
             temp += temp[0].up(note1)
@@ -1000,6 +1001,11 @@ class chord:
             temp.clear_tempo()
             note1.clear_pitch_bend(value='all')
             note1.clear_tempo()
+            if not temp.notes:
+                result = note1 + not_notes
+                if start != 0:
+                    result.start_time += start
+                return result
             distance = []
             intervals1 = temp.interval
             intervals2 = note1.interval
@@ -1143,9 +1149,9 @@ class chord:
                 if isinstance(change_note, note):
                     temp[ind] = change_note.up(unit)
         else:
-            temp.notes = temp.notes[:ind1] + [
+            temp.notes = temp.notes[:ind] + [
                 each.up(unit)
-                for each in temp.notes[ind1:ind2] if isinstance(each, note)
+                for each in temp.notes[ind:ind2] if isinstance(each, note)
             ] + temp.notes[ind2:]
         return temp
 
@@ -2086,7 +2092,6 @@ class chord:
 
 
 class scale:
-
     def __init__(self,
                  start=None,
                  mode=None,
@@ -2664,7 +2669,6 @@ class circle_of_fourths(circle_of_fifths):
 
 
 class piece:
-
     def __init__(self,
                  tracks,
                  instruments_list=None,
@@ -3697,7 +3701,6 @@ class tempo:
 
 
 class pitch_bend:
-
     def __init__(self,
                  value,
                  start_time=None,
@@ -3749,7 +3752,6 @@ class pitch_bend:
 
 
 class tuning:
-
     def __init__(self,
                  tuning_dict,
                  track=None,
@@ -3785,7 +3787,6 @@ class tuning:
 
 
 class track:
-
     def __init__(self,
                  content,
                  instrument=1,
@@ -4035,7 +4036,6 @@ class volume:
 
 
 class drum:
-
     def __init__(self,
                  pattern='',
                  mapping=drum_mapping,
@@ -4260,7 +4260,6 @@ class drum:
 
 
 class controller_event:
-
     def __init__(self,
                  track=0,
                  channel=0,
@@ -4275,7 +4274,6 @@ class controller_event:
 
 
 class copyright_event:
-
     def __init__(self, track=0, time=0, notice=None):
         self.track = track
         self.time = time * 4
@@ -4283,7 +4281,6 @@ class copyright_event:
 
 
 class key_signature:
-
     def __init__(self,
                  track=0,
                  time=0,
@@ -4298,7 +4295,6 @@ class key_signature:
 
 
 class sysex:
-
     def __init__(self, track=0, time=0, manID=None, payload=None):
         self.track = track
         self.time = time * 4
@@ -4307,7 +4303,6 @@ class sysex:
 
 
 class text_event:
-
     def __init__(self, track=0, time=0, text=''):
         self.track = track
         self.time = time * 4
@@ -4315,7 +4310,6 @@ class text_event:
 
 
 class time_signature:
-
     def __init__(self,
                  track=0,
                  time=0,
@@ -4332,7 +4326,6 @@ class time_signature:
 
 
 class universal_sysex:
-
     def __init__(self,
                  track=0,
                  time=0,
@@ -4351,7 +4344,6 @@ class universal_sysex:
 
 
 class rpn:
-
     def __init__(self,
                  track=0,
                  channel=0,
@@ -4374,7 +4366,6 @@ class rpn:
 
 
 class tuning_bank:
-
     def __init__(self,
                  track=0,
                  channel=0,
@@ -4389,7 +4380,6 @@ class tuning_bank:
 
 
 class tuning_program:
-
     def __init__(self,
                  track=0,
                  channel=0,
@@ -4404,7 +4394,6 @@ class tuning_program:
 
 
 class channel_pressure:
-
     def __init__(self, track=0, channel=0, time=0, pressure_value=None):
         self.track = track
         self.channel = channel
@@ -4413,7 +4402,6 @@ class channel_pressure:
 
 
 class program_change:
-
     def __init__(self, track=0, channel=0, time=0, program=0):
         self.track = track
         self.channel = channel
@@ -4422,7 +4410,6 @@ class program_change:
 
 
 class track_name:
-
     def __init__(self, track=0, time=0, name=''):
         self.track = track
         self.time = time * 4
@@ -4430,7 +4417,6 @@ class track_name:
 
 
 class rest:
-
     def __init__(self, duration=1 / 4, dotted=None):
         self.duration = duration
         if dotted is not None:
@@ -4832,7 +4818,7 @@ def piece_process_normalize_tempo(self, bpm, first_track_start_time):
     whole_volume = mp.concat(self.volume) if self.volume else None
     normalize_result, first_track_start_time = first_track.normalize_tempo(
         bpm,
-        start_time=first_track_start_time,
+        start_time=first_track_start_time + first_track.start_time,
         pan_msg=whole_pan,
         volume_msg=whole_volume)
     new_other_messages = normalize_result[0]
