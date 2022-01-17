@@ -10,6 +10,7 @@ import importlib
 
 
 class browse_window(tk.Tk):
+
     def __init__(self, parent, browse_dict):
         super(browse_window, self).__init__()
         self.parent = parent
@@ -239,6 +240,7 @@ class browse_window(tk.Tk):
 
 
 class setup:
+
     def __init__(self, browse_dict):
         importlib.reload(piano_config)
         self.file_path = None
