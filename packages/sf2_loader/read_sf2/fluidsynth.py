@@ -531,6 +531,7 @@ def fluid_synth_write_s16_stereo(synth, len):
 
 class Synth:
     """Synth represents a FluidSynth synthesizer"""
+
     def __init__(self, gain=0.2, samplerate=44100.0, channels=256, kwargs={}):
         """Create new synthesizer object to control sound generation
 
@@ -1006,6 +1007,7 @@ class Synth:
 
 
 class Sequencer:
+
     def __init__(self, time_scale=1000, use_system_timer=True):
         """Create new sequencer object to control and schedule timing of midi events
 

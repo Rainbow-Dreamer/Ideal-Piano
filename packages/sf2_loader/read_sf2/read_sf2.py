@@ -11,9 +11,12 @@ from pydub import AudioSegment
 from io import BytesIO
 from copy import deepcopy as copy
 
-mp.pygame.mixer.quit()
-mp.pygame.mixer.init(44100, -16, 2, 1024)
-mp.pygame.mixer.set_num_channels(1000)
+try:
+    mp.pygame.mixer.quit()
+    mp.pygame.mixer.init(44100, -16, 2, 1024)
+    mp.pygame.mixer.set_num_channels(1000)
+except mp.pygame.error:
+    has_audio_interface = False
 
 
 def play_sound(audio, mode=0):
@@ -222,6 +225,7 @@ def adsr_func(sound, attack, decay, sustain, release):
 
 
 class effect:
+
     def __init__(self, func, name=None, *args, unknown_args=None, **kwargs):
         self.func = func
         if name is None:
@@ -267,6 +271,7 @@ class effect:
 
 
 class effect_chain:
+
     def __init__(self, *effects):
         self.effects = list(effects)
 
@@ -280,6 +285,7 @@ class effect_chain:
 
 
 class general_event:
+
     def __init__(self, event_type, start_time, value=None, other=None):
         self.event_type = event_type
         self.start_time = start_time
@@ -293,6 +299,7 @@ class general_event:
 
 
 class sf2_loader:
+
     def __init__(self, file=None):
         self.file = []
         self.synth = fluidsynth.Synth()
@@ -1208,6 +1215,7 @@ current preset name: {self.get_current_instrument()}'''
 
 
 class sf2_player:
+
     def __init__(self, file=None):
         self.file = []
         self.synth = fluidsynth.Synth()
