@@ -144,13 +144,11 @@ show_delay_time = 1
 # original_first: detection result is preferentially chosen as a variation of the original position of the chord(i.e. no inversion or any changes to the notes of the chord)
 detect_mode = 'chord'
 inv_num = False
-rootpitch = 5
 change_from_first = True
 original_first = True
 same_note_special = False
 whole_detect = True
 return_fromchord = False
-two_show_interval = True
 poly_chord_first = False
 root_position_return_first = True
 alter_notes_show_degree = True

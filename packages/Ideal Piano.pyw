@@ -773,10 +773,9 @@ class piano_engine:
     def _detect_chord(self, current_chord):
         return mp.detect(
             current_chord, piano_config.detect_mode, piano_config.inv_num,
-            piano_config.rootpitch, piano_config.change_from_first,
-            piano_config.original_first, piano_config.same_note_special,
-            piano_config.whole_detect, piano_config.return_fromchord,
-            piano_config.two_show_interval, piano_config.poly_chord_first,
+            piano_config.change_from_first, piano_config.original_first,
+            piano_config.same_note_special, piano_config.whole_detect,
+            piano_config.return_fromchord, piano_config.poly_chord_first,
             piano_config.root_position_return_first,
             piano_config.alter_notes_show_degree)
 
