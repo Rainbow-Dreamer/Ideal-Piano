@@ -272,8 +272,11 @@ def read(name,
     whole_tracks = current_midi.tracks
     current_track = None
     find_changes = False
+    whole_bpm = 120
+    changes = []
     changes_track = [
-        each for each in whole_tracks if all(i.is_meta for i in each)
+        each for each in whole_tracks
+        if all((i.is_meta or i.type == 'sysex') for i in each)
     ]
     if not changes_track:
         changes_track = [
@@ -282,8 +285,6 @@ def read(name,
         ]
     else:
         find_changes = True
-    whole_bpm = 120
-    changes = []
     if changes_track:
         changes = [
             midi_to_chord(current_midi,
@@ -301,7 +302,8 @@ def read(name,
             ]
             whole_bpm = whole_bpm_list[-1].bpm
     available_tracks = [
-        each for each in whole_tracks if any(not i.is_meta for i in each)
+        each for each in whole_tracks
+        if any(not (i.is_meta or i.type == 'sysex') for i in each)
     ]
     if get_off_drums:
         available_tracks = [
@@ -320,7 +322,24 @@ def read(name,
     if available_tracks:
         channels_list = [[i.channel for i in each if hasattr(i, 'channel')]
                          for each in available_tracks]
-        channels_list = [each[0] if each else 0 for each in channels_list]
+        channels_list = [each[0] if each else -1 for each in channels_list]
+        unassigned_channels = channels_list.count(-1)
+        if unassigned_channels > 0:
+            free_channel_numbers = [
+                i for i in range(16) if i not in channels_list
+            ]
+            free_channel_numbers_length = len(free_channel_numbers)
+            unassigned_channels_number = []
+            for k in range(unassigned_channels):
+                if k < free_channel_numbers_length:
+                    unassigned_channels_number.append(free_channel_numbers[k])
+                else:
+                    unassigned_channels_number.append(
+                        16 + k - free_channel_numbers_length)
+            channels_list = [
+                each if each != -1 else unassigned_channels_number.pop(0)
+                for each in channels_list
+            ]
     else:
         channels_list = None
 
@@ -346,7 +365,8 @@ def read(name,
                          volume_list)
     if split_channels:
         remain_available_tracks = [
-            each for each in whole_tracks if any(not j.is_meta for j in each)
+            each for each in whole_tracks
+            if any(not (j.is_meta or j.type == 'sysex') for j in each)
         ]
         channels_numbers = concat(
             [[i.channel for i in each if hasattr(i, 'channel')]
@@ -484,8 +504,8 @@ def read(name,
     if find_changes and changes:
         result_piece.tracks[0].notes.extend(changes.notes)
         result_piece.tracks[0].interval.extend(changes.interval)
-        result_piece.tracks[0].other_messages.extend(changes.other_messages)
-        result_piece.other_messages.extend(changes.other_messages)
+        result_piece.tracks[0].other_messages[0:0] = changes.other_messages
+        result_piece.other_messages[0:0] = changes.other_messages
 
     if clear_other_channel_msg:
         result_piece.other_messages = [
