@@ -1,6 +1,6 @@
 # Ideal-Piano
 
-[中文](#Ideal-Piano-1)
+[中文](https://github.com/Rainbow-Dreamer/Ideal-Piano/blob/master/README_cn.md)
 
 ## Introduction
 
