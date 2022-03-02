@@ -1284,14 +1284,32 @@ soundfonts id: {self.sfid_list}'''
             self.synth.play_midi_stop()
             self.playing = False
 
-    def set_tempo(self, bpm):
+    def set_tempo(self, bpm, tempo_type=1):
         if fluidsynth.fluid_player_set_tempo:
-            self.synth.player_set_tempo(1, bpm)
+            self.synth.player_set_tempo(tempo_type, bpm)
 
     def set_default_audio_driver(self, driver):
         self.default_audio_driver = driver
         if self.default_audio_driver:
             self.synth.setting('audio.driver', self.default_audio_driver)
+
+    def set_pos(self, ticks):
+        self.synth.player_seek(ticks)
+
+    def get_current_tick(self):
+        return self.synth.get_current_tick()
+
+    def get_total_ticks(self):
+        return self.synth.get_total_ticks()
+
+    def get_current_tempo(self):
+        return self.synth.get_current_tempo()
+
+    def get_current_bpm(self):
+        return self.synth.get_current_bpm()
+
+    def get_status(self):
+        return self.synth.get_status()
 
 
 reverse = effect(lambda s: s.reverse(), 'reverse')
