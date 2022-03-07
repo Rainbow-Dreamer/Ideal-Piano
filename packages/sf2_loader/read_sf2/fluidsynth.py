@@ -172,6 +172,10 @@ fluid_synth_get_cc = cfunc('fluid_synth_get_cc', c_int, ('synth', c_void_p, 1),
                            ('chan', c_int, 1), ('num', c_int, 1),
                            ('pval', POINTER(c_int), 1))
 
+fluid_synth_get_pitch_bend = cfunc('fluid_synth_get_pitch_bend', c_int,
+                                   ('synth', c_void_p, 1), ('chan', c_int, 1),
+                                   ('pval', POINTER(c_int), 1))
+
 fluid_synth_program_change = cfunc('fluid_synth_program_change', c_int,
                                    ('synth', c_void_p, 1), ('chan', c_int, 1),
                                    ('prg', c_int, 1))
@@ -930,6 +934,11 @@ class Synth:
     def get_cc(self, chan, num):
         i = c_int()
         fluid_synth_get_cc(self.synth, chan, num, byref(i))
+        return i.value
+
+    def get_pitch_bend(self, chan):
+        i = c_int()
+        fluid_synth_get_pitch_bend(self.synth, chan, byref(i))
         return i.value
 
     def program_change(self, chan, prg):
