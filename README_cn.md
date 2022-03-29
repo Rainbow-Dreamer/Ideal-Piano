@@ -80,7 +80,7 @@ brew install fluidsynth
 
 ## 其他说明
 
-1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DZN6-TAQhPG0CBifnp0E)下载
+1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DY_8cucQhPG0CBifkqYE)下载
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，请将设置文件里的`language`改为`'Chinese'`，保存后重启软件即可使用。
 3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`piano_config.py`里去修改，保存之后再打开软件就可以看到变化了。
 
