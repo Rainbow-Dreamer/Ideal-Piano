@@ -34,11 +34,6 @@ class browse_window(tk.Tk):
         self.button_a.grid(row=1, column=0)
 
         self.make_button()
-        try:
-            with open('browse memory.txt') as f:
-                self.last_place = f.read()
-        except:
-            self.last_place = "/"
 
     def make_button(self):
         self.button = ttk.Button(self.labelFrame,
@@ -182,15 +177,10 @@ class browse_window(tk.Tk):
 
     def fileDialog(self):
         self.filename = filedialog.askopenfilename(
-            initialdir=self.last_place,
             title=self.browse_dict['choose MIDI file'],
             filetypes=(("MIDI files", "*.mid"), ("all files", "*.*")))
         if '.mid' in self.filename or '.MID' in self.filename:
             self.parent.file_path = self.filename
-            memory = self.filename[:self.filename.rindex('/') + 1]
-            with open('browse memory.txt', 'w') as f:
-                f.write(memory)
-            self.last_place = memory
             self.button.destroy()
             self.button = ttk.Button(self.labelFrame,
                                      text="OK",
