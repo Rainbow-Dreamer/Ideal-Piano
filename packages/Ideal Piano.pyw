@@ -108,7 +108,8 @@ class piano_window(pyglet.window.Window):
     def init_window(self):
         super(piano_window, self).__init__(*piano_config.screen_size,
                                            caption='Ideal Piano',
-                                           resizable=True)
+                                           resizable=True,
+                                           file_drops=True)
         self.icon = pyglet.image.load('resources/piano.ico')
         self.set_icon(self.icon)
         self.keyboard_handler = key.KeyStateHandler()
@@ -427,6 +428,30 @@ class piano_window(pyglet.window.Window):
             mp.detect = language_patch.detect
         current_piano_engine.current_midi_device = language_patch.ideal_piano_language_dict[
             'current_midi_device']
+
+    def on_file_drop(self, x, y, paths):
+        if paths:
+            current_path = paths[0]
+            import mimetypes
+            current_type = mimetypes.guess_type(current_path)[0]
+            if current_type:
+                current_type, type_name = current_type.split('/')
+                if current_type == 'image':
+                    piano_config.background_image = current_path
+                    self.init_screen()
+                elif type_name == 'mid':
+                    if self.click_mode is None:
+                        init_result = current_piano_engine.init_midi_show(
+                            current_path)
+                        self.click_mode = 2
+                        self.mode_num = 2
+                        if init_result == 'back':
+                            self.mode_num = 4
+                        else:
+                            self.func = current_piano_engine.mode_midi_show
+                            self.not_first()
+                            pyglet.clock.schedule_interval(
+                                self.func, 1 / piano_config.fps)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = x, y
@@ -833,9 +858,10 @@ class piano_engine:
         self.sostenuto_pedal_on = False
         self.soft_pedal_volume_ratio = 1
 
-    def init_midi_show(self):
+    def init_midi_show(self, file_name=None):
         current_piano_window.open_browse_window = True
-        current_setup = browse.setup(language_patch.browse_language_dict)
+        current_setup = browse.setup(language_patch.browse_language_dict,
+                                     file_name=file_name)
         current_piano_window.open_browse_window = False
         self.path = current_setup.file_path
         self.action = current_setup.action

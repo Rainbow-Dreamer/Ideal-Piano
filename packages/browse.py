@@ -11,7 +11,7 @@ import importlib
 
 class browse_window(tk.Tk):
 
-    def __init__(self, parent, browse_dict):
+    def __init__(self, parent, browse_dict, file_name=None):
         super(browse_window, self).__init__()
         self.parent = parent
         self.browse_dict = browse_dict
@@ -27,13 +27,18 @@ class browse_window(tk.Tk):
         self.labelFrame = ttk.LabelFrame(self,
                                          text=self.browse_dict['MIDI files'],
                                          borderwidth=70)
-        self.labelFrame.grid(padx=200, pady=100, row=0)
         self.button_a = ttk.Button(self.labelFrame,
                                    text=self.browse_dict['go back'],
                                    command=self.go_back)
+        self.button = ttk.Button(self.labelFrame,
+                                 text=self.browse_dict['choose MIDI file'],
+                                 command=self.fileDialog)
+        self.labelFrame.grid(padx=200, pady=100, row=0)
         self.button_a.grid(row=1, column=0)
-
-        self.make_button()
+        if file_name:
+            self.fileDialog(file_name=file_name)
+            return
+        self.button.grid(row=2, column=0)
 
     def make_button(self):
         self.button = ttk.Button(self.labelFrame,
@@ -175,10 +180,13 @@ class browse_window(tk.Tk):
         self.out_of_index = ttk.Label(self.labelFrame,
                                       text=self.browse_dict['out of index'])
 
-    def fileDialog(self):
-        self.filename = filedialog.askopenfilename(
-            title=self.browse_dict['choose MIDI file'],
-            filetypes=(("MIDI files", "*.mid"), ("all files", "*.*")))
+    def fileDialog(self, file_name=None):
+        if file_name:
+            self.filename = file_name
+        else:
+            self.filename = filedialog.askopenfilename(
+                title=self.browse_dict['choose MIDI file'],
+                filetypes=(("MIDI files", "*.mid"), ("all files", "*.*")))
         if '.mid' in self.filename or '.MID' in self.filename:
             self.parent.file_path = self.filename
             self.button.destroy()
@@ -231,7 +239,7 @@ class browse_window(tk.Tk):
 
 class setup:
 
-    def __init__(self, browse_dict):
+    def __init__(self, browse_dict, file_name=None):
         importlib.reload(piano_config)
         self.file_path = None
         self.action = 0
@@ -242,5 +250,7 @@ class setup:
         self.set_bpm = None
         self.off_melody = 0
         self.if_merge = True
-        self.current_browse_window = browse_window(self, browse_dict)
+        self.current_browse_window = browse_window(self,
+                                                   browse_dict,
+                                                   file_name=file_name)
         self.current_browse_window.mainloop()
