@@ -766,14 +766,9 @@ current preset name: {self.get_current_instrument()}'''
         for i in range(current_timestamps_length):
             current = current_timestamps[i]
             each = current.value
-            if current.event_type == 'noteon' and check_effect(each):
-                if hasattr(each, 'decay_length'):
-                    current_note_decay = each.decay_length
-                else:
-                    current_note_decay = current_decay[len([
-                        j for j in current_timestamps[:i]
-                        if j.event_type == 'noteon'
-                    ])]
+            if current.event_type == 'noteon' and (check_effect(each)
+                                                   or hasattr(each, 'decay')):
+                current_note_decay = getattr(each, 'decay', 1)
                 current_note_audio = self.export_note(
                     each,
                     duration=bar_to_real_time(each.duration, bpm, 1) / 1000,
@@ -786,7 +781,7 @@ current preset name: {self.get_current_instrument()}'''
                     frame_rate=frame_rate,
                     format=format,
                     get_audio=True,
-                    effects=each.effects,
+                    effects=getattr(each, 'effects', None),
                     bpm=bpm)
                 current_silent_audio = current_silent_audio.overlay(
                     current_note_audio,

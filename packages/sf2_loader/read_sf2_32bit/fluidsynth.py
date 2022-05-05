@@ -245,6 +245,10 @@ fluid_synth_set_chorus = cfunc('fluid_synth_set_chorus', c_int,
                                ('level', c_double, 1), ('speed', c_double, 1),
                                ('depth_ms', c_double, 1), ('type', c_int, 1))
 
+fluid_synth_set_chorus_speed = cfunc('fluid_synth_set_chorus_speed', c_int,
+                                     ('synth', c_void_p, 1),
+                                     ('speed', c_double, 1))
+
 fluid_synth_set_reverb_roomsize = cfunc('fluid_synth_set_reverb_roomsize',
                                         c_int, ('synth', c_void_p, 1),
                                         ('roomsize', c_double, 1))
@@ -267,6 +271,10 @@ fluid_synth_set_chorus_nr = cfunc('fluid_synth_set_chorus_nr', c_int,
 fluid_synth_set_chorus_level = cfunc('fluid_synth_set_chorus_level', c_int,
                                      ('synth', c_void_p, 1),
                                      ('level', c_double, 1))
+
+fluid_synth_set_chorus_depth = cfunc('fluid_synth_set_chorus_depth', c_int,
+                                     ('synth', c_void_p, 1),
+                                     ('depth_ms', c_double, 1))
 
 fluid_synth_set_chorus_type = cfunc('fluid_synth_set_chorus_type', c_int,
                                     ('synth', c_void_p, 1), ('type', c_int, 1))
@@ -687,7 +695,7 @@ class Synth:
             (sfontid, banknum, prognum, presetname) = self.channel_info(chan)
             return (sfontid, banknum, prognum)
 
-    def sfpreset_name(self, sfid, bank, prenum):
+    def sfpreset_name(self, sfid, bank, prenum, chan=None):
         """Return name of a soundfont preset"""
         if fluid_synth_get_sfont_by_id is not None:
             sfont = fluid_synth_get_sfont_by_id(self.synth, sfid)
@@ -971,9 +979,9 @@ class Synth:
         """
         return fluid_synth_write_s16_stereo(self.synth, len)
 
-    def tuning_dump(self, bank, prog, pitch):
+    def tuning_dump(self, bank, prog, pitch, name):
         return fluid_synth_tuning_dump(self.synth, bank, prog, name.encode(),
-                                       length(name), pitch)
+                                       len(name), pitch)
 
     def midi_event_get_type(self, event):
         return fluid_midi_event_get_type(event)
@@ -1073,7 +1081,7 @@ class Sequencer:
         response = fluid_sequencer_register_fluidsynth(self.sequencer,
                                                        synth.synth)
         if response == FLUID_FAILED:
-            raise Error("Registering fluid synth failed")
+            raise Exception("Registering fluid synth failed")
         return response
 
     def register_client(self, name, callback, data=None):
@@ -1083,7 +1091,7 @@ class Sequencer:
                                                    name.encode(), c_callback,
                                                    data)
         if response == FLUID_FAILED:
-            raise Error("Registering client failed")
+            raise Exception("Registering client failed")
 
         # store in a list to prevent garbage collection
         self.client_callbacks.append(c_callback)
@@ -1138,7 +1146,7 @@ class Sequencer:
     def _schedule_event(self, evt, time, absolute=True):
         response = fluid_sequencer_send_at(self.sequencer, evt, time, absolute)
         if response == FLUID_FAILED:
-            raise Error("Scheduling event failed")
+            raise Exception("Scheduling event failed")
 
     def get_tick(self):
         return fluid_sequencer_get_tick(self.sequencer)
