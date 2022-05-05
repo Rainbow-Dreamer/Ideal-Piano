@@ -1,3 +1,0 @@
-mido
-midiutil
-pygame
