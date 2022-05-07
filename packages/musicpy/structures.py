@@ -1768,10 +1768,11 @@ class chord:
                 except:
                     chord_type = original_chord_type
                     chord_types_root = chord_type
-        root_note = f"{root_note[0].upper()}{''.join(root_note[1:])}"
         if other_msg['altered']:
             chord_types_root = chord_types_root.split(',')[0]
             chord_type = original_chord_type
+        root_note = standard_dict.get(root_note, root_note)
+        chord_type_name = chord_types_root[len(root_note):]
         if get_dict:
             return {
                 'chord name':
@@ -1780,6 +1781,8 @@ class chord:
                 chord_types_root,
                 'root':
                 root_note,
+                'chord type':
+                chord_type_name,
                 'chord speciality':
                 chord_speciality,
                 'inversion':
@@ -1791,7 +1794,7 @@ class chord:
         else:
             other_msg_str = '\n'.join(
                 [f'{i}: {j}' for i, j in other_msg.items() if j])
-            return f"chord name: {chord_type}\nroot position: {chord_types_root}\nroot: {root_note}\nchord speciality: {chord_speciality}" + (
+            return f"chord name: {chord_type}\nroot position: {chord_types_root}\nroot: {root_note}\nchord type: {chord_type_name}\nchord speciality: {chord_speciality}" + (
                 f"\ninversion: {inversion_msg}" if chord_speciality
                 == 'inverted chord' else '') + (f'\n{other_msg_str}'
                                                 if other_msg_str else '')
@@ -2158,31 +2161,21 @@ class chord:
 
 class scale:
 
-    def __init__(self,
-                 start=None,
-                 mode=None,
-                 interval=None,
-                 name=None,
-                 notels=None,
-                 pitch=4):
+    def __init__(self, start=None, mode=None, interval=None, notes=None):
         self.interval = interval
-        if notels is not None:
-            notels = [
-                mp.toNote(i) if isinstance(i, str) else i for i in notels
-            ]
-            self.notes = notels
-            self.start = notels[0]
+        if notes is not None:
+            notes = [mp.toNote(i) if isinstance(i, str) else i for i in notes]
+            self.notes = notes
+            self.start = notes[0]
             self.mode = mode
-            self.pitch = pitch
         else:
             if isinstance(start, str):
                 start = mp.trans_note(start)
             self.start = start
-            self.pitch = self.start.num
             if mode is not None:
                 self.mode = mode.lower()
             else:
-                self.mode = name
+                self.mode = mode
             self.notes = self.getScale().notes
 
         if interval is None:
@@ -2271,7 +2264,15 @@ class scale:
             if result != 'not found':
                 return result
             else:
-                raise ValueError('could not find this scale')
+                if self.notes is None:
+                    raise ValueError('could not find this scale')
+                else:
+                    notes = self.notes
+                    rootdegree = notes[0].degree
+                    return [
+                        notes[i].degree - notes[i - 1].degree
+                        for i in range(1, len(notes))
+                    ]
 
     def getScale(self, intervals=0.25, durations=None):
         if self.mode == None:
@@ -2542,9 +2543,7 @@ class scale:
         return self.down()
 
     def __invert__(self):
-        return scale(self[0],
-                     interval=list(reversed(self.interval)),
-                     pitch=self.pitch)
+        return scale(self[0], interval=list(reversed(self.interval)))
 
     def move(self, x):
         notes = copy(self.getScale())
