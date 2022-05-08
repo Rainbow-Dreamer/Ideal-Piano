@@ -6,6 +6,7 @@ os.chdir(abs_path)
 sys.path.insert(0, abs_path)
 sys.path.insert(0, 'packages')
 sys.path.append('tools')
+import fractions
 import pygame
 import pygame.midi
 import time
