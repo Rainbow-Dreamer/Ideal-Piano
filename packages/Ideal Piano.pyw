@@ -106,10 +106,11 @@ class piano_window(pyglet.window.Window):
         self.init_music_analysis()
 
     def init_window(self):
-        super(piano_window, self).__init__(*piano_config.screen_size,
-                                           caption='Ideal Piano',
-                                           resizable=True,
-                                           file_drops=True)
+        super(piano_window, self).__init__(
+            *piano_config.screen_size,
+            caption='Ideal Piano',
+            resizable=True,
+            file_drops=True if sys.platform != 'darwin' else False)
         self.icon = pyglet.image.load('resources/piano.ico')
         self.set_icon(self.icon)
         self.keyboard_handler = key.KeyStateHandler()
