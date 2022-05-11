@@ -15,7 +15,12 @@ INTERVAL = {
     9: '大六度',
     10: '小七度',
     11: '大七度',
-    12: '纯八度'
+    12: '纯八度',
+    13: '小九度',
+    14: '大九度',
+    17: '纯十一度',
+    20: '小十三度',
+    21: '大十三度'
 }
 
 chordTypes = match({
@@ -540,11 +545,14 @@ def detect_split(current_chord, N=None, **detect_args):
 
 
 def interval_check(current_chord):
-    TIMES, DIST = divmod(
+    times, dist = divmod(
         (current_chord.notes[1].degree - current_chord.notes[0].degree), 12)
-    if DIST == 0 and TIMES != 0:
-        DIST = 12
-    interval_name = INTERVAL[DIST]
+    if times > 0:
+        dist = 12 + dist
+    if dist in INTERVAL:
+        interval_name = INTERVAL[dist]
+    else:
+        interval_name = INTERVAL[dist % 12]
     root_note_name = current_chord[0].name
     if interval_name == '纯五度':
         return f'{root_note_name} 和纯五度 / {root_note_name}5 ({root_note_name} 强力和弦)'
