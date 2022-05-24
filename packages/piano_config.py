@@ -1,4 +1,4 @@
-﻿# basic screen settings
+# basic screen settings
 
 screen_size = (1300, 650)
 background_image = 'resources/white.png'
