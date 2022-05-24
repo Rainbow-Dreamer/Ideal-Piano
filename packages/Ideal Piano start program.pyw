@@ -26,5 +26,5 @@ from change_settings import config_window
 from copy import deepcopy as copy
 import importlib
 
-with open('packages/Ideal Piano.pyw', encoding='utf-8-sig') as f:
+with open('packages/Ideal Piano.pyw', encoding='utf-8') as f:
     exec(f.read())

@@ -311,7 +311,7 @@ class piano_window(pyglet.window.Window):
                 width=piano_config.music_analysis_width)
             if piano_config.music_analysis_file:
                 with open(piano_config.music_analysis_file,
-                          encoding='utf-8-sig') as f:
+                          encoding='utf-8') as f:
                     data = f.read()
                     lines = [i for i in data.split('\n\n') if i]
                     self.music_analysis_list = []
