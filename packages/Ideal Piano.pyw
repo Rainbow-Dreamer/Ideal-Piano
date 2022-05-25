@@ -797,8 +797,8 @@ class piano_engine:
             21].color = current_piano_window.initial_colors[each.degree - 21]
 
     def _detect_chord(self, current_chord):
-        return mp.detect(
-            current_chord, piano_config.detect_mode, piano_config.inv_num,
+        return mp.alg.detect(
+            current_chord, piano_config.inv_num,
             piano_config.change_from_first, piano_config.original_first,
             piano_config.same_note_special, piano_config.whole_detect,
             piano_config.return_fromchord, piano_config.poly_chord_first,
