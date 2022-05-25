@@ -36,7 +36,7 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 你可以从[release页面](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest)下载这个软件的Windows, Linux和macOS版本。
 
-注意1：对于Linux版本，使用默认设置播放MIDI文件需要安装freepats，这是pygame的mixer music模块用来播放MIDI文件的默认MIDI声音集。你可以通过打开`resources`文件夹里的`freepats_20060219-3_all.deb`文件来直接安装freepats，或者运行 (比如在Ubuntu上)
+注意1：对于Linux版本，使用默认设置播放MIDI文件需要安装freepats，这是pygame的mixer music模块用来播放MIDI文件的默认MIDI声音集。在Ubuntu上，你可以运行
 
 ````
 sudo apt-get install freepats
