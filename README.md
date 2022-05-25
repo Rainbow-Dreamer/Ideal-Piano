@@ -38,7 +38,7 @@ This software also supports directly loading SoundFont files as sound source to 
 
 You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
 
-Note1: for Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. On Ubuntu you can run
+Note1: for Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. you can directly install freepats by opening the file `freepats_20060219-3_all.deb` in `resources` folder, or run (for example, on Ubuntu)
 
 ````
 sudo apt-get install freepats
