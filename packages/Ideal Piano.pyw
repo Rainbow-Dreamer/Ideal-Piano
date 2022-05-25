@@ -481,6 +481,12 @@ class piano_window(pyglet.window.Window):
                         if piano_config.use_soundfont and not piano_config.render_as_audio:
                             if self.current_sf2_player.playing:
                                 self.current_sf2_player.stop()
+                        elif not piano_config.use_soundfont and sys.platform == 'linux':
+                            try:
+                                os.remove(
+                                    current_piano_engine.current_convert_name)
+                            except:
+                                pass
                     if current_piano_engine.playls:
                         current_piano_engine.playls.clear()
             self.is_click = True
@@ -877,7 +883,7 @@ class piano_engine:
             return 'back'
         if self.path and read_result:
             if read_result != 'error':
-                self.bpm, self.musicsheet, start_time = read_result
+                self.bpm, self.musicsheet, start_time, actual_start_time = read_result
                 self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
                     *piano_config.pitch_range)
                 start_time += new_start_time
@@ -912,6 +918,7 @@ class piano_engine:
         # 0 means has not been played yet, 1 means it has started playing,
         # 2 means it has stopped playing
         self.musicsheet.start_time = start_time
+        self.musicsheet.actual_start_time = actual_start_time
         self.playls = self._midi_show_init(self.musicsheet, self.unit_time,
                                            start_time)
         if piano_config.show_music_analysis:
@@ -965,7 +972,7 @@ class piano_engine:
                     else:
                         current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
                 else:
-                    pygame.mixer.music.load('temp.mid')
+                    self._load_file('temp.mid')
             else:
                 with open(self.path, 'rb') as f:
                     if f.read(4) == b'RIFF':
@@ -982,7 +989,7 @@ class piano_engine:
                         else:
                             current_piano_window.current_sf2_player.current_midi_file = self.path
                     else:
-                        pygame.mixer.music.load(self.path)
+                        self._load_file(self.path)
                 else:
                     current_path = mp.riff_to_midi(self.path)
                     current_buffer = current_path.getbuffer()
@@ -997,14 +1004,27 @@ class piano_engine:
                         else:
                             current_piano_window.current_sf2_player.current_midi_file = 'temp.mid'
                     else:
-                        pygame.mixer.music.load('temp.mid')
+                        self._load_file('temp.mid')
         if piano_config.use_soundfont and piano_config.render_as_audio:
             current_piano_window.label.text = ''
             current_piano_window.label.draw()
             current_piano_window.flip()
-        pyglet.clock.schedule_once(self.midi_file_play,
-                                   current_piano_window.bars_drop_interval)
+        current_start_time = current_piano_window.bars_drop_interval
+        if sys.platform == 'linux' and not piano_config.use_soundfont:
+            current_start_time += self.musicsheet.actual_start_time * self.unit_time
+        pyglet.clock.schedule_once(self.midi_file_play, current_start_time)
         self._midi_show_init_note_list(musicsheet, unit_time, playls)
+
+    def _load_file(self, path):
+        if sys.platform == 'linux':
+            import subprocess
+            file_name = os.path.split(path)[-1]
+            self.current_convert_name = f'resources/{os.path.splitext(file_name)[0]}.wav'
+            current_command = f'timidity "{path}" -Ow --output-file="{self.current_convert_name}"'
+            subprocess.run([current_command], shell=True)
+            pygame.mixer.music.load(self.current_convert_name)
+        else:
+            pygame.mixer.music.load(path)
 
     def _midi_show_init_as_audio(self, musicsheet, unit_time, start_time,
                                  playls, window_mode):

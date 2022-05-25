@@ -38,10 +38,10 @@ This software also supports directly loading SoundFont files as sound source to 
 
 You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
 
-Note1: for Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. On Ubuntu you can run
+Note1: for Linux version,  playing MIDI files using default settings requires installing freepats and timidity. On Ubuntu you can run
 
 ````
-sudo apt-get install freepats
+sudo apt-get install freepats timidity
 ````
 
 If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
