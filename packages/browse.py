@@ -108,7 +108,7 @@ class browse_window(tk.Tk):
                 i += 1
             actual_start_time = min(all_tracks.start_times)
             if piano_config.get_off_drums:
-                if 9 in all_tracks.channels:
+                while 9 in all_tracks.channels:
                     del all_tracks[all_tracks.channels.index(9)]
             if not self.parent.if_merge:
                 if self.parent.track_ind_get is not None:
