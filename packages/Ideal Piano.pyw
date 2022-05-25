@@ -9,7 +9,7 @@ if piano_config.language == 'English':
     from languages.en import language_patch
 elif piano_config.language == 'Chinese':
     from languages.cn import language_patch
-    mp.detect = language_patch.detect
+    mp.alg.detect = language_patch.detect
 
 if (piano_config.play_as_midi
         and piano_config.use_soundfont) or piano_config.play_use_soundfont:
@@ -426,7 +426,7 @@ class piano_window(pyglet.window.Window):
             importlib.reload(mp)
         elif piano_config.language == 'Chinese':
             from languages.cn import language_patch
-            mp.detect = language_patch.detect
+            mp.alg.detect = language_patch.detect
         current_piano_engine.current_midi_device = language_patch.ideal_piano_language_dict[
             'current_midi_device']
 
