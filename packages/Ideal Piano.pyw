@@ -967,7 +967,12 @@ class piano_engine:
                 else:
                     pygame.mixer.music.load('temp.mid')
             else:
-                try:
+                with open(self.path, 'rb') as f:
+                    if f.read(4) == b'RIFF':
+                        is_riff_midi = True
+                    else:
+                        is_riff_midi = False
+                if not is_riff_midi:
                     if piano_config.use_soundfont:
                         if piano_config.render_as_audio:
                             current_waveform = current_piano_window.current_sf2.export_midi_file(
@@ -975,12 +980,10 @@ class piano_engine:
                             self.current_midi_audio = pygame.mixer.Sound(
                                 buffer=current_waveform)
                         else:
-                            pygame.mixer.music.load(self.path)
-                            pygame.mixer.music.unload()
                             current_piano_window.current_sf2_player.current_midi_file = self.path
                     else:
                         pygame.mixer.music.load(self.path)
-                except:
+                else:
                     current_path = mp.riff_to_midi(self.path)
                     current_buffer = current_path.getbuffer()
                     with open('temp.mid', 'wb') as f:
