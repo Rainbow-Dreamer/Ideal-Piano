@@ -50,6 +50,8 @@ If you want to use SoundFont files as instruments in the Linux version, you need
 sudo apt-get install fluidsynth
 ````
 
+ It is also recommended to install fluidsynth by MacPorts, which might be faster than homebrew, and also very easy to install, you can click this [link](https://ports.macports.org/port/fluidsynth/) to install MacPorts and then install fluidsynth using MacPorts with the command provided by the website.
+
 Note2: for macOS version, due to an existing bug of pygame's mixer that it cannot pause MIDI file playing on macOS, before the pygame's developers fix this bug, the default settings of playing MIDI files cannot pause for the macOS version. If you want to pause and unpause MIDI files when playing for macOS version, you can switch to use fluidsynth to play MIDI files in Ideal Piano by changing `use_soundfont` to True in the settings file, and then install fluidsynth on macOS, it is pretty easy, you can use homebrew to install fluidsynth by running this line in the terminal
 
 ``````
