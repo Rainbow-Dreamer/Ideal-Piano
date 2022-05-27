@@ -202,7 +202,7 @@ class browse_window(tk.Tk):
         else:
             self.filename = filedialog.askopenfilename(
                 title=self.browse_dict['choose MIDI file'],
-                filetypes=(("MIDI files", "*.mid"), ("all files", "*.*")))
+                filetypes=(("MIDI files", ".mid"), ("all files", "*")))
         if '.mid' in self.filename or '.MID' in self.filename:
             self.parent.file_path = self.filename
             self.button.destroy()

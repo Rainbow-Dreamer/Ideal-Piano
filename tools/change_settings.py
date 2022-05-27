@@ -219,8 +219,7 @@ class config_window(tk.Tk):
 
     def choose_filename(self):
         filename = filedialog.askopenfilename(title="choose filename",
-                                              filetypes=(("all files",
-                                                          "*.*"), ))
+                                              filetypes=(("all files", "*"), ))
         if filename:
             self.config_contents.delete('1.0', tk.END)
             self.config_contents.insert(tk.END, f"'{filename}'")
