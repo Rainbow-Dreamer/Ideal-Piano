@@ -54,6 +54,8 @@ sudo apt-get install fluidsynth
 brew install fluidsynth
 ``````
 
+也很推荐用MacPorts安装fluidsynth，可能比homebrew要快，而且也很容易安装，你可以点击这个[链接](https://ports.macports.org/port/fluidsynth/)安装MacPorts，然后使用MacPorts按照网站上提供的指令安装fluidsynth。
+
 ## 预览
 
 以下是Ideal Piano的画面预览：
