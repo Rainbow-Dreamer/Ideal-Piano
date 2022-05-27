@@ -56,8 +56,6 @@ Note2: for macOS version, due to an existing bug of pygame's mixer that it canno
 brew install fluidsynth
 ``````
 
-It is also recommended to install fluidsynth by MacPorts, which might be faster than homebrew, and also very easy to install, you can click this [link](https://ports.macports.org/port/fluidsynth/) to install MacPorts and then install fluidsynth using MacPorts with the command provided by the website.
-
 ## Previews
 
 Here is a preview of Ideal Piano's screen.
