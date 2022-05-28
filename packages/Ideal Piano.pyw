@@ -821,10 +821,26 @@ class piano_engine:
             alter_notes_show_degree=piano_config.alter_notes_show_degree)
         if current_chord_info['type'] == 'chord':
             current_info = current_chord_info['chord name']
+            if piano_config.show_chord_accidentals == 'flat':
+                current_chord_root = current_chord_info['root']
+                if '#' in current_chord_root:
+                    new_current_chord_root = (~mp.N(current_chord_root)).name
+                    current_info = current_info.replace(
+                        current_chord_root, new_current_chord_root)
         elif current_chord_info['type'] == 'note':
             current_info = current_chord_info['whole name']
+            if piano_config.show_chord_accidentals == 'flat':
+                current_note = current_chord_info["note name"]
+                if '#' in current_note:
+                    new_current_note = ~mp.N(current_note)
+                    current_info = f'note {new_current_note}'
         elif current_chord_info['type'] == 'interval':
             current_info = current_chord_info['whole name']
+            if piano_config.show_chord_accidentals == 'flat':
+                current_root = current_chord_info["root"]
+                if '#' in current_root:
+                    new_current_root = (~mp.N(current_root)).name
+                    current_info = f'{new_current_root} with {current_chord_info["interval name"]}'
         return current_info
 
     def init_self_pc(self):
@@ -1254,7 +1270,8 @@ class piano_engine:
             self.currentchord.notes.sort(key=lambda x: x.degree)
             if self.currentchord != self.lastshow:
                 self.lastshow = self.currentchord
-                current_piano_window.label.text = str(self.currentchord.notes)
+                current_piano_window.label.text = self._show_notes(
+                    self.currentchord.notes)
                 if piano_config.show_chord and any(
                         type(t) == mp.note for t in self.currentchord):
                     chordtype = self._detect_chord(self.currentchord)
@@ -1269,6 +1286,12 @@ class piano_engine:
             current_piano_window.label2.text = ''
         if piano_config.show_key:
             current_piano_window.label.text = str(self.truecurrent)
+
+    def _show_notes(self, currentchord):
+        if piano_config.show_chord_accidentals == 'flat':
+            return str([~i if '#' in i.name else i for i in currentchord])
+        else:
+            return str(currentchord)
 
     def mode_self_midi(self, dt):
         self._midi_keyboard_read_stillplay_notes()
@@ -1299,7 +1322,7 @@ class piano_engine:
                             ] + self.current_play)
                             self.currentchord.notes.sort(
                                 key=lambda x: x.degree)
-                            current_piano_window.label.text = str(
+                            current_piano_window.label.text = self._show_notes(
                                 self.currentchord.notes)
                             if piano_config.show_chord and any(
                                     type(t) == mp.note
@@ -1321,7 +1344,7 @@ class piano_engine:
                     if self.stillplay:
                         self.currentchord = mp.chord(self.stillplay)
                         self.currentchord.notes.sort(key=lambda x: x.degree)
-                        current_piano_window.label.text = str(
+                        current_piano_window.label.text = self._show_notes(
                             self.currentchord.notes)
                         if piano_config.show_chord and any(
                                 type(t) == mp.note for t in self.currentchord):
@@ -1345,7 +1368,8 @@ class piano_engine:
                 ) if piano_config.delay_only_read_current else mp.chord(
                     self.stillplay)
                 self.currentchord.notes.sort(key=lambda x: x.degree)
-                current_piano_window.label.text = str(self.currentchord.notes)
+                current_piano_window.label.text = self._show_notes(
+                    self.currentchord.notes)
                 if piano_config.show_chord and any(
                         type(t) == mp.note for t in self.currentchord):
                     chordtype = self._detect_chord(self.currentchord)
@@ -1618,7 +1642,8 @@ class piano_engine:
                                     each.degree - 21]
             self.lastshow = self.playnotes
             if piano_config.show_notes:
-                current_piano_window.label.text = str(self.playnotes)
+                current_piano_window.label.text = self._show_notes(
+                    self.playnotes)
             if piano_config.show_chord and any(
                     type(t) == mp.note for t in self.playnotes):
                 chordtype = self._detect_chord(self.playnotes)

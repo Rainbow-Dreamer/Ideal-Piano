@@ -295,3 +295,5 @@ soft_pedal_volume = 0.2
 render_as_audio = False
 
 language = 'English'
+
+show_chord_accidentals = 'flat'
