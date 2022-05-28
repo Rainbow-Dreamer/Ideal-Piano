@@ -300,10 +300,10 @@ soft_pedal_volume = 0.2
 
 render_as_audio = False
 
-language = 'Chinese'
+language = 'English'
 
 show_chord_accidentals = 'sharp'
-show_chord_details = True
+show_chord_details = False
 chord_details_label_place = (750, 500)
 chord_details_label_anchor_x = 'left'
 chord_details_label_anchor_y = 'baseline'
