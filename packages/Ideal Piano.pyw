@@ -265,7 +265,7 @@ class piano_window(pyglet.window.Window):
                                        anchor_x=piano_config.label_anchor_x,
                                        anchor_y=piano_config.label_anchor_y,
                                        multiline=True,
-                                       width=1000)
+                                       width=piano_config.label_width)
         self.label2 = pyglet.text.Label('',
                                         font_name=piano_config.fonts,
                                         font_size=piano_config.fonts_size,
@@ -288,15 +288,28 @@ class piano_window(pyglet.window.Window):
         self.label_midi_device = pyglet.text.Label(
             '',
             font_name=piano_config.fonts,
-            font_size=15,
+            font_size=piano_config.label_device_font_size,
             bold=piano_config.bold,
-            x=250,
-            y=400,
+            x=piano_config.label_device_place[0],
+            y=piano_config.label_device_place[1],
             color=piano_config.message_color,
             anchor_x=piano_config.label_anchor_x,
             anchor_y=piano_config.label_anchor_y,
             multiline=True,
-            width=1000)
+            width=piano_config.label_device_width)
+
+        self.chord_details_label = pyglet.text.Label(
+            '',
+            font_name=piano_config.fonts,
+            font_size=piano_config.chord_details_font_size,
+            bold=piano_config.bold,
+            x=piano_config.chord_details_label_place[0],
+            y=piano_config.chord_details_label_place[1],
+            color=piano_config.message_color,
+            anchor_x=piano_config.chord_details_label_anchor_x,
+            anchor_y=piano_config.chord_details_label_anchor_y,
+            multiline=True,
+            width=piano_config.chord_details_label_width)
 
     def init_music_analysis(self):
         if piano_config.show_music_analysis:
@@ -627,6 +640,8 @@ class piano_window(pyglet.window.Window):
             self.mode_num = None
         self.label.draw()
         self.label2.draw()
+        if piano_config.show_chord_details:
+            self.chord_details_label.draw()
         if self.message_label:
             self.label3.draw()
         if piano_config.show_music_analysis:
@@ -642,6 +657,8 @@ class piano_window(pyglet.window.Window):
         self.go_back_button.draw()
         self.label_midi_device.draw()
         self.label2.draw()
+        if piano_config.show_chord_details:
+            self.chord_details_label.draw()
         if self.message_label:
             self.label3.draw()
         if piano_config.show_music_analysis:
@@ -841,6 +858,11 @@ class piano_engine:
                 if '#' in current_root:
                     new_current_root = (~mp.N(current_root)).name
                     current_info = f'{new_current_root} with {current_chord_info["interval name"]}'
+        if piano_config.show_chord_details:
+            if 'other' in current_chord_info:
+                current_chord_info.update(current_chord_info.pop('other'))
+            current_piano_window.chord_details_label.text = '\n'.join(
+                [f'{i}: {j}' for i, j in current_chord_info.items()])
         return current_info
 
     def init_self_pc(self):

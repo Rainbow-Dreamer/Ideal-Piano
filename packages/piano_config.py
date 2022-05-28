@@ -13,6 +13,7 @@ label2_place = (300, 350)
 label3_place = (300, 450)
 label_anchor_x = 'left'
 label_anchor_y = 'center'
+label_width = 1000
 fonts = 'Consolas'
 bold = True
 go_back_image = 'resources/go_back.png'
@@ -97,6 +98,9 @@ key_settings = {
 
 midi_device_id = 1
 device_info_num = 10
+label_device_place = (250, 400)
+label_device_font_size = 15
+label_device_width = 1000
 
 # operation key settings for pause, unpause, repeat and so on
 pause_key = 'space'
@@ -297,3 +301,9 @@ render_as_audio = False
 language = 'English'
 
 show_chord_accidentals = 'sharp'
+show_chord_details = False
+chord_details_label_place = (750, 500)
+chord_details_label_anchor_x = 'left'
+chord_details_label_anchor_y = 'baseline'
+chord_details_font_size = 15
+chord_details_label_width = 500
