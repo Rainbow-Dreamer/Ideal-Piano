@@ -88,6 +88,9 @@ class ideal_piano_button:
     def draw(self):
         self.button.draw()
 
+    def mouse_press(self, window, button, mouse):
+        return self.inside(window.mouse_pos) & button & mouse
+
 
 class piano_window(pyglet.window.Window):
 
@@ -458,56 +461,17 @@ class piano_window(pyglet.window.Window):
         self.mouse_pos = x, y
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if self.go_back_button.inside(
-                self.mouse_pos
-        ) & button & self.mouse_left and not self.first_time:
-            pygame.mixer.stop()
-            pygame.mixer.music.stop()
-            if self.mode_num in [0, 1, 2]:
-                pyglet.clock.unschedule(self.func)
-                if current_piano_engine.plays:
-                    current_piano_engine.plays.clear()
-                if self.mode_num == 0:
-                    if current_piano_engine.still_hold_pc:
-                        current_piano_engine.still_hold_pc.clear()
-                elif self.mode_num == 1:
-                    piano_config.delay_only_read_current = True
-                elif self.mode_num == 2:
-                    pyglet.clock.unschedule(
-                        current_piano_engine.midi_file_play)
-                    if piano_config.show_music_analysis:
-                        self.music_analysis_label.text = ''
-                    if piano_config.play_as_midi:
-                        if piano_config.use_soundfont and not piano_config.render_as_audio:
-                            if self.current_sf2_player.playing:
-                                self.current_sf2_player.stop()
-                        elif not piano_config.use_soundfont and sys.platform == 'linux':
-                            try:
-                                os.remove(
-                                    current_piano_engine.current_convert_name)
-                            except:
-                                pass
-                    if current_piano_engine.playls:
-                        current_piano_engine.playls.clear()
-            self.is_click = True
-            self.click_mode = None
-            if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-                current_piano_engine.still_hold.clear()
-                if piano_config.note_mode == 'bars drop':
-                    current_piano_engine.bars_drop_time.clear()
-            if piano_config.draw_piano_keys:
-                for k in range(len(self.piano_keys)):
-                    self.piano_keys[k].color = self.initial_colors[k]
-            self.label3.text = ''
-
-        if self.self_play_button.inside(
-                self.mouse_pos) & button & self.mouse_left and self.first_time:
+        if self.go_back_button.mouse_press(
+                self, button, mouse=self.mouse_left) and not self.first_time:
+            self._go_back_func()
+        if self.self_play_button.mouse_press(
+                self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 0
-        if self.self_midi_button.inside(
-                self.mouse_pos) & button & self.mouse_left and self.first_time:
+        if self.self_midi_button.mouse_press(
+                self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 1
-        if self.play_midi_button.inside(
-                self.mouse_pos) & button & self.mouse_left and self.first_time:
+        if self.play_midi_button.mouse_press(
+                self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 2
 
     def on_draw(self):
@@ -523,6 +487,45 @@ class piano_window(pyglet.window.Window):
             self._draw_window_first_time()
         else:
             self._draw_window()
+
+    def _go_back_func(self):
+        pygame.mixer.stop()
+        pygame.mixer.music.stop()
+        if self.mode_num in [0, 1, 2]:
+            pyglet.clock.unschedule(self.func)
+            if current_piano_engine.plays:
+                current_piano_engine.plays.clear()
+            if self.mode_num == 0:
+                if current_piano_engine.still_hold_pc:
+                    current_piano_engine.still_hold_pc.clear()
+            elif self.mode_num == 1:
+                piano_config.delay_only_read_current = True
+            elif self.mode_num == 2:
+                pyglet.clock.unschedule(current_piano_engine.midi_file_play)
+                if piano_config.show_music_analysis:
+                    self.music_analysis_label.text = ''
+                if piano_config.play_as_midi:
+                    if piano_config.use_soundfont and not piano_config.render_as_audio:
+                        if self.current_sf2_player.playing:
+                            self.current_sf2_player.stop()
+                    elif not piano_config.use_soundfont and sys.platform == 'linux':
+                        try:
+                            os.remove(
+                                current_piano_engine.current_convert_name)
+                        except:
+                            pass
+                if current_piano_engine.playls:
+                    current_piano_engine.playls.clear()
+        self.is_click = True
+        self.click_mode = None
+        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+            current_piano_engine.still_hold.clear()
+            if piano_config.note_mode == 'bars drop':
+                current_piano_engine.bars_drop_time.clear()
+        if piano_config.draw_piano_keys:
+            for k in range(len(self.piano_keys)):
+                self.piano_keys[k].color = self.initial_colors[k]
+        self.label3.text = ''
 
     def _draw_window_first_time(self):
         self.self_play_button.draw()
@@ -803,13 +806,26 @@ class piano_engine:
             21].color = current_piano_window.initial_colors[each.degree - 21]
 
     def _detect_chord(self, current_chord):
-        return mp.alg.detect(
-            current_chord, piano_config.inv_num,
-            piano_config.change_from_first, piano_config.original_first,
-            piano_config.same_note_special, piano_config.whole_detect,
-            piano_config.return_fromchord, piano_config.poly_chord_first,
-            piano_config.root_position_return_first,
-            piano_config.alter_notes_show_degree)
+        if not isinstance(current_chord, mp.chord):
+            current_chord = mp.chord(current_chord)
+        current_chord_info = current_chord.info(
+            get_dict=True,
+            inv_num=piano_config.inv_num,
+            change_from_first=piano_config.change_from_first,
+            original_first=piano_config.original_first,
+            same_note_special=piano_config.same_note_special,
+            whole_detect=piano_config.whole_detect,
+            return_fromchord=piano_config.return_fromchord,
+            poly_chord_first=piano_config.poly_chord_first,
+            root_position_return_first=piano_config.root_position_return_first,
+            alter_notes_show_degree=piano_config.alter_notes_show_degree)
+        if current_chord_info['type'] == 'chord':
+            current_info = current_chord_info['chord name']
+        elif current_chord_info['type'] == 'note':
+            current_info = current_chord_info['whole name']
+        elif current_chord_info['type'] == 'interval':
+            current_info = current_chord_info['whole name']
+        return current_info
 
     def init_self_pc(self):
         if not piano_config.play_use_soundfont:
