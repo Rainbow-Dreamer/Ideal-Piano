@@ -34,5 +34,16 @@ ideal_piano_language_dict = {
     'Rendering current MIDI file with audio samples, please wait ...',
     'close': 'press ctrl to close me ~\n',
     'default': 'default',
-    'soundfont': 'Rendering current MIDI file with SoundFont, please wait ...'
+    'soundfont': 'Rendering current MIDI file with SoundFont, please wait ...',
+    'type': 'type',
+    'chord name': 'chord name',
+    'root': 'root',
+    'note name': 'note name',
+    'interval name': 'interval name',
+    'whole name': 'whole name',
+    'other': 'other',
+    'chord': 'chord',
+    'note': 'note',
+    'interval': 'interval',
+    'with': 'with'
 }

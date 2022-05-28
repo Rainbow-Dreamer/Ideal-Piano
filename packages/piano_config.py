@@ -24,6 +24,8 @@ self_midi_image = 'resources/midi_keyboard.png'
 self_midi_place = 50, 410
 play_midi_image = 'resources/play_midi.png'
 play_midi_place = 50, 340
+settings_image = 'resources/settings.png'
+settings_place = 50, 270
 button_resize_num = 2.3
 fps = 60
 
@@ -298,10 +300,10 @@ soft_pedal_volume = 0.2
 
 render_as_audio = False
 
-language = 'English'
+language = 'Chinese'
 
 show_chord_accidentals = 'sharp'
-show_chord_details = False
+show_chord_details = True
 chord_details_label_place = (750, 500)
 chord_details_label_anchor_x = 'left'
 chord_details_label_anchor_y = 'baseline'

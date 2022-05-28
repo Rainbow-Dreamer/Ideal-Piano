@@ -10,6 +10,7 @@ if piano_config.language == 'English':
 elif piano_config.language == 'Chinese':
     from languages.cn import language_patch
     mp.alg.detect = language_patch.detect
+    mp.chord.info = language_patch.info
 
 if (piano_config.play_as_midi
         and piano_config.use_soundfont) or piano_config.play_use_soundfont:
@@ -245,6 +246,7 @@ class piano_window(pyglet.window.Window):
             piano_config.self_play_image = 'packages/languages/cn/play.png'
             piano_config.self_midi_image = 'packages/languages/cn/midi_keyboard.png'
             piano_config.play_midi_image = 'packages/languages/cn/play_midi.png'
+            piano_config.settings_image = 'packages/languages/cn/settings.png'
         self.go_back_button = ideal_piano_button(piano_config.go_back_image,
                                                  *piano_config.go_back_place)
         self.self_play_button = ideal_piano_button(
@@ -253,6 +255,8 @@ class piano_window(pyglet.window.Window):
             piano_config.self_midi_image, *piano_config.self_midi_place)
         self.play_midi_button = ideal_piano_button(
             piano_config.play_midi_image, *piano_config.play_midi_place)
+        self.settings_button = ideal_piano_button(piano_config.settings_image,
+                                                  *piano_config.settings_place)
 
     def init_screen_labels(self):
         self.label = pyglet.text.Label('',
@@ -443,6 +447,7 @@ class piano_window(pyglet.window.Window):
         elif piano_config.language == 'Chinese':
             from languages.cn import language_patch
             mp.alg.detect = language_patch.detect
+            mp.chord.info = language_patch.info
         current_piano_engine.current_midi_device = language_patch.ideal_piano_language_dict[
             'current_midi_device']
 
@@ -486,6 +491,9 @@ class piano_window(pyglet.window.Window):
         if self.play_midi_button.mouse_press(
                 self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 2
+        if self.settings_button.mouse_press(
+                self, button, mouse=self.mouse_left) and self.first_time:
+            self.open_settings()
 
     def on_draw(self):
         self.clear()
@@ -544,6 +552,7 @@ class piano_window(pyglet.window.Window):
         self.self_play_button.draw()
         self.self_midi_button.draw()
         self.play_midi_button.draw()
+        self.settings_button.draw()
         if self.mode_num is None:
             self._main_window_read_click_mode()
         else:
@@ -836,31 +845,34 @@ class piano_engine:
             poly_chord_first=piano_config.poly_chord_first,
             root_position_return_first=piano_config.root_position_return_first,
             alter_notes_show_degree=piano_config.alter_notes_show_degree)
-        if current_chord_info['type'] == 'chord':
-            current_info = current_chord_info['chord name']
+        current_dict = language_patch.ideal_piano_language_dict
+        if current_chord_info[current_dict['type']] == current_dict['chord']:
+            current_info = current_chord_info[current_dict['chord name']]
             if piano_config.show_chord_accidentals == 'flat':
-                current_chord_root = current_chord_info['root']
+                current_chord_root = current_chord_info[current_dict['root']]
                 if '#' in current_chord_root:
                     new_current_chord_root = (~mp.N(current_chord_root)).name
                     current_info = current_info.replace(
                         current_chord_root, new_current_chord_root)
-        elif current_chord_info['type'] == 'note':
-            current_info = current_chord_info['whole name']
+        elif current_chord_info[current_dict['type']] == current_dict['note']:
+            current_info = current_chord_info[current_dict['whole name']]
             if piano_config.show_chord_accidentals == 'flat':
-                current_note = current_chord_info["note name"]
+                current_note = current_chord_info[current_dict["note name"]]
                 if '#' in current_note:
                     new_current_note = ~mp.N(current_note)
-                    current_info = f'note {new_current_note}'
-        elif current_chord_info['type'] == 'interval':
-            current_info = current_chord_info['whole name']
+                    current_info = f'{current_dict["note"]} {new_current_note}'
+        elif current_chord_info[
+                current_dict['type']] == current_dict['interval']:
+            current_info = current_chord_info[current_dict['whole name']]
             if piano_config.show_chord_accidentals == 'flat':
-                current_root = current_chord_info["root"]
+                current_root = current_chord_info[current_dict['root']]
                 if '#' in current_root:
                     new_current_root = (~mp.N(current_root)).name
-                    current_info = f'{new_current_root} with {current_chord_info["interval name"]}'
+                    current_info = f'{new_current_root} {current_dict["with"]} {current_chord_info[current_dict["interval name"]]}'
         if piano_config.show_chord_details:
-            if 'other' in current_chord_info:
-                current_chord_info.update(current_chord_info.pop('other'))
+            if current_dict['other'] in current_chord_info:
+                current_chord_info.update(
+                    current_chord_info.pop(current_dict['other']))
             current_piano_window.chord_details_label.text = '\n'.join(
                 [f'{i}: {j}' for i, j in current_chord_info.items()])
         return current_info
