@@ -296,4 +296,4 @@ render_as_audio = False
 
 language = 'English'
 
-show_chord_accidentals = 'flat'
+show_chord_accidentals = 'sharp'
