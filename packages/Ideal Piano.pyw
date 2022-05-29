@@ -688,9 +688,32 @@ class piano_window(pyglet.window.Window):
         self.keyboard_handler[self.config_key] = False
         self.keyboard_handler[key.S] = False
         os.chdir(abs_path)
-        current_config_window = config_window()
-        current_config_window.mainloop()
-        self.reload_settings()
+        if sys.platform == 'darwin':
+            import subprocess
+            subprocess.call(['open "../../../tools/change_settings.app"'],
+                            shell=True)
+            pyglet.clock.schedule_interval(self.check_change_settings, 0.1)
+        else:
+            current_config_window = config_window()
+            current_config_window.mainloop()
+            self.reload_settings()
+
+    def is_runnning(self):
+        import subprocess
+        process = subprocess.Popen('pgrep change_settings',
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        my_pid, err = process.communicate()
+        if my_pid:
+            return True
+        else:
+            return False
+
+    def check_change_settings(self, dt):
+        if not self.is_runnning():
+            self.reload_settings()
+            pyglet.clock.unschedule(self.check_change_settings)
 
     def reload_settings(self):
         importlib.reload(piano_config)
