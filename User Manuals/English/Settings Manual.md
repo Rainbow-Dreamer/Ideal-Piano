@@ -2,6 +2,8 @@
 
 Here we give you an explanation of what each parameter in the configuration file config.py corresponds to, so that you can be clearer when you modify it.
 
+
+
 ## Contents
 
 - [Screen related parameters](#screen related parameters)
@@ -14,6 +16,8 @@ Here we give you an explanation of what each parameter in the configuration file
 - [SoundFont file related parameters](#soundFont file related parameters)
 - [Show composition analysis](#show composition analysis)
   - [Related parameters](#related parameters)
+
+
 
 ## Screen related parameters
 
@@ -41,37 +45,55 @@ label_anchor_x: horizontal alignment of the text
 
 label_anchor_y: vertical alignment of the text
 
+label_width: max with of the label
+
 fonts: font name
 
 bold: whether to bold the text
 
-go_back_image: Returns the button's image file path
+go_back_image: the image file path of go back button
 
-go_back_place: Returns the image location of the button
+go_back_place: the position of go back button
 
-self_play_image: the image file path of the computer keyboard's play button
+self_play_image: the image file path of play button
 
-self_play_place: The location of the computer keyboard play button image
+self_play_place: the position of play button
 
-self_midi_image: the image file path of the midi keyboard play button
+self_midi_image: the image file path of MIDI keyboard button
 
-self_midi_place: The location of the midi keyboard play button image
+self_midi_place: the position of MIDI keyboard button
 
-play_midi_image: the image file path of the play MIDI file button
+play_midi_image: the image file path of play MIDI button
 
-play_midi_place: the image location of the play MIDI file button
+play_midi_place: the position of play MIDI button
+
+settings_image: the image file path of settings button
+
+settings_place: the position of settings button
 
 key_settings: The dictionary of the 88 keys of the computer keyboard, please note that all the files in the sound path must contain the keys you have set to
 
 midi_device_id: This parameter is the id of the midi device after it is connected to the midi device (e.g. midi keyboard)
 
+device_info_num: when you press shift to see current devices info, the number of devices info shows on the screen
+
+label_device_place: text position of the devices info
+
+label_device_font_size: font size of the devices info
+
+label_device_width: max width of the devices info
+
 language: the display language of the software, including main window buttons, chord names, messages and the window to choose MIDI files, currently only 'English' and 'Chinese' are supported
+
+
 
 ## pygame mixer initialization parameters
 
 frequency, size, channel, buffer, max_num_channels
 
 (please refer to pygame's mixer module documentation online)
+
+
 
 ## Keyboard playing and MIDI files playing parameters
 
@@ -137,6 +159,8 @@ pitch_range: A tuple of two pitch strings, which filters out the notes between t
 
 soft_pedal_volume: The ratio of the reduction of the volume of the notes when the weak pedal is pressed in MIDI keyboard playing mode, a decimal number between 0 and 1
 
+
+
 ## Chord analysis parameters
 
 These are the parameters of the chord logic algorithm, the default settings are the most widely used, so if I want to explain what they mean, I may need to understand my algorithm first, so I will explain this part later when I introduce it
@@ -159,9 +183,13 @@ root_position_return_first = True
 
 alter_notes_show_degree = True
 
+
+
 ## Parameters of the algorithm for separating the main melody of a piece
 
 melody_tol, chord_tol, get_off_overlap_notes, average_degree_length, melody_degree_tol
+
+
 
 ## Note display related parameters
 
@@ -207,6 +235,22 @@ bar_border: the width of the bar's border
 
 bar_border_color: the border color of the note bar, it is the RGB tuple, `(R, G, B)`.
 
+show_chord_accidentals: show notes and chord types in sharp or flat accidentals, the values could be `'sharp'` or `'flat'`, the default value is `'sharp'`
+
+show_chord_details: whether to show chord details of current chord you are playing
+
+chord_details_label_place: text position of chord details
+
+chord_details_label_anchor_x: horizontal alignment of chord details
+
+chord_details_label_anchor_y = vertical alignment of chord details
+
+chord_details_font_size: font size of chord details
+
+chord_details_label_width: max width of chord details
+
+
+
 ## Piano keyboard related parameters
 
 draw_piano_keys: set to True to enter the draw piano mode, (according to the parameters and the structure of the piano 88 keys to draw the piano keyboard, replacing the previous piano picture) In the draw piano mode, the corresponding keys will light up when the midi keyboard is played or the computer keyboard is played, including when the MIDI file is played in drop note mode, the notes will also light up when they land on the keys. The piano is drawn using black and white keys that directly follow the structure of the piano's 88 keys, according to settable parameters, and each key can change color. Underneath the drawing of the 88 keys there is a black background image, which is mainly used to show the gaps between the piano keys (for filling). You can turn off note mode (note_mode can be set to a value other than bars, bars drop) and just turn on draw piano mode, the corresponding piano key will be lit up when playing and the current note will be lit up when playing the MIDI file. It is also possible to use any of the note modes and turn on draw piano mode.
@@ -249,6 +293,8 @@ piano_key_border: the width of the piano's keyboard border
 
 piano_key_border_color: piano_key_border_color, RGB tuple, `(R, G, B)`
 
+
+
 ## SoundFont file related parameters
 
 use_soundfont: Whether to use SoundFont files to play MIDI files, when this is set to True, rendering the MIDI file to be played to audio with the loaded SoundFont file to play when playing the MIDI file
@@ -270,6 +316,8 @@ sf2_volume: the volume of the note generated by the SoundFont file, in units of 
 sf2_path: path to the SoundFont file
 
 render_as_audio: this parameter is useful for Linux version, since fluidsynth installed by apt or other package manager on some Linux system is not recent version, and the pause and unpause functionality when using fluidsynth as MIDI player may not work properly in this case, when this parameter is set to True, use the rendered audio as playback, if it is set to False, use fluidsynth as the MIDI player
+
+
 
 ## Show composition analysis
 
@@ -360,6 +408,8 @@ IVM9 iii7 bIIIM7 V11 (F# major)
 You can use the editor of [music_analysis_batch_language](https://github.com/Rainbow-Dreamer/music_analysis_batch_language) to generate music theory analysis statements according to the batch syntax of README .
 
 Using this batch syntax I designed, you can input a large number of music analysis statements very concisely and quickly, and the syntax of the music analysis statements itself is very comfortable for non-programmers to read directly. So you can also use this special batch statement as a small programming language to write chord function analysis, I think it's still very good :D
+
+
 
 ### Related parameters
 

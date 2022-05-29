@@ -8,6 +8,8 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 这个钢琴软件现在有Windows, Linux 和 macOS版本。
 
+
+
 ## 使用
 
 这个智能钢琴软件总共有三个模式，电脑键盘自由演奏，MIDI键盘自由演奏和播放MIDI文件分析和弦并且实时演示。在播放MIDI文件演示的模式中，可以选择通过算法去除主旋律，只听低音部分的和弦的音符。这三个模式在打开Ideal Piano之后选择左上角对应的按钮就可以进入。
@@ -30,7 +32,13 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 如果你想要声音来自DAW的音源的话，使用loopMIDI就可以做到了，在DAW里播放工程，同时Ideal Piano可以同步接收到MIDI信号，实时分析当前的音符组成的和弦，显示音符与和弦类型在屏幕上。具体的操作流程请到`User Manuals/中文/使用须知 (请先看我!).pdf`这个文件里看。
 
+这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`piano_config.py`里去修改，保存之后再打开软件就可以看到变化了，也可以点击主屏幕上的设置按钮打开设置。
+
 本软件也支持直接加载SoundFont文件作为音源来用键盘演奏和播放MIDI文件，请参考`User Manuals`文件夹中的更新日志以了解如何使用。
+
+你可以设置 `show_chord_details` 为 `True` 来显示你当前正在演奏的和弦的详细信息，这对于学习和理解和弦结构有帮助。
+
+
 
 ## 下载
 
@@ -53,6 +61,8 @@ sudo apt-get install fluidsynth
 ``````
 brew install fluidsynth
 ``````
+
+
 
 ## 预览
 
@@ -78,11 +88,14 @@ brew install fluidsynth
 
 <p align="center">你可以轻松地改变背景图片</p>
 
+
+
 ## 其他说明
 
 1. 好像有些人github下载失败，所以我坚果云也传了一份，直接可以从[这里](https://www.jianguoyun.com/p/DY_8cucQhPG0CBifkqYE)下载
 2. 由于我这个软件是全英文的，考虑到很多小伙伴可能看中文的和弦类型名称比较亲切一些，因此我做了一个中文补丁包，请将设置文件里的`language`改为`'Chinese'`，保存后重启软件即可使用。
-3. 这个软件的各种参数设置都可以使用`tools/change_settings.exe`修改或者直接到`piano_config.py`里去修改，保存之后再打开软件就可以看到变化了。
+
+
 
 ## 总结
 

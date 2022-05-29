@@ -10,6 +10,8 @@ The best feature of Ideal Piano is the algorithm that uses music logic to determ
 
 This piano software currently has Windows, Linux and macOS version.
 
+
+
 ## Usage
 
 There are three modes in total: computer keyboard free play, MIDI keyboard free play and play MIDI file to analyze chords and demonstrate them in real time. In the demo mode of playing the MIDI file, you can choose to remove the main melody by the algorithm and listen only to the notes of the chords in the bass part. These three modes can be accessed by selecting the corresponding buttons in the upper left corner after opening Ideal Piano.
@@ -32,7 +34,13 @@ In this mode, the selected MIDI file will be played in Ideal Piano, with the sou
 
 If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/English/User Instructions (Read me first!).pdf`.
 
+The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `piano_config.py`, save and then open the software to see the changes, you can also click the `Settings` button on the main screen to open the settings.
+
 This software also supports directly loading SoundFont files as sound source to play by keyboard and play MIDI files, please refer to changelog in `User Manuals` folder to see how to use it.
+
+You can set `show_chord_details` to `True` to show chord details of current chord you are playing, which is helpful for learning and understanding chord structures.
+
+
 
 ## Download
 
@@ -55,6 +63,8 @@ Note2: for macOS version, due to an existing bug of pygame's mixer that it canno
 ``````
 brew install fluidsynth
 ``````
+
+
 
 ## Previews
 
@@ -80,11 +90,14 @@ Here is a preview of Ideal Piano's screen.
 
 <p align="center">You can easily change the background image</p>
 
+
+
 ## Other notes
 
 1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from [here](https://www.jianguoyun.com/p/DY_8cucQhPG0CBifkqYE)
 2. Since my software is in English, considering somebody might be more familiar with chord type names in Chinese, I made a Chinese patch package, please change `language` to `'Chinese'` in the settings file, save and restart the software to use it.
-3. The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `piano_config.py`, save and then open the software to see the changes.
+
+
 
 ## Summary
 

@@ -1,5 +1,13 @@
 # Changelog
 
+2022-05-28
+
+* Added functionality to show notes and chord types in sharp or flat accidentals, you can choose the accidentals by setting the parameter `show_chord_accidentals` to `'sharp'` or `'flat'` in the settings. The default value is `'sharp'`.
+* Added `Settings` button to the main screen, you can click it to open the settings.
+* Added functionality to show chord details on the main screen, you can open it by setting the parameter `show_chord_details` to `True` in the settings.
+
+
+
 2022-05-01
 
 * Added drag and drop files functionality, now you can drag and drop local image files onto the main window to change the background image, and drag and drop MIDI files onto the main window to load the MIDI files to play. (drag and drop functionality is currently not supported for macOS)
