@@ -1,43 +1,57 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
 import musicpy as mp
 import os
 import sys
 import piano_config
 import importlib
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-class browse_window(tk.Tk):
+class Dialog(QtWidgets.QMainWindow):
+
+    def __init__(self, caption, filter):
+        super().__init__()
+        self.filename = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            caption=caption,
+            filter=filter,
+            options=QtWidgets.QFileDialog.DontUseNativeDialog)
+
+
+class browse_window(QtWidgets.QMainWindow):
 
     def __init__(self, parent, browse_dict, file_name=None):
-        super(browse_window, self).__init__()
+        super().__init__()
         self.parent = parent
         self.browse_dict = browse_dict
-        self.title(self.browse_dict['choose'])
-        self.minsize(200, 300)
+        self.setWindowTitle(self.browse_dict['choose'])
+        self.setMinimumSize(600, 400)
 
         if sys.platform == 'win32':
-            self.wm_iconbitmap('resources/piano.ico')
+            self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
         elif sys.platform == 'linux':
-            self.tk.call('wm', 'iconphoto', self._w,
-                         tk.PhotoImage(file='resources/piano_icon.png'))
-
-        self.labelFrame = ttk.LabelFrame(self,
-                                         text=self.browse_dict['MIDI files'],
-                                         borderwidth=70)
-        self.button_a = ttk.Button(self.labelFrame,
-                                   text=self.browse_dict['go back'],
-                                   command=self.go_back)
-        self.button = ttk.Button(self.labelFrame,
-                                 text=self.browse_dict['choose MIDI file'],
-                                 command=self.fileDialog)
-        self.labelFrame.grid(padx=200, pady=100, row=0)
-        self.button_a.grid(row=1, column=0)
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
+        elif sys.platform == 'darwin':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
+        self.browse_layout = QtWidgets.QHBoxLayout()
+        self.labelFrame = QtWidgets.QGroupBox(self)
+        self.labelFrame.setTitle(self.browse_dict['MIDI files'])
+        self.labelFrame.resize(400, 250)
+        self.labelFrame.move(100, 70)
+        self.labelFrame.setFont(QtGui.QFont('', 15))
+        self.browse_layout.addWidget(self.labelFrame)
+        self.setLayout(self.browse_layout)
+        self.button_a = QtWidgets.QPushButton(self.browse_dict['go back'],
+                                              self.labelFrame)
+        self.button_a.clicked.connect(self.go_back)
+        self.button_a.move(150, 80)
+        self.button = QtWidgets.QPushButton(
+            self.browse_dict['choose MIDI file'], self.labelFrame)
+        self.button.clicked.connect(self.fileDialog)
+        self.button.move(120, 140)
         if file_name:
             self.fileDialog(file_name=file_name)
             return
-        self.button.grid(row=2, column=0)
+        self.show()
 
     def make_button(self):
         self.button = ttk.Button(self.labelFrame,
@@ -64,7 +78,7 @@ class browse_window(tk.Tk):
 
     def go_back(self):
         self.parent.action = 1
-        self.destroy()
+        self.close()
 
     def quit_normal(self):
         if self.out_of_index.place_info():
@@ -200,20 +214,22 @@ class browse_window(tk.Tk):
         if file_name:
             self.filename = file_name
         else:
-            self.filename = filedialog.askopenfilename(
-                title=self.browse_dict['choose MIDI file'],
-                filetypes=(("MIDI files", ".mid"), ("all files", "*")))
+            self.filename = Dialog(
+                caption=self.browse_dict['choose MIDI file'],
+                filter='MIDI files (*.mid);; all files (*)').filename[0]
         if '.mid' in self.filename or '.MID' in self.filename:
             self.parent.file_path = self.filename
-            self.button.destroy()
-            self.button = ttk.Button(self.labelFrame,
-                                     text="OK",
-                                     command=self.quit_normal)
-            self.button.grid(row=2, column=0)
-            self.button2 = ttk.Button(self.labelFrame,
-                                      text=self.browse_dict['cancel'],
-                                      command=self.redo)
-            self.button2.grid(row=3, column=0)
+            self.button.deleteLater()
+            self.button = QtWidgets.QPushButton("OK", self.labelFrame)
+            self.button.clicked.connect(self.quit_normal)
+            self.button.move(150, 130)
+            self.button2 = QtWidgets.QPushButton(self.browse_dict['cancel'],
+                                                 self.labelFrame)
+            self.button2.clicked.connect(self.redo)
+            self.button2.move(150, 180)
+            self.button.show()
+            self.button2.show()
+            '''
             self.choose_track_ind_text = ttk.Label(
                 self.labelFrame, text=self.browse_dict['trackind'])
             self.choose_track_ind_text.grid(row=4, column=0)
@@ -251,6 +267,7 @@ class browse_window(tk.Tk):
                 self,
                 text=f'{self.browse_dict["file name"]}: {current_filename}')
             self.filename_label.place(x=60, y=50, width=2000, height=30)
+            '''
 
 
 class setup:
@@ -266,7 +283,8 @@ class setup:
         self.set_bpm = None
         self.off_melody = 0
         self.if_merge = True
+        app = QtWidgets.QApplication(sys.argv)
         self.current_browse_window = browse_window(self,
                                                    browse_dict,
                                                    file_name=file_name)
-        self.current_browse_window.mainloop()
+        app.exec()

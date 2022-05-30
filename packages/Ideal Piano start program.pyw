@@ -13,9 +13,7 @@ import time
 import pyglet
 import mido
 import midiutil
-import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
+from PyQt5 import QtGui, QtWidgets
 import py
 from pydub import AudioSegment
 import browse
