@@ -972,7 +972,6 @@ class piano_engine:
         set_bpm = current_setup.set_bpm
         self.off_melody = current_setup.off_melody
         self.if_merge = current_setup.if_merge
-        play_interval = current_setup.interval
         if self.action == 1:
             self.action = 0
             return 'back'
@@ -997,12 +996,6 @@ class piano_engine:
                 piano_config.average_degree_length,
                 piano_config.melody_degree_tol)
             self.sheetlen = len(self.musicsheet)
-        if play_interval is not None:
-            play_start, play_stop = int(
-                self.sheetlen * (play_interval[0] / 100)), int(
-                    self.sheetlen * (play_interval[1] / 100))
-            self.musicsheet = self.musicsheet[play_start:play_stop]
-            self.sheetlen = play_stop + 1 - play_start
         if self.sheetlen == 0:
             return 'back'
         pygame.mixer.set_num_channels(self.sheetlen)

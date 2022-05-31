@@ -3,18 +3,15 @@ import os
 import sys
 import piano_config
 import importlib
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt5 import QtGui, QtWidgets
 
 
 class Dialog(QtWidgets.QMainWindow):
 
-    def __init__(self, caption, filter):
+    def __init__(self, caption, directory, filter):
         super().__init__()
         self.filename = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            caption=caption,
-            filter=filter,
-            options=QtWidgets.QFileDialog.DontUseNativeDialog)
+            self, caption=caption, directory=directory, filter=filter)
 
 
 class browse_window(QtWidgets.QMainWindow):
@@ -24,7 +21,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.parent = parent
         self.browse_dict = browse_dict
         self.setWindowTitle(self.browse_dict['choose'])
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(600, 420)
 
         if sys.platform == 'win32':
             self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
@@ -35,45 +32,45 @@ class browse_window(QtWidgets.QMainWindow):
         self.browse_layout = QtWidgets.QHBoxLayout()
         self.labelFrame = QtWidgets.QGroupBox(self)
         self.labelFrame.setTitle(self.browse_dict['MIDI files'])
-        self.labelFrame.resize(400, 250)
+        self.labelFrame.resize(400, 320)
         self.labelFrame.move(100, 70)
-        self.labelFrame.setFont(QtGui.QFont('', 15))
+        self.labelFrame.setFont(QtGui.QFont('Consolas', 12))
         self.browse_layout.addWidget(self.labelFrame)
         self.setLayout(self.browse_layout)
-        self.button_a = QtWidgets.QPushButton(self.browse_dict['go back'],
-                                              self.labelFrame)
-        self.button_a.clicked.connect(self.go_back)
-        self.button_a.move(150, 80)
-        self.button = QtWidgets.QPushButton(
-            self.browse_dict['choose MIDI file'], self.labelFrame)
-        self.button.clicked.connect(self.fileDialog)
-        self.button.move(120, 140)
+        self.go_back_button = QtWidgets.QPushButton(
+            parent=self.labelFrame, text=self.browse_dict['go back'])
+        self.go_back_button.clicked.connect(self.go_back)
+        self.go_back_button.resize(80, 30)
+        self.go_back_button.move(155, 60)
+        self.choose_midi_file_button = QtWidgets.QPushButton(
+            parent=self.labelFrame, text=self.browse_dict['choose MIDI file'])
+        self.choose_midi_file_button.clicked.connect(self.fileDialog)
+        self.choose_midi_file_button.move(115, 100)
+        self.msg_label = QtWidgets.QLabel(parent=self.labelFrame)
+        self.msg_label.setFont(QtGui.QFont('Consolas', 10))
+        self.msg_label.resize(500, 50)
+        self.msg_label.move(30, 265)
+        self.show()
         if file_name:
             self.fileDialog(file_name=file_name)
-            return
-        self.show()
 
     def make_button(self):
-        self.button = ttk.Button(self.labelFrame,
-                                 text=self.browse_dict['choose MIDI file'],
-                                 command=self.fileDialog)
-        self.button.grid(row=2, column=0)
+        self.choose_midi_file_button = QtWidgets.QPushButton(
+            parent=self.labelFrame, text=self.browse_dict['choose MIDI file'])
+        self.choose_midi_file_button.clicked.connect(self.fileDialog)
+        self.choose_midi_file_button.move(115, 100)
+        self.choose_midi_file_button.show()
 
     def redo(self):
-        self.button.destroy()
-        self.button2.destroy()
-        self.no_notes.destroy()
-        self.choose_track_ind_text.destroy()
-        self.choose_track_ind.destroy()
-        self.from_text.destroy()
-        self.interval_from.destroy()
-        self.to_text.destroy()
-        self.interval_to.destroy()
-        self.out_of_index.destroy()
-        self.check_bpm_text.destroy()
-        self.check_bpm.destroy()
-        self.merge_all_tracks.destroy()
-        self.filename_label.destroy()
+        self.quit_normal_button.deleteLater()
+        self.cancel_button.deleteLater()
+        self.choose_track_ind_text.deleteLater()
+        self.choose_track_ind.deleteLater()
+        self.check_bpm_text.deleteLater()
+        self.check_bpm.deleteLater()
+        self.main_melody.deleteLater()
+        self.merge_all_tracks.deleteLater()
+        self.filename_label.deleteLater()
         self.make_button()
 
     def go_back(self):
@@ -81,20 +78,12 @@ class browse_window(QtWidgets.QMainWindow):
         self.close()
 
     def quit_normal(self):
-        if self.out_of_index.place_info():
-            self.out_of_index.place_forget()
-        if self.no_notes.place_info():
-            self.no_notes.place_forget()
-        self.parent.set_bpm = self.check_bpm.get()
-        self.parent.off_melody = self.if_melody.get()
-        self.parent.if_merge = self.if_merge_all_tracks.get()
+        self.msg_label.setText('')
+        self.parent.set_bpm = self.check_bpm.text()
+        self.parent.off_melody = self.main_melody.isChecked()
+        self.parent.if_merge = self.merge_all_tracks.isChecked()
         try:
-            self.parent.track_ind_get = int(self.choose_track_ind.get())
-        except:
-            pass
-        try:
-            self.parent.interval = (int(self.interval_from.get()),
-                                    int(self.interval_to.get()))
+            self.parent.track_ind_get = int(self.choose_track_ind.text())
         except:
             pass
         try:
@@ -196,78 +185,77 @@ class browse_window(QtWidgets.QMainWindow):
 
         if self.parent.read_result != 'error':
             self.parent.sheetlen = len(self.parent.read_result[1])
-            if all(not isinstance(i, mp.note)
-                   for i in self.parent.read_result[1].notes):
-                self.no_notes.place(x=-50, y=160, width=200, height=20)
-            else:
-                self.destroy()
+            self.close()
         else:
-            self.out_of_index.place(x=-50, y=160, width=200, height=20)
-
-    def make_error_labels(self):
-        self.no_notes = ttk.Label(self.labelFrame,
-                                  text=self.browse_dict['no notes'])
-        self.out_of_index = ttk.Label(self.labelFrame,
-                                      text=self.browse_dict['out of index'])
+            self.msg_label.setText(self.browse_dict['out of index'])
 
     def fileDialog(self, file_name=None):
+        last_path = ''
         if file_name:
             self.filename = file_name
         else:
+            if os.path.exists('last_path.txt'):
+                with open('last_path.txt', encoding='utf-8') as f:
+                    last_path = f.read()
             self.filename = Dialog(
                 caption=self.browse_dict['choose MIDI file'],
+                directory=last_path,
                 filter='MIDI files (*.mid);; all files (*)').filename[0]
         if '.mid' in self.filename or '.MID' in self.filename:
+            current_path = os.path.dirname(self.filename)
+            if current_path != last_path:
+                with open('last_path.txt', 'w', encoding='utf-8') as f:
+                    f.write(current_path)
             self.parent.file_path = self.filename
-            self.button.deleteLater()
-            self.button = QtWidgets.QPushButton("OK", self.labelFrame)
-            self.button.clicked.connect(self.quit_normal)
-            self.button.move(150, 130)
-            self.button2 = QtWidgets.QPushButton(self.browse_dict['cancel'],
-                                                 self.labelFrame)
-            self.button2.clicked.connect(self.redo)
-            self.button2.move(150, 180)
-            self.button.show()
-            self.button2.show()
-            '''
-            self.choose_track_ind_text = ttk.Label(
-                self.labelFrame, text=self.browse_dict['trackind'])
-            self.choose_track_ind_text.grid(row=4, column=0)
-            self.choose_track_ind = ttk.Entry(self.labelFrame, width=5)
-            self.choose_track_ind.grid(row=4, column=1)
-            self.from_text = ttk.Label(self.labelFrame,
-                                       text=self.browse_dict['from'])
-            self.from_text.grid(row=6, column=0)
-            self.interval_from = ttk.Entry(self.labelFrame, width=5)
-            self.interval_from.grid(row=6, column=1)
-            self.to_text = ttk.Label(self.labelFrame,
-                                     text=self.browse_dict['to'])
-            self.to_text.grid(row=6, column=2)
-            self.interval_to = ttk.Entry(self.labelFrame, width=5)
-            self.interval_to.grid(row=6, column=3)
-            self.check_bpm_text = ttk.Label(self.labelFrame, text='BPM')
-            self.check_bpm_text.grid(row=7, column=0)
-            self.check_bpm = ttk.Entry(self.labelFrame, width=5)
-            self.check_bpm.grid(row=7, column=1)
-            self.if_melody = tk.IntVar()
-            self.main_melody = ttk.Checkbutton(self.labelFrame,
-                                               text=self.browse_dict['melody'],
-                                               variable=self.if_melody)
-            self.main_melody.place(x=-60, y=180, width=300, height=30)
-            self.if_merge_all_tracks = tk.IntVar()
-            self.if_merge_all_tracks.set(1)
-            self.merge_all_tracks = ttk.Checkbutton(
-                self.labelFrame,
-                text=self.browse_dict['merge'],
-                variable=self.if_merge_all_tracks)
-            self.merge_all_tracks.place(x=100, y=0, width=125, height=30)
-            self.make_error_labels()
+            self.choose_midi_file_button.deleteLater()
+            self.quit_normal_button = QtWidgets.QPushButton(
+                parent=self.labelFrame, text="OK")
+            self.quit_normal_button.clicked.connect(self.quit_normal)
+            self.quit_normal_button.resize(80, 30)
+            self.quit_normal_button.move(155, 100)
+            self.cancel_button = QtWidgets.QPushButton(
+                parent=self.labelFrame, text=self.browse_dict['cancel'])
+            self.cancel_button.clicked.connect(self.redo)
+            self.cancel_button.resize(80, 30)
+            self.cancel_button.move(155, 140)
+            self.quit_normal_button.show()
+            self.cancel_button.show()
             current_filename = os.path.basename(self.parent.file_path)
-            self.filename_label = ttk.Label(
-                self,
+            self.filename_label = QtWidgets.QLabel(
+                parent=self,
                 text=f'{self.browse_dict["file name"]}: {current_filename}')
-            self.filename_label.place(x=60, y=50, width=2000, height=30)
-            '''
+            self.filename_label.resize(500, 50)
+            self.filename_label.move(50, 20)
+            self.filename_label.show()
+
+            self.choose_track_ind_text = QtWidgets.QLabel(
+                parent=self.labelFrame, text=self.browse_dict['trackind'])
+            self.choose_track_ind_text.setFont(QtGui.QFont('Consolas', 10))
+            self.choose_track_ind_text.move(100, 182)
+            self.choose_track_ind_text.show()
+            self.choose_track_ind = QtWidgets.QLineEdit(parent=self.labelFrame)
+            self.choose_track_ind.setMaximumWidth(50)
+            self.choose_track_ind.move(230, 180)
+            self.choose_track_ind.show()
+            self.check_bpm_text = QtWidgets.QLabel(parent=self.labelFrame,
+                                                   text='BPM')
+            self.check_bpm_text.move(155, 215)
+            self.check_bpm_text.show()
+            self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame)
+            self.check_bpm.setMaximumWidth(100)
+            self.check_bpm.move(230, 215)
+            self.check_bpm.show()
+            self.main_melody = QtWidgets.QCheckBox(
+                parent=self.labelFrame, text=self.browse_dict['melody'])
+            self.main_melody.move(100, 250)
+            self.main_melody.setFont(QtGui.QFont('Consolas', 10))
+            self.main_melody.show()
+            self.merge_all_tracks = QtWidgets.QCheckBox(
+                parent=self.labelFrame, text=self.browse_dict['merge'])
+            self.merge_all_tracks.setFont(QtGui.QFont('Consolas', 10))
+            self.merge_all_tracks.move(250, 65)
+            self.merge_all_tracks.setChecked(True)
+            self.merge_all_tracks.show()
 
 
 class setup:
@@ -277,7 +265,6 @@ class setup:
         self.file_path = None
         self.action = 0
         self.track_ind_get = None
-        self.interval = None
         self.read_result = None
         self.sheetlen = None
         self.set_bpm = None
