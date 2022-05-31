@@ -1,8 +1,6 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
 from ast import literal_eval
 import sys
+from PyQt5 import QtGui, QtWidgets
 
 
 def get_all_config_options(text):
@@ -44,15 +42,24 @@ def change(var, new, is_str=True):
         f.write(''.join(text_ls))
 
 
-class config_window(tk.Tk):
+class config_window(QtWidgets.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, dpi=None):
         with open(config_path, encoding='utf-8') as f:
             text = f.read()
             exec(text, globals(), globals())
-        super(config_window, self).__init__()
-        self.title("Settings")
-        self.minsize(800, 600)
+        super().__init__()
+        self.dpi = dpi
+        self.setWindowTitle("Settings")
+        self.setMinimumSize(800, 600)
+        if sys.platform == 'win32':
+            self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
+        elif sys.platform == 'linux':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
+        elif sys.platform == 'darwin':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
+        '''
+        
         self.config_options_bar = tk.Scrollbar(self)
         self.config_options_bar.place(x=235,
                                       y=120,
@@ -136,6 +143,8 @@ class config_window(tk.Tk):
                                              command=self.change_sort)
         self.sort_mode = 0
         self.change_sort_button.place(x=150, y=400)
+        '''
+        self.show()
 
     def change_sort(self):
         global all_config_options
@@ -250,12 +259,4 @@ class config_window(tk.Tk):
             self.show_saved()
 
 
-if __name__ == '__main__':
-    if sys.platform == 'darwin':
-        config_path = '../../../../Ideal Piano.app/Contents/Resources/packages/piano_config.py'
-    else:
-        config_path = '../packages/piano_config.py'
-    current_config_window = config_window()
-    current_config_window.mainloop()
-else:
-    config_path = 'packages/piano_config.py'
+config_path = 'packages/piano_config.py'

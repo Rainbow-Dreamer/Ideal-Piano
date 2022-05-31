@@ -440,6 +440,7 @@ class piano_window(pyglet.window.Window):
         self.click_mode = None
         self.bar_offset_x = piano_config.bar_offset_x
         self.open_browse_window = False
+        self.open_settings_window = False
 
     def init_language(self):
         global language_patch
@@ -684,17 +685,16 @@ class piano_window(pyglet.window.Window):
         self.first_time = not self.first_time
 
     def open_settings(self):
-        self.keyboard_handler[self.config_key] = False
-        self.keyboard_handler[key.S] = False
-        os.chdir(abs_path)
-        if sys.platform == 'darwin':
-            import subprocess
-            subprocess.call(['open "../../../tools/change_settings.app"'],
-                            shell=True)
-            pyglet.clock.schedule_interval(self.check_change_settings, 0.1)
-        else:
-            current_config_window = config_window()
-            current_config_window.mainloop()
+        if not self.open_settings_window:
+            self.open_settings_window = True
+            self.keyboard_handler[self.config_key] = False
+            self.keyboard_handler[key.S] = False
+            os.chdir(abs_path)
+            app = QtWidgets.QApplication(sys.argv)
+            dpi = (app.screens()[0]).logicalDotsPerInch()
+            current_config_window = config_window(dpi=dpi)
+            app.exec()
+            self.open_settings_window = False
             self.reload_settings()
 
     def is_runnning(self):

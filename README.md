@@ -34,7 +34,7 @@ In this mode, the selected MIDI file will be played in Ideal Piano, with the sou
 
 If you want the sound to come from a sound source in a DAW, you can use loopMIDI. Playing the project in the DAW, while Ideal Piano receives the MIDI signal and analyzes the chords in real time, displaying the notes and chord types on the screen. For more details, please go to the file `User Manuals/English/User Instructions (Read me first!).pdf`.
 
-The various setting parameters of this software can be modified using `tools/change_settings.exe` or directly in `piano_config.py`, save and then open the software to see the changes, you can also click the `Settings` button on the main screen to open the settings.
+The various setting parameters of this software can be modified by clicking `Settings` on the main screen or directly in `piano_config.py`, save and then open the software to see the changes, you can also click the `Settings` button on the main screen to open the settings.
 
 This software also supports directly loading SoundFont files as sound source to play by keyboard and play MIDI files, please refer to changelog in `User Manuals` folder to see how to use it.
 

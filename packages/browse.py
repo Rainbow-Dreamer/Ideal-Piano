@@ -6,6 +6,12 @@ import importlib
 from PyQt5 import QtGui, QtWidgets
 
 
+def set_font(font, dpi):
+    if dpi != 96.0:
+        font.setPointSize(font.pointSize() * (96.0 / dpi))
+    return font
+
+
 class Dialog(QtWidgets.QMainWindow):
 
     def __init__(self, caption, directory, filter):
@@ -16,10 +22,11 @@ class Dialog(QtWidgets.QMainWindow):
 
 class browse_window(QtWidgets.QMainWindow):
 
-    def __init__(self, parent, browse_dict, file_name=None):
+    def __init__(self, parent, browse_dict, file_name=None, dpi=None):
         super().__init__()
         self.parent = parent
         self.browse_dict = browse_dict
+        self.dpi = dpi
         self.setWindowTitle(self.browse_dict['choose'])
         self.setMinimumSize(600, 420)
 
@@ -34,7 +41,8 @@ class browse_window(QtWidgets.QMainWindow):
         self.labelFrame.setTitle(self.browse_dict['MIDI files'])
         self.labelFrame.resize(400, 320)
         self.labelFrame.move(100, 70)
-        self.labelFrame.setFont(QtGui.QFont('Consolas', 12))
+        self.labelFrame.setFont(set_font(QtGui.QFont('Consolas', 12),
+                                         self.dpi))
         self.browse_layout.addWidget(self.labelFrame)
         self.setLayout(self.browse_layout)
         self.go_back_button = QtWidgets.QPushButton(
@@ -48,7 +56,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.choose_midi_file_button.setFixedWidth(200)
         self.choose_midi_file_button.move(100, 100)
         self.msg_label = QtWidgets.QLabel(parent=self.labelFrame)
-        self.msg_label.setFont(QtGui.QFont('Consolas', 10))
+        self.msg_label.setFont(set_font(QtGui.QFont('Consolas', 10), self.dpi))
         self.msg_label.resize(500, 50)
         self.msg_label.move(30, 265)
         self.show()
@@ -59,7 +67,8 @@ class browse_window(QtWidgets.QMainWindow):
         self.choose_midi_file_button = QtWidgets.QPushButton(
             parent=self.labelFrame, text=self.browse_dict['choose MIDI file'])
         self.choose_midi_file_button.clicked.connect(self.fileDialog)
-        self.choose_midi_file_button.move(115, 100)
+        self.choose_midi_file_button.setFixedWidth(200)
+        self.choose_midi_file_button.move(100, 100)
         self.choose_midi_file_button.show()
 
     def redo(self):
@@ -231,7 +240,8 @@ class browse_window(QtWidgets.QMainWindow):
 
             self.choose_track_ind_text = QtWidgets.QLabel(
                 parent=self.labelFrame, text=self.browse_dict['trackind'])
-            self.choose_track_ind_text.setFont(QtGui.QFont('Consolas', 10))
+            self.choose_track_ind_text.setFont(
+                set_font(QtGui.QFont('Consolas', 10), self.dpi))
             self.choose_track_ind_text.move(100, 182)
             self.choose_track_ind_text.show()
             self.choose_track_ind = QtWidgets.QLineEdit(parent=self.labelFrame)
@@ -249,11 +259,13 @@ class browse_window(QtWidgets.QMainWindow):
             self.main_melody = QtWidgets.QCheckBox(
                 parent=self.labelFrame, text=self.browse_dict['melody'])
             self.main_melody.move(100, 250)
-            self.main_melody.setFont(QtGui.QFont('Consolas', 10))
+            self.main_melody.setFont(
+                set_font(QtGui.QFont('Consolas', 10), self.dpi))
             self.main_melody.show()
             self.merge_all_tracks = QtWidgets.QCheckBox(
                 parent=self.labelFrame, text=self.browse_dict['merge'])
-            self.merge_all_tracks.setFont(QtGui.QFont('Consolas', 10))
+            self.merge_all_tracks.setFont(
+                set_font(QtGui.QFont('Consolas', 10), self.dpi))
             self.merge_all_tracks.move(250, 65)
             self.merge_all_tracks.setChecked(True)
             self.merge_all_tracks.show()
@@ -272,7 +284,9 @@ class setup:
         self.off_melody = 0
         self.if_merge = True
         app = QtWidgets.QApplication(sys.argv)
+        dpi = (app.screens()[0]).logicalDotsPerInch()
         self.current_browse_window = browse_window(self,
                                                    browse_dict,
-                                                   file_name=file_name)
+                                                   file_name=file_name,
+                                                   dpi=dpi)
         app.exec()
