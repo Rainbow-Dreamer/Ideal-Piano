@@ -45,7 +45,8 @@ class browse_window(QtWidgets.QMainWindow):
         self.choose_midi_file_button = QtWidgets.QPushButton(
             parent=self.labelFrame, text=self.browse_dict['choose MIDI file'])
         self.choose_midi_file_button.clicked.connect(self.fileDialog)
-        self.choose_midi_file_button.move(115, 100)
+        self.choose_midi_file_button.setFixedWidth(200)
+        self.choose_midi_file_button.move(100, 100)
         self.msg_label = QtWidgets.QLabel(parent=self.labelFrame)
         self.msg_label.setFont(QtGui.QFont('Consolas', 10))
         self.msg_label.resize(500, 50)
