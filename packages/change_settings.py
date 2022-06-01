@@ -95,11 +95,11 @@ class config_window(QtWidgets.QMainWindow):
         alpha_config = all_config_options.copy()
         for k, each in enumerate(all_config_options):
             self.choose_config_options.insertItem(k, each)
-        self.choose_config_options.resize(220, 170)
+        self.choose_config_options.resize(250, 200)
         self.choose_config_options.move(0, 30)
         self.config_name = QtWidgets.QLabel(self, text='')
         self.config_name.setFixedWidth(300)
-        self.config_name.move(300, 20)
+        self.config_name.move(350, 20)
         self.config_contents = QtWidgets.QPlainTextEdit(self)
         self.config_contents.setFont(
             set_font(QtGui.QFont('Consolas', 10), self.dpi))
