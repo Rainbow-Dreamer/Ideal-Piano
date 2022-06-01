@@ -243,7 +243,7 @@ class browse_window(QtWidgets.QMainWindow):
             self.choose_track_ind_text.show()
             self.choose_track_ind = QtWidgets.QLineEdit(parent=self.labelFrame)
             self.choose_track_ind.setMaximumWidth(50)
-            self.choose_track_ind.move(230, 180)
+            self.choose_track_ind.move(240, 180)
             self.choose_track_ind.show()
             self.check_bpm_text = QtWidgets.QLabel(parent=self.labelFrame,
                                                    text='BPM')
@@ -251,7 +251,7 @@ class browse_window(QtWidgets.QMainWindow):
             self.check_bpm_text.show()
             self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame)
             self.check_bpm.setMaximumWidth(100)
-            self.check_bpm.move(230, 215)
+            self.check_bpm.move(240, 215)
             self.check_bpm.show()
             self.main_melody = QtWidgets.QCheckBox(
                 parent=self.labelFrame, text=self.browse_dict['melody'])
