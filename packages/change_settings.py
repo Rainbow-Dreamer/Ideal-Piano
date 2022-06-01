@@ -1,6 +1,12 @@
 from ast import literal_eval
-import sys
-from PyQt5 import QtGui, QtWidgets
+import sys, os
+from PyQt5 import QtGui, QtWidgets, QtCore
+
+
+def set_font(font, dpi):
+    if dpi != 96.0:
+        font.setPointSize(font.pointSize() * (96.0 / dpi))
+    return font
 
 
 def get_all_config_options(text):
@@ -42,6 +48,18 @@ def change(var, new, is_str=True):
         f.write(''.join(text_ls))
 
 
+class Dialog(QtWidgets.QMainWindow):
+
+    def __init__(self, caption, directory, filter, mode=0):
+        super().__init__()
+        if mode == 0:
+            self.filename = QtWidgets.QFileDialog.getOpenFileName(
+                self, caption=caption, directory=directory, filter=filter)
+        elif mode == 1:
+            self.directory = QtWidgets.QFileDialog.getExistingDirectory(
+                self, caption=caption, directory=directory)
+
+
 class config_window(QtWidgets.QMainWindow):
 
     def __init__(self, dpi=None):
@@ -52,23 +70,16 @@ class config_window(QtWidgets.QMainWindow):
         self.dpi = dpi
         self.setWindowTitle("Settings")
         self.setMinimumSize(800, 600)
+        self.setFont(set_font(QtGui.QFont('Consolas', 10), self.dpi))
         if sys.platform == 'win32':
             self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
         elif sys.platform == 'linux':
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
         elif sys.platform == 'darwin':
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
-        '''
-        
-        self.config_options_bar = tk.Scrollbar(self)
-        self.config_options_bar.place(x=235,
-                                      y=120,
-                                      height=170,
-                                      anchor=tk.CENTER)
-        self.choose_config_options = tk.Listbox(
-            self, yscrollcommand=self.config_options_bar.set)
-        self.choose_config_options.bind('<<ListboxSelect>>',
-                                        self.show_current_config_options)
+        self.choose_config_options = QtWidgets.QListWidget(self)
+        self.choose_config_options.clicked.connect(
+            self.show_current_config_options)
         global all_config_options
         all_config_options = get_all_config_options(text)
         self.options_num = len(all_config_options)
@@ -82,100 +93,102 @@ class config_window(QtWidgets.QMainWindow):
         all_config_options.sort(key=lambda s: s.lower())
         global alpha_config
         alpha_config = all_config_options.copy()
-        for k in all_config_options:
-            self.choose_config_options.insert(tk.END, k)
-        self.choose_config_options.place(x=0, y=30, width=220)
-        self.config_options_bar.config(
-            command=self.choose_config_options.yview)
-        self.config_name = ttk.Label(self, text='')
-        self.config_name.place(x=300, y=20)
-        self.config_contents = tk.Text(self,
-                                       undo=True,
-                                       autoseparators=True,
-                                       maxundo=-1,
-                                       bd=1,
-                                       relief="sunken")
-        self.config_contents.bind('<KeyRelease>', self.config_change)
-        self.config_contents.place(x=350, y=50, width=400, height=400)
-        self.choose_filename_button = ttk.Button(self,
-                                                 text='choose filename',
-                                                 command=self.choose_filename)
-        self.choose_directory_button = ttk.Button(
-            self, text='choose directory', command=self.choose_directory)
-        self.choose_filename_button.place(x=0, y=250)
-        self.choose_directory_button.place(x=0, y=320)
-        self.save = ttk.Button(self, text="save", command=self.save_current)
-        self.save.place(x=0, y=400)
-        self.bind('<Control-s>', lambda e: self.save_current())
-        self.saved_text = ttk.Label(self, text='saved')
-        self.search_text = ttk.Label(self, text='search for config options')
-        self.search_text.place(x=0, y=450)
-        self.search_contents = tk.StringVar()
-        self.search_contents.trace_add('write', self.search)
-        self.search_entry = tk.Entry(self, textvariable=self.search_contents)
-        self.search_entry.place(x=0, y=480)
+        for k, each in enumerate(all_config_options):
+            self.choose_config_options.insertItem(k, each)
+        self.choose_config_options.resize(220, 170)
+        self.choose_config_options.move(0, 30)
+        self.config_name = QtWidgets.QLabel(self, text='')
+        self.config_name.setFixedWidth(300)
+        self.config_name.move(300, 20)
+        self.config_contents = QtWidgets.QPlainTextEdit(self)
+        self.config_contents.setFont(
+            set_font(QtGui.QFont('Consolas', 10), self.dpi))
+        self.config_contents.textChanged.connect(self.config_change)
+        self.config_contents.resize(400, 400)
+        self.config_contents.move(350, 50)
+        self.choose_filename_button = QtWidgets.QPushButton(
+            self, text='choose filename')
+        self.choose_filename_button.clicked.connect(self.choose_filename)
+        self.choose_filename_button.setFixedWidth(150)
+        self.choose_filename_button.move(0, 250)
+        self.choose_directory_button = QtWidgets.QPushButton(
+            self, text='choose directory')
+        self.choose_directory_button.clicked.connect(self.choose_directory)
+        self.choose_directory_button.setFixedWidth(150)
+        self.choose_directory_button.move(0, 320)
+        self.save = QtWidgets.QPushButton(self, text="save")
+        self.save.clicked.connect(self.save_current)
+        self.save.move(0, 400)
+        self.save_shortcut = QtWidgets.QShortcut('Ctrl+S', self)
+        self.save_shortcut.activated.connect(self.save_current)
+        self.saved_text = QtWidgets.QLabel(self, text='saved')
+        self.saved_text.move(50, 530)
+        self.saved_text.hide()
+        self.search_text = QtWidgets.QLabel(self,
+                                            text='search for config options')
+        self.search_text.setFixedWidth(200)
+        self.search_text.move(0, 450)
+        self.search_entry = QtWidgets.QLineEdit(self)
+        self.search_entry.setFixedWidth(200)
+        self.search_entry.textChanged.connect(self.search)
+        self.search_entry.move(0, 480)
         self.search_inds = 0
-        self.up_button = ttk.Button(
-            self,
-            text='Previous',
-            command=lambda: self.change_search_inds(-1),
-            width=8)
-        self.down_button = ttk.Button(
-            self,
-            text='Next',
-            command=lambda: self.change_search_inds(1),
-            width=8)
-        self.up_button.place(x=220 if sys.platform == 'darwin' else 170, y=480)
-        self.down_button.place(x=350 if sys.platform == 'darwin' else 250,
-                               y=480)
+        self.up_button = QtWidgets.QPushButton(self, text='Previous')
+        self.up_button.clicked.connect(lambda: self.change_search_inds(-1))
+        self.down_button = QtWidgets.QPushButton(self, text='Next')
+        self.down_button.clicked.connect(lambda: self.change_search_inds(1))
+        self.up_button.move(220, 480)
+        self.down_button.move(350, 480)
         self.search_inds_list = []
         self.value_dict = {i: str(eval(i)) for i in all_config_options}
-        self.choose_bool1 = ttk.Button(
-            self, text='True', command=lambda: self.insert_bool('True'))
-        self.choose_bool2 = ttk.Button(
-            self, text='False', command=lambda: self.insert_bool('False'))
-        self.choose_bool1.place(x=120 if sys.platform == 'win32' else 140,
-                                y=270)
-        self.choose_bool2.place(x=220 if sys.platform == 'win32' else 240,
-                                y=270)
-        self.change_sort_button = ttk.Button(self,
-                                             text="sort in alphabetical order",
-                                             command=self.change_sort)
+        self.choose_bool1 = QtWidgets.QPushButton(self, text='True')
+        self.choose_bool1.clicked.connect(lambda: self.insert_bool('True'))
+        self.choose_bool1.setFixedWidth(80)
+        self.choose_bool2 = QtWidgets.QPushButton(self, text='False')
+        self.choose_bool2.clicked.connect(lambda: self.insert_bool('False'))
+        self.choose_bool2.setFixedWidth(80)
+        self.choose_bool1.move(160, 270)
+        self.choose_bool2.move(260, 270)
+        self.change_sort_button = QtWidgets.QPushButton(
+            self, text="sort in alphabetical order")
+        self.change_sort_button.clicked.connect(self.change_sort)
+        self.change_sort_button.setFixedWidth(200)
+        self.change_sort_button.setFont(
+            set_font(QtGui.QFont('Consolas', 8), self.dpi))
         self.sort_mode = 0
-        self.change_sort_button.place(x=150, y=400)
-        '''
+        self.change_sort_button.move(140, 400)
         self.show()
 
     def change_sort(self):
         global all_config_options
         if self.sort_mode == 0:
             self.sort_mode = 1
-            self.change_sort_button.config(text='sort in order of appearance')
+            self.change_sort_button.setText('sort in order of appearance')
             all_config_options = config_original.copy()
-            self.choose_config_options.delete(0, tk.END)
-            for k in all_config_options:
-                self.choose_config_options.insert(tk.END, k)
+            self.choose_config_options.clear()
+            for k, each in enumerate(all_config_options):
+                self.choose_config_options.insertItem(k, each)
         else:
             self.sort_mode = 0
-            self.change_sort_button.config(text='sort in alphabetical order')
+            self.change_sort_button.setText('sort in alphabetical order')
             all_config_options = alpha_config.copy()
-            self.choose_config_options.delete(0, tk.END)
-            for k in all_config_options:
-                self.choose_config_options.insert(tk.END, k)
+            self.choose_config_options.clear()
+            for k, each in enumerate(all_config_options):
+                self.choose_config_options.insertItem(k, each)
         self.search()
 
     def insert_bool(self, content):
-        self.config_contents.delete('1.0', tk.END)
-        self.config_contents.insert(tk.END, content)
-        self.config_change(0)
+        self.config_contents.setPlainText(content)
+        self.config_change()
 
-    def config_change(self, e):
+    def config_change(self):
         try:
-            current = self.config_contents.get('1.0', 'end-1c')
+            current = self.config_contents.toPlainText()
             current = literal_eval(current)
             if type(current) == str:
                 current = f"'{current}'"
-            current_config = self.choose_config_options.get(tk.ANCHOR)
+            current_config = self.choose_config_options.selectedItems(
+            )[0].text()
             exec(f'{current_config} = {current}', globals())
         except:
             pass
@@ -189,14 +202,11 @@ class config_window(QtWidgets.QMainWindow):
             if self.search_inds >= search_num:
                 self.search_inds = search_num - 1
             first = self.search_inds_list[self.search_inds]
-            self.choose_config_options.selection_clear(0, tk.END)
-            self.choose_config_options.selection_set(first)
-            self.choose_config_options.selection_anchor(first)
-            self.choose_config_options.see(first)
-            self.show_current_config_options(0)
+            self.choose_config_options.setCurrentRow(first)
+            self.show_current_config_options()
 
-    def search(self, *args):
-        current = self.search_contents.get()
+    def search(self):
+        current = self.search_entry.text()
         if not current:
             return
         self.search_inds_list = [
@@ -206,44 +216,58 @@ class config_window(QtWidgets.QMainWindow):
         if self.search_inds_list:
             self.search_inds = 0
             first = self.search_inds_list[self.search_inds]
-            self.choose_config_options.selection_clear(0, tk.END)
-            self.choose_config_options.selection_set(first)
-            self.choose_config_options.selection_anchor(first)
-            self.choose_config_options.see(first)
-            self.show_current_config_options(0)
+            self.choose_config_options.setCurrentRow(first)
+            self.show_current_config_options()
         else:
-            self.choose_config_options.selection_clear(0, tk.END)
+            self.choose_config_options.clearSelection()
 
-    def show_current_config_options(self, e):
-        current_config = self.choose_config_options.get(tk.ANCHOR)
+    def show_current_config_options(self):
+        current_config = self.choose_config_options.selectedItems()[0].text()
         if current_config:
-            self.config_name.configure(text=current_config)
-            self.config_contents.delete('1.0', tk.END)
+            self.config_name.setText(current_config)
             current_config_value = eval(current_config)
             if type(current_config_value) == str:
                 current_config_value = f"'{current_config_value}'"
             else:
                 current_config_value = str(current_config_value)
-            self.config_contents.insert(tk.END, current_config_value)
+            self.config_contents.setPlainText(current_config_value)
 
     def choose_filename(self):
-        filename = filedialog.askopenfilename(title="choose filename",
-                                              filetypes=(("all files", "*"), ))
+        last_path = ''
+        if os.path.exists('last_path.txt'):
+            with open('last_path.txt', encoding='utf-8') as f:
+                last_path = f.read()
+        filename = Dialog(caption='choose filename',
+                          directory=last_path,
+                          filter='all files (*)').filename[0]
         if filename:
-            self.config_contents.delete('1.0', tk.END)
-            self.config_contents.insert(tk.END, f"'{filename}'")
-            self.config_change(0)
+            current_path = os.path.dirname(filename)
+            if current_path != last_path:
+                with open('last_path.txt', 'w', encoding='utf-8') as f:
+                    f.write(current_path)
+            self.config_contents.setPlainText(f"'{filename}'")
+            self.config_change()
 
     def choose_directory(self):
-        directory = filedialog.askdirectory(title="choose directory", )
+        last_path = ''
+        if os.path.exists('last_path.txt'):
+            with open('last_path.txt', encoding='utf-8') as f:
+                last_path = f.read()
+        directory = Dialog(caption='choose directory',
+                           directory=last_path,
+                           filter='all files (*)',
+                           mode=1).directory
         if directory:
-            self.config_contents.delete('1.0', tk.END)
-            self.config_contents.insert(tk.END, f"'{directory}'")
-            self.config_change(0)
+            current_path = directory
+            if current_path != last_path:
+                with open('last_path.txt', 'w', encoding='utf-8') as f:
+                    f.write(current_path)
+            self.config_contents.setPlainText(f"'{directory}'")
+            self.config_change()
 
     def show_saved(self):
-        self.saved_text.place(x=140, y=350)
-        self.after(1000, self.saved_text.place_forget)
+        self.saved_text.show()
+        QtCore.QTimer.singleShot(1000, self.saved_text.hide)
 
     def save_current(self):
         changed = False

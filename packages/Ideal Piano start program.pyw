@@ -12,7 +12,7 @@ import time
 import pyglet
 import mido
 import midiutil
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 import py
 from pydub import AudioSegment
 import browse
