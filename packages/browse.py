@@ -48,7 +48,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.go_back_button = QtWidgets.QPushButton(
             parent=self.labelFrame, text=self.browse_dict['go back'])
         self.go_back_button.clicked.connect(self.go_back)
-        self.go_back_button.resize(80, 30)
+        self.go_back_button.setFixedWidth(90)
         self.go_back_button.move(155, 60)
         self.choose_midi_file_button = QtWidgets.QPushButton(
             parent=self.labelFrame, text=self.browse_dict['choose MIDI file'])
@@ -221,12 +221,12 @@ class browse_window(QtWidgets.QMainWindow):
             self.quit_normal_button = QtWidgets.QPushButton(
                 parent=self.labelFrame, text="OK")
             self.quit_normal_button.clicked.connect(self.quit_normal)
-            self.quit_normal_button.resize(80, 30)
+            self.quit_normal_button.setFixedWidth(90)
             self.quit_normal_button.move(155, 100)
             self.cancel_button = QtWidgets.QPushButton(
                 parent=self.labelFrame, text=self.browse_dict['cancel'])
             self.cancel_button.clicked.connect(self.redo)
-            self.cancel_button.resize(80, 30)
+            self.cancel_button.setFixedWidth(90)
             self.cancel_button.move(155, 140)
             self.quit_normal_button.show()
             self.cancel_button.show()
