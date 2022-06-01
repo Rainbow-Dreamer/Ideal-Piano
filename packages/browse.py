@@ -36,15 +36,12 @@ class browse_window(QtWidgets.QMainWindow):
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
         elif sys.platform == 'darwin':
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
-        self.browse_layout = QtWidgets.QHBoxLayout()
         self.labelFrame = QtWidgets.QGroupBox(self)
         self.labelFrame.setTitle(self.browse_dict['MIDI files'])
         self.labelFrame.resize(400, 320)
         self.labelFrame.move(100, 70)
         self.labelFrame.setFont(set_font(QtGui.QFont('Consolas', 12),
                                          self.dpi))
-        self.browse_layout.addWidget(self.labelFrame)
-        self.setLayout(self.browse_layout)
         self.go_back_button = QtWidgets.QPushButton(
             parent=self.labelFrame, text=self.browse_dict['go back'])
         self.go_back_button.clicked.connect(self.go_back)
