@@ -154,7 +154,7 @@ class config_window(QtWidgets.QMainWindow):
         self.change_sort_button.clicked.connect(self.change_sort)
         self.change_sort_button.setFixedWidth(200)
         self.change_sort_button.setFont(
-            set_font(QtGui.QFont('Consolas', 8), self.dpi))
+            set_font(QtGui.QFont('Consolas', 10), self.dpi))
         self.sort_mode = 0
         self.change_sort_button.move(140, 400)
         self.show()
