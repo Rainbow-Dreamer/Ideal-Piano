@@ -1,5 +1,14 @@
 # Changelog
 
+2022-05-30
+
+* Switch from tkinter to PyQt5 for the browse window and settings window, since on macOS there are always plenty of bugs when pyglet and tkinter work together, and tkinter is not that powerful for a GUI toolkit compares to PyQt5. After completely rewriting the codes for the browse window and settings window for PyQt5, I find that the functional logic and framework of PyQt5 is actually a lot more easier and flexible than tkinter, and there are no longer bugs appear on macOS when pyglet and PyQt5 works together.
+* For the browse window, the interval functionality is removed, since it is not that useful actually.
+* Retested the MIDI keyboard mode with a MIDI keyboard and a sustain pedal, fixed all of the bugs that appeared during the testing.
+* Remove the change settings standalone executable, now the change settings functionality is built into the software, you can click `Settings` button to open the change settings window.
+
+
+
 2022-05-28
 
 * Added functionality to show notes and chord types in sharp or flat accidentals, you can choose the accidentals by setting the parameter `show_chord_accidentals` to `'sharp'` or `'flat'` in the settings. The default value is `'sharp'`.
