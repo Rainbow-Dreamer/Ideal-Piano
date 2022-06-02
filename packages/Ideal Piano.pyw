@@ -13,11 +13,8 @@ elif piano_config.language == 'Chinese':
     mp.alg.detect = language_patch.detect
     mp.chord.info = language_patch.info
 
-if (piano_config.play_as_midi
-        and piano_config.use_soundfont) or piano_config.play_use_soundfont:
-    import sf2_loader as rs
-
 key = pyglet.window.key
+has_soundfont_plugins = True
 
 
 def get_off_sort(a):
@@ -97,11 +94,11 @@ class ideal_piano_button:
 class piano_window(pyglet.window.Window):
 
     def __init__(self):
+        self.init_sf2()
         self.init_window()
         self.init_parameters()
         self.init_key_map()
         self.init_keys()
-        self.init_sf2()
         self.init_screen()
         self.init_layers()
         self.init_screen_buttons()
@@ -158,14 +155,22 @@ class piano_window(pyglet.window.Window):
                                                        key.LALT)
 
     def init_sf2(self, mode=0):
-        if mode == 0:
-            self.current_sf2_player = None
-        else:
-            if piano_config.play_use_soundfont or (
-                    piano_config.play_as_midi and piano_config.use_soundfont):
-                if 'rs' not in sys.modules:
-                    global rs
-                    import sf2_loader as rs
+        if piano_config.play_use_soundfont or (piano_config.play_as_midi
+                                               and piano_config.use_soundfont):
+            if 'rs' not in sys.modules:
+                global rs
+                global has_soundfont_plugins
+                if has_soundfont_plugins:
+                    try:
+                        import sf2_loader as rs
+                    except:
+                        piano_config.use_soundfont = False
+                        piano_config.play_use_soundfont = False
+                        has_soundfont_plugins = False
+                        self.use_soundfont_msg_box()
+                else:
+                    piano_config.use_soundfont = False
+                    piano_config.play_use_soundfont = False
         if piano_config.play_use_soundfont or (
                 piano_config.play_as_midi and piano_config.use_soundfont
                 and piano_config.render_as_audio):
@@ -456,6 +461,15 @@ class piano_window(pyglet.window.Window):
         current_piano_engine.current_midi_device = language_patch.ideal_piano_language_dict[
             'current_midi_device']
 
+    def use_soundfont_msg_box(self):
+        app = QtWidgets.QApplication(sys.argv)
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle('Error')
+        msg_box.setText(
+            'It seems that FluidSynth is not installed on your computer, FluidSynth is required to play using SoundFont files as you set use_soundfont = True or play_use_soundfont = True, please install FluidSynth and then try to reopen again. You can use Ideal Piano as usual, as now the use soundfont config parameters will be set to False.'
+        )
+        msg_box.exec()
+
     def on_file_drop(self, x, y, paths):
         if paths:
             current_path = paths[0]
@@ -694,6 +708,7 @@ class piano_window(pyglet.window.Window):
             dpi = (app.screens()[0]).logicalDotsPerInch()
             current_config_window = config_window(dpi=dpi)
             app.exec()
+            del app
             self.open_settings_window = False
             self.reload_settings()
 
@@ -850,8 +865,15 @@ class piano_engine:
             if piano_config.render_as_audio:
                 self.current_midi_audio.play()
             else:
+                if piano_config.sf2_mode == 1:
+                    current_midi_file = current_piano_window.current_sf2_player.current_midi_file
+                    current_piano_window.current_sf2_player.synth.delete()
+                    current_piano_window.current_sf2_player = rs.sf2_player(
+                        piano_config.sf2_path)
+                    current_piano_window.current_sf2_player.current_midi_file = current_midi_file
                 current_piano_window.current_sf2_player.play_midi_file(
                     current_piano_window.current_sf2_player.current_midi_file)
+
         else:
             pygame.mixer.music.play()
 

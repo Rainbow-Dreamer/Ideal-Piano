@@ -295,6 +295,7 @@ preset = 0
 sf2_duration = 6
 sf2_decay = 1
 sf2_volume = 100
+sf2_mode = 0
 
 soft_pedal_volume = 0.2
 
