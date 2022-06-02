@@ -155,6 +155,8 @@ class piano_window(pyglet.window.Window):
                                                        key.LALT)
 
     def init_sf2(self, mode=0):
+        if mode == 0:
+            self.current_sf2_player = None
         if piano_config.play_use_soundfont or (piano_config.play_as_midi
                                                and piano_config.use_soundfont):
             if 'rs' not in sys.modules:
