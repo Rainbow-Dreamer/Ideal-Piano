@@ -82,8 +82,7 @@ Here is a preview of Ideal Piano's screen.
 
 ## Other notes
 
-1. It seems that some people fails to download directly from github, so I also upload a copy to the cloud, you can download directly from [here](https://www.jianguoyun.com/p/DY_8cucQhPG0CBifkqYE)
-2. Since my software is in English, considering somebody might be more familiar with chord type names in Chinese, I made a Chinese patch package, please change `language` to `'Chinese'` in the settings file, save and restart the software to use it.
+1. Since my software is in English, considering somebody might be more familiar with chord type names in Chinese, I made a Chinese patch package, please change `language` to `'Chinese'` in the settings file, save and restart the software to use it.
 
 
 
