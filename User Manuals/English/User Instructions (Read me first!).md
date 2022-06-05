@@ -19,7 +19,7 @@ Other way: Change the parameter `background_image` in the settings file to the p
 
 ## What do the buttons on the main screen do?
 
-Click the `PLAY` button to enter the computer keyboard playing mode, click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode, and click `PLAY MIDI` button to enter the MIDI file playing mode. When entering one of these modes, click `GO BACK` button to go back to the initial page.
+Click the `PLAY` button to enter the computer keyboard playing mode, click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode, and click `PLAY MIDI` button to enter the MIDI file playing mode. When entering one of these modes, click `GO BACK` button to go back to the initial page. Click `SETTINGS` button to open the change settings window.
 
 
 
@@ -71,16 +71,17 @@ Yes, you can, please refer to the settings manual, to be short, you can change t
 
 ## What should I pay attention to when playing with a MIDI keyboard?
 
-It is better to open Ideal Piano only after the midi keyboard is connected to the computer, or open Ideal Piano first, don't click the midi keyboard button, then connect the midi keyboard to the computer, then click the button, so as to make sure your midi keyboard can be detected properly in the software. If the midi keyboard still does not respond, then press `shift` on your computer keyboard to display the MIDI ports currently available on your computer, you can confirm the MIDI port number you need to use by the name of the corresponding device, then open `change_settings.exe` to change the value of `midi_device_id` to the one you want to use MIDI port number, then reopen Ideal Piano.
+It is better to open Ideal Piano only after the MIDI keyboard is connected to the computer, or open Ideal Piano first, don't click the MIDI keyboard button, then connect the MIDI keyboard to the computer, then click the button, so as to make sure your MIDI keyboard can be detected properly in the software. If the MIDI keyboard still does not respond, then press `shift` on your computer keyboard to display the MIDI ports currently available on your computer, you can confirm the MIDI port number you need to use by the name of the corresponding device, then open `change_settings.exe` to change the value of `midi_device_id` to the one you want to use MIDI port number, then reopen Ideal Piano.
 
 
 
 ## Why can't Ideal Piano detect my MIDI keyboard?
 
-If you open the DAW, the midi keyboard is already available in the DAW, then Ideal Piano can't detect your midi keyboard at this time, because a midi keyboard can only control one software at most, so at this time the DAW has already occupied the midi keyboard, and Ideal Piano can't detect the midi keyboard.
+If you open the DAW, the MIDI keyboard is already available in the DAW, then Ideal Piano can't detect your MIDI keyboard at this time, because a MIDI keyboard can only control one software at most, so at this time the DAW has already occupied the MIDI keyboard, and Ideal Piano can't detect the MIDI keyboard.
 
-If you want to use a midi keyboard in a DAW and also use Ideal Piano, there is a very simple solution.
-Using `loopmidi`, a free software, you can use both DAW and Ideal Piano to play midi keyboard, the procedure is as follows.
+If you want to use a MIDI keyboard in a DAW and also use Ideal Piano, there is a very simple solution.
+
+Using loopMIDI, a free software, you can use both DAW and Ideal Piano to play MIDI keyboard, the procedure is as follows.
 
 
 
@@ -88,33 +89,45 @@ Using `loopmidi`, a free software, you can use both DAW and Ideal Piano to play 
 
 ### Using a MIDI keyboard in the DAW
 
-With `loopmidi`, a free software, you can play with a midi keyboard in the DAW, and at the same time Ideal Piano can display the current notes and the corresponding chords, so you can listen to the instrument you want more easily and see what you are playing in Ideal Piano.
+Previously I wanted to implement a MIDI keyboard shared by both DAW and Ideal Piano, or to play a project in DAW and display the current notes in Ideal Piano, but at the beginning it failed, always showing errors like Host error, but later I found a good solution. loopMIDI is a free software that allows you to create virtual MIDI ports, so you can use it to connect to the MIDI ports of several different software. With loopMIDI you can use a MIDI keyboard for both the DAW and Ideal Piano, so you can load the source you want to hear in the DAW and then play it on the MIDI keyboard and hear the DAW source, while Ideal Piano can display the chord type and notes you are currently playing in real time.
 
-Take FL Studio for example, first open loopmidi, create a new midi port, (click on the + sign below) and then open FL Studio, in the midi settings in the options, select the midi keyboard you are connected to on the input side, and select the new midi port you just created on the output side.
+The download link of loopMIDI: [click here](https://www.tobias-erichsen.de/software/loopmidi.html)
 
-The input midi keyboard should be enabled, the port should not be set (left blank), and the output midi port should be set with a port number, for example 0.
+With loopMIDI, a free software, you can play with a MIDI keyboard in the DAW, and at the same time Ideal Piano can display the current notes and the corresponding chords, so you can listen to the instrument you want more easily and see what you are playing in Ideal Piano.
 
-Then load an instrument sound source and set the midi output port number for this instrument to the same number as the output midi port.
+Take FL Studio for example, first open loopMIDI, create a new MIDI port, (click on the + sign below) and then open FL Studio, in the MIDI settings in the options, select the MIDI keyboard you are connected to on the input side, and select the new MIDI port you just created on the output side.
 
-Then open Ideal Piano, change the midi_device_id in the config.py file to the number of the new midi port in loopmidi, and remember to set the parameter load_sound to False, so that Ideal Piano will not load the sound source you set, and will only play the sound source in the host when you play it. so that Ideal Piano will not load the sources it has set up, and will only play the sources from the host when playing.
+The input MIDI keyboard should be enabled, the port should not be set (left blank), and the output MIDI port should be set with a port number, for example 0.
 
-For some sources, even if the midi output port is set to the same loopmidi as the host, the solution is to use the midi out plugin, set the port to the same midi output port as the host, then set the input port of the source to the midi out port, and select the midi out channel to play when you play to receive the data. (Another important point is that
+Then load an instrument sound source and set the MIDI output port number for this instrument to the same number as the output MIDI port.
 
-(There is also a very important point is that you must first import the source, and then import the midi out plug-in, and then set the port, every time you change the new source to this order, otherwise the data still can not pass loopmidi)
+Then open Ideal Piano, change `midi_device_id` in the config.py file to the number of the new MIDI port in loopMIDI, and remember to set the parameter load_sound to False, so that Ideal Piano will not load the sound source you set, and will only play the sound source in the host when you play it. so that Ideal Piano will not load the sources it has set up, and will only play the sources from the host when playing.
+
+For some sources, even if the MIDI output port is set to the same loopMIDI as the host, the solution is to use the MIDI out plugin, set the port to the same MIDI output port as the host, then set the input port of the source to the MIDI out port, and select the MIDI out channel to play when you play to receive the data. (Another important point is that
+
+(There is also a very important point is that you must first import the source, and then import the MIDI out plug-in, and then set the port, every time you change the new source to this order, otherwise the data still can not pass loopMIDI)
 
 ### Play the project in the DAW
 
-With loopmidi you can also play the project in the DAW and at the same time Ideal Piano can demonstrate the current notes and chords, you just need to set the midi out port of the DAW and the midi out port of the source to the same number, which corresponds to the new midi port you created in loopmidi.
+With loopMIDI you can also play the project in the DAW and at the same time Ideal Piano can demonstrate the current notes and chords, you just need to set the MIDI out port of the DAW and the MIDI out port of the source to the same number, which corresponds to the new MIDI port you created in loopMIDI.
 
-For example, if loopmidi creates a new midi port called midi port A, then in the midi settings of the DAW, set the port corresponding to midi port A to 0, then set the midi output port of the audio source to 0 as well, and then set the midi_device_id in the configuration file of Ideal Piano to the number corresponding to midi port A.
+For example, if loopMIDI creates a new MIDI port called MIDI port A, then in the MIDI settings of the DAW, set the port corresponding to MIDI port A to 0, then set the MIDI output port of the audio source to 0 as well, and then set `midi_device_id` in the configuration file of Ideal Piano to the number corresponding to MIDI port A.
 
-Save the settings file after each change (or just open change_settings.exe to search for parameters to modify more easily), then reopen Ideal Piano.exe. Then click the midi keyboard button to enter midi keyboard mode, at this time, play the track with the midi output port set in the DAW. When you play the track with the midi output port, you can see that Ideal Piano also follows the same notes in real time.
+Save the settings file after each change (or just open change_settings.exe to search for parameters to modify more easily), then reopen Ideal Piano.exe. Then click the MIDI keyboard button to enter MIDI keyboard mode, at this time, play the track with the MIDI output port set in the DAW. When you play the track with the MIDI output port, you can see that Ideal Piano also follows the same notes in real time.
 
-For some sources that are set up with midi out but still can't pass data to loopmidi, the solution is also to use midi out as a relay station, but this is slightly different from playing with a midi keyboard.
+For some sources that are set up with MIDI out but still can't pass data to loopMIDI, the solution is also to use MIDI out as a relay station, but this is slightly different from playing with a MIDI keyboard.
 
-When playing with a midi keyboard, you can select the midi out track to play, and the sound will come from the source paired with the midi port, and Ideal Piano can also receive the midi signal, but if you don't use the midi keyboard and play the project directly in the DAW, you can't transfer the data to loopmidi even if you select the midi out track to play. I found a solution to this problem by copying the pairing and playing the track.
+When playing with a MIDI keyboard, you can select the MIDI out track to play, and the sound will come from the source paired with the MIDI port, and Ideal Piano can also receive the MIDI signal, but if you don't use the MIDI keyboard and play the project directly in the DAW, you can't transfer the data to loopMIDI even if you select the MIDI out track to play. I found a solution to this problem by copying the pairing and playing the track.
 
-The solution I found was to copy the notes from the track of the source paired with the midi port to the piano window of midi out, then mute the track of that source and let midi out play only, then I could hear the sound of the track of the source when it was not muted before, and I could also transfer data to loopmidi, so Ideal Piano could also can receive the midi signal in real time.
+The solution I found was to copy the notes from the track of the source paired with the MIDI port to the piano window of MIDI out, then mute the track of that source and let MIDI out play only, then I could hear the sound of the track of the source when it was not muted before, and I could also transfer data to loopMIDI, so Ideal Piano could also can receive the MIDI signal in real time.
+
+
+
+## Other cautions of choose MIDI files window
+
+The MIDI track box can be left blank, and the program I wrote will intelligently find the first track with notes in the MIDI file you choose and use it as the track to play. So if it is a pure piano piece with only one track, then you can leave it blank and the program will play the track with the notes directly, if it is a MIDI with multiple tracks, then you can fill in the track you want to play according to your needs.
+
+In this mode, the selected MIDI file will be played in Ideal Piano, with the sound coming from a built-in General MIDI player by default. You can change `play_as_midi` in the settings file to `False` to make the sound coming from the sound source you set. The sound source must be a folder with audio files named after notes, like `C5.wav`. The current position of the notes on the piano will be displayed on the screen, and the chords of the notes currently played will be analyzed in real time.
 
 
 
