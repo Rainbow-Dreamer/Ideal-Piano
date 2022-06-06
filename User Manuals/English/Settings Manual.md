@@ -139,8 +139,6 @@ change_read_current: The key used with the function key to change whether only t
 
 change_pause_key_clear_notes: key used with function keys to change whether the display of the currently played note is cleared when paused
 
-note_place: The position of all keys on the piano from left to right in note point mode
-
 load_sound: whether to load the sound source and play it when playing (set to False when using with the host)
 
 show_key: whether to show the name of the keys of the computer keyboard when playing on it
@@ -243,7 +241,7 @@ chord_details_label_place: text position of chord details
 
 chord_details_label_anchor_x: horizontal alignment of chord details
 
-chord_details_label_anchor_y = vertical alignment of chord details
+chord_details_label_anchor_y: vertical alignment of chord details
 
 chord_details_font_size: font size of chord details
 
