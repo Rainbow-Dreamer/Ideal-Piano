@@ -22,7 +22,7 @@ The second mode, MIDI keyboard free play, is to connect a MIDI keyboard to your 
 
 The third mode is to play the MIDI file to analyze the current chords in real time. After entering this mode, a file browsing box will pop up for you to select the MIDI file you want to play in Ideal Piano, and after that, you can select the MIDI track you want to play, choose the BPM (tempo of the song) to be played, and you can also choose to remove the main melody through the algorithm and listen only to the notes of the chords in the bass part. (The algorithm to remove the main melody of the tune is my own idea, and after testing, it works well for most of the pieces.)
 
-The various setting parameters of this software can be modified by clicking `Settings` on the main screen or directly in `piano_config.py`, save and then open the software to see the changes, you can also click the `Settings` button on the main screen to open the settings.
+The various setting parameters of this software can be modified by clicking `SETTINGS` button on the main screen to open the change settings window, save and then close the change settings window, the changes will take place immediately.
 
 This software also supports directly loading SoundFont files as sound source to play by keyboard and play MIDI files, please refer to changelog in `User Manuals` folder to see how to use it.
 
