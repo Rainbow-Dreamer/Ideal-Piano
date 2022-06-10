@@ -137,7 +137,7 @@ touch_interval = 0.1
 delay_only_read_current = True
 
 # the suffix of the sound files
-sound_format = 'wav'
+sound_format = 'mp3'
 
 # the path of the sounds folder
 sound_path = 'resources/sounds'
