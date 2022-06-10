@@ -898,6 +898,8 @@ class piano_engine:
             poly_chord_first=piano_config.poly_chord_first,
             root_position_return_first=piano_config.root_position_return_first,
             alter_notes_show_degree=piano_config.alter_notes_show_degree)
+        if current_chord_info is None:
+            return
         current_dict = language_patch.ideal_piano_language_dict
         if current_chord_info[current_dict['type']] == current_dict['chord']:
             current_info = current_chord_info[current_dict['chord name']]
