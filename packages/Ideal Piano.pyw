@@ -1,4 +1,5 @@
 import random
+from change_settings import change_parameter
 
 app = QtWidgets.QApplication(sys.argv)
 del app
@@ -495,7 +496,9 @@ class piano_window(pyglet.window.Window):
             if current_type:
                 current_type, type_name = current_type.split('/')
                 if current_type == 'image':
-                    piano_config.background_image = current_path
+                    change_parameter('background_image',
+                                     current_path,
+                                     is_str=True)
                     self.init_screen()
                 elif 'mid' in type_name:
                     if self.click_mode is None:

@@ -4,6 +4,7 @@ import sys
 import piano_config
 import importlib
 from PyQt5 import QtGui, QtWidgets
+from change_settings import change_parameter
 
 
 def set_font(font, dpi):
@@ -361,53 +362,9 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
             i[1] for i in self.midi_inputs
         ].index(current_midi_input)][0]
         try:
-            self.change('midi_device_id',
-                        str(current_midi_device_id),
-                        is_str=False)
+            change_parameter('midi_device_id',
+                             str(current_midi_device_id),
+                             is_str=False)
         except:
             import traceback
             print(traceback.format_exc())
-
-    def change(self, var, new, is_str=True):
-        with open('packages/piano_config.py', encoding='utf-8') as f:
-            text = f.read()
-
-        all_config_options = []
-        N = len(text)
-        for i in range(N):
-            current = text[i]
-            if current == '\n':
-                if i + 1 < N:
-                    next_character = text[i + 1]
-                    if next_character.isalpha():
-                        inds = text[i + 1:].index('=') - 1
-                        current_config_options = text[i + 1:i + 1 + inds]
-                        all_config_options.append(current_config_options)
-
-        options_num = len(all_config_options)
-        all_config_options_ind = {
-            all_config_options[i]: i
-            for i in range(options_num)
-        }
-
-        text_ls = list(text)
-        var_len = len(var) + 1
-        var_ind = text.index('\n' + var + ' ') + var_len
-        current_var_ind = all_config_options_ind[var]
-        if current_var_ind < len(all_config_options) - 1:
-            next_var = all_config_options[current_var_ind + 1]
-            next_var_ind = text.index('\n' + next_var + ' ')
-            next_comments_ind = text[var_ind:].find('\n\n')
-            if next_comments_ind != -1:
-                next_comments_ind += var_ind
-                if next_comments_ind < next_var_ind:
-                    next_var_ind = next_comments_ind
-        else:
-            next_var_ind = -1
-        if is_str:
-            text_ls[var_ind:next_var_ind] = f" = '{new}'"
-        else:
-            text_ls[var_ind:next_var_ind] = f" = {new}"
-        with open('packages/piano_config.py', 'w', encoding='utf-8') as f:
-            f.write(''.join(text_ls))
-        importlib.reload(piano_config)
