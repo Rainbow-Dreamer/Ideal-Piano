@@ -25,14 +25,12 @@ ideal_piano_language_dict = {
     'reload': 'reload settings',
     'load': 'loading sound samples, please wait...',
     'finished': 'sounds loading finished',
-    'no MIDI input': 'there is no MIDI input devices, please check',
-    'error message': 'error message',
+    'no MIDI input':
+    'MIDI device id does not exist,\nplease right click on the MIDI KEYBOARD button\nto select a MIDI device',
     'pause': 'paused, press {unpause_key} to unpause',
     'repeat': 'music playing finished,\npress {repeat_key} to listen again',
     'sample':
     'Rendering current MIDI file with audio samples, please wait ...',
-    'close': 'press ctrl to close me ~\n',
-    'default': 'default',
     'soundfont': 'Rendering current MIDI file with SoundFont, please wait ...',
     'type': 'type',
     'chord name': 'chord name',

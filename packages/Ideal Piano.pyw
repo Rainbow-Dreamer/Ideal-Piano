@@ -298,19 +298,6 @@ class piano_window(pyglet.window.Window):
                                         anchor_x=piano_config.label_anchor_x,
                                         anchor_y=piano_config.label_anchor_y)
 
-        self.label_midi_device = pyglet.text.Label(
-            '',
-            font_name=piano_config.fonts,
-            font_size=piano_config.label_device_font_size,
-            bold=piano_config.bold,
-            x=piano_config.label_device_place[0],
-            y=piano_config.label_device_place[1],
-            color=piano_config.message_color,
-            anchor_x=piano_config.label_anchor_x,
-            anchor_y=piano_config.label_anchor_y,
-            multiline=True,
-            width=piano_config.label_device_width)
-
         self.chord_details_label = pyglet.text.Label(
             '',
             font_name=piano_config.fonts,
@@ -476,8 +463,6 @@ class piano_window(pyglet.window.Window):
             from languages.cn import language_patch
             mp.alg.detect = language_patch.detect
             mp.chord.info = language_patch.info
-        current_piano_engine.current_midi_device = language_patch.ideal_piano_language_dict[
-            'current_midi_device']
 
     def use_soundfont_msg_box(self):
         app = QtWidgets.QApplication(sys.argv)
@@ -545,7 +530,6 @@ class piano_window(pyglet.window.Window):
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
-        self.label_midi_device.draw()
         if self.first_time:
             self._draw_window_first_time()
         else:
@@ -601,10 +585,6 @@ class piano_window(pyglet.window.Window):
             self._main_window_enter_mode()
 
     def _main_window_read_click_mode(self):
-        if self.keyboard_handler[key.LSHIFT]:
-            self.label_midi_device.text = current_piano_engine.current_midi_device
-        if self.keyboard_handler[key.LCTRL]:
-            self.label_midi_device.text = ''
         if self.keyboard_handler[self.config_key] and self.keyboard_handler[
                 key.S]:
             self.open_settings()
@@ -655,7 +635,6 @@ class piano_window(pyglet.window.Window):
             except Exception as e:
                 current_piano_engine.has_load(False)
                 pygame.midi.quit()
-                current_piano_engine.current_midi_device += f'\n{language_patch.ideal_piano_language_dict["error message"]}: {e}'
                 self.label.text = language_patch.ideal_piano_language_dict[
                     'no MIDI input']
                 self.mode_num = 3
@@ -672,7 +651,7 @@ class piano_window(pyglet.window.Window):
                     pyglet.clock.schedule_interval(self.func,
                                                    1 / piano_config.fps)
         elif self.mode_num == 3:
-            time.sleep(1)
+            time.sleep(2)
             self.label.text = ''
             self.mode_num = None
         elif self.mode_num == 4:
@@ -708,7 +687,6 @@ class piano_window(pyglet.window.Window):
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
-        self.label_midi_device.draw()
         self.label2.draw()
         if piano_config.show_chord_details:
             self.chord_details_label.draw()
@@ -783,8 +761,6 @@ class piano_engine:
         self.bars_drop_time = []
         self.plays = []
         self.midi_device_load = False
-        self.current_midi_device = language_patch.ideal_piano_language_dict[
-            'current_midi_device']
         self.device = None
         self.play_midi_file = False
         self.sostenuto_pedal_on = False
@@ -984,14 +960,7 @@ class piano_engine:
         if not self.midi_device_load:
             self.device = None
             self.has_load(True)
-            self.current_midi_device = language_patch.ideal_piano_language_dict[
-                'close']
             pygame.midi.init()
-            midi_info = [(language_patch.ideal_piano_language_dict['default'],
-                          pygame.midi.get_default_input_id())]
-            midi_info += [(i, pygame.midi.get_device_info(i))
-                          for i in range(piano_config.device_info_num)]
-            self.current_midi_device += '\n'.join([str(j) for j in midi_info])
             self.device = pygame.midi.Input(piano_config.midi_device_id)
         else:
             if self.device:
@@ -1633,10 +1602,6 @@ class piano_engine:
                     self.still_hold.remove(k)
 
     def _midi_keyboard_read_pc_keyboard_key(self):
-        if current_piano_window.keyboard_handler[key.LSHIFT]:
-            current_piano_window.label_midi_device.text = self.current_midi_device
-        if current_piano_window.keyboard_handler[key.LCTRL]:
-            current_piano_window.label_midi_device.text = ''
         if piano_config.config_enable:
             if piano_config.play_use_soundfont:
                 self.detect_sf2_config(1)

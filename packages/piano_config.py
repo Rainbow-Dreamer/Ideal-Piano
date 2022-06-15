@@ -99,10 +99,6 @@ key_settings = {
 }
 
 midi_device_id = 1
-device_info_num = 10
-label_device_place = (250, 400)
-label_device_font_size = 15
-label_device_width = 1000
 
 # operation key settings for pause, unpause, repeat and so on
 pause_key = 'space'
