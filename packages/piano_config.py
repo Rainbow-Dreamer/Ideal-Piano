@@ -290,7 +290,7 @@ chord_details_label_anchor_y = 'baseline'
 chord_details_font_size = 15
 chord_details_label_width = 500
 
-show_current_detect_key = True
+show_current_detect_key = False
 current_detect_key_label_place = (230, 550)
 current_detect_key_label_anchor_x = 'left'
 current_detect_key_label_anchor_y = 'baseline'
