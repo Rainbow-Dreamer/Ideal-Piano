@@ -282,9 +282,20 @@ render_as_audio = False
 language = 'English'
 
 show_chord_accidentals = 'sharp'
+
 show_chord_details = False
 chord_details_label_place = (750, 500)
 chord_details_label_anchor_x = 'left'
 chord_details_label_anchor_y = 'baseline'
 chord_details_font_size = 15
 chord_details_label_width = 500
+
+show_current_detect_key = True
+current_detect_key_label_place = (230, 550)
+current_detect_key_label_anchor_x = 'left'
+current_detect_key_label_anchor_y = 'baseline'
+current_detect_key_font_size = 15
+current_detect_key_label_width = 1000
+major_minor_preference = False
+most_appear_num = 5
+current_detect_key_limit = 100

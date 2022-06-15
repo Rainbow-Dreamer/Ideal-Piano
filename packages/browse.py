@@ -287,3 +287,127 @@ class setup:
                                                    file_name=file_name,
                                                    dpi=dpi)
         app.exec()
+
+
+class midi_keyboard_window(QtWidgets.QMainWindow):
+
+    def __init__(self, dpi=None):
+        super().__init__()
+        self.dpi = dpi
+        self.setWindowTitle('Choose MIDI Device')
+        self.setMinimumSize(800, 400)
+
+        if sys.platform == 'win32':
+            self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
+        elif sys.platform == 'linux':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
+        elif sys.platform == 'darwin':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
+        import pygame.midi
+        pygame.midi.quit()
+        pygame.midi.init()
+        midi_info = []
+        counter = 0
+        while True:
+            current = counter, pygame.midi.get_device_info(counter)
+            counter += 1
+            if current[1] is None:
+                break
+            midi_info.append(current)
+
+        self.midi_inputs = [
+            (i[0], f'{i[1][0].decode("utf-8")}, {i[1][1].decode("utf-8")}')
+            for i in midi_info if i[1][2] == 1
+        ]
+        self.midi_outputs = [
+            (i[0], f'{i[1][0].decode("utf-8")}, {i[1][1].decode("utf-8")}')
+            for i in midi_info if i[1][2] == 0
+        ]
+        self.midi_ports = self.midi_inputs + self.midi_outputs
+        self.midi_input_box = QtWidgets.QComboBox(self)
+        self.midi_input_box.setFixedWidth(400)
+        self.midi_input_box.addItems([i[1] for i in self.midi_inputs])
+        self.midi_input_box.move(200, 70)
+        self.midi_input_box.activated.connect(self.change_midi_device_id)
+        self.midi_input_label = QtWidgets.QLabel(self,
+                                                 text='MIDI Input Driver')
+        self.midi_input_label.setFont(
+            set_font(QtGui.QFont('Consolas', 10), self.dpi))
+        self.midi_input_label.setFixedWidth(150)
+        self.midi_input_label.move(50, 70)
+        self.midi_output_box = QtWidgets.QComboBox(self)
+        self.midi_output_box.setFixedWidth(400)
+        self.midi_output_box.addItems([i[1] for i in self.midi_outputs])
+        self.midi_output_box.move(200, 170)
+        self.midi_output_label = QtWidgets.QLabel(self,
+                                                  text='MIDI Output Driver')
+        self.midi_output_label.setFont(
+            set_font(QtGui.QFont('Consolas', 10), self.dpi))
+        self.midi_output_label.setFixedWidth(150)
+        self.midi_output_label.move(50, 170)
+        self.msg_label = QtWidgets.QLabel(
+            self,
+            text=
+            'Instruction: Choose your MIDI device in MIDI Input Driver box,\n             and then you can close this window.'
+        )
+        self.msg_label.setFont(set_font(QtGui.QFont('Consolas', 10), self.dpi))
+        self.msg_label.setFixedWidth(600)
+        self.msg_label.move(50, 270)
+        self.show()
+
+    def change_midi_device_id(self):
+        current_midi_input = self.midi_input_box.currentText()
+        current_midi_device_id = self.midi_inputs[[
+            i[1] for i in self.midi_inputs
+        ].index(current_midi_input)][0]
+        try:
+            self.change('midi_device_id',
+                        str(current_midi_device_id),
+                        is_str=False)
+        except:
+            import traceback
+            print(traceback.format_exc())
+
+    def change(self, var, new, is_str=True):
+        with open('packages/piano_config.py', encoding='utf-8') as f:
+            text = f.read()
+
+        all_config_options = []
+        N = len(text)
+        for i in range(N):
+            current = text[i]
+            if current == '\n':
+                if i + 1 < N:
+                    next_character = text[i + 1]
+                    if next_character.isalpha():
+                        inds = text[i + 1:].index('=') - 1
+                        current_config_options = text[i + 1:i + 1 + inds]
+                        all_config_options.append(current_config_options)
+
+        options_num = len(all_config_options)
+        all_config_options_ind = {
+            all_config_options[i]: i
+            for i in range(options_num)
+        }
+
+        text_ls = list(text)
+        var_len = len(var) + 1
+        var_ind = text.index('\n' + var + ' ') + var_len
+        current_var_ind = all_config_options_ind[var]
+        if current_var_ind < len(all_config_options) - 1:
+            next_var = all_config_options[current_var_ind + 1]
+            next_var_ind = text.index('\n' + next_var + ' ')
+            next_comments_ind = text[var_ind:].find('\n\n')
+            if next_comments_ind != -1:
+                next_comments_ind += var_ind
+                if next_comments_ind < next_var_ind:
+                    next_var_ind = next_comments_ind
+        else:
+            next_var_ind = -1
+        if is_str:
+            text_ls[var_ind:next_var_ind] = f" = '{new}'"
+        else:
+            text_ls[var_ind:next_var_ind] = f" = {new}"
+        with open('packages/piano_config.py', 'w', encoding='utf-8') as f:
+            f.write(''.join(text_ls))
+        importlib.reload(piano_config)

@@ -88,7 +88,7 @@ class ideal_piano_button:
         self.button.draw()
 
     def mouse_press(self, window, button, mouse):
-        return self.inside(window.mouse_pos) & button & mouse
+        return self.inside(window.mouse_pos) and button == mouse
 
 
 class piano_window(pyglet.window.Window):
@@ -323,6 +323,19 @@ class piano_window(pyglet.window.Window):
             multiline=True,
             width=piano_config.chord_details_label_width)
 
+        self.current_detect_key_label = pyglet.text.Label(
+            '',
+            font_name=piano_config.fonts,
+            font_size=piano_config.current_detect_key_font_size,
+            bold=piano_config.bold,
+            x=piano_config.current_detect_key_label_place[0],
+            y=piano_config.current_detect_key_label_place[1],
+            color=piano_config.message_color,
+            anchor_x=piano_config.current_detect_key_label_anchor_x,
+            anchor_y=piano_config.current_detect_key_label_anchor_y,
+            multiline=True,
+            width=piano_config.current_detect_key_label_width)
+
     def init_music_analysis(self):
         if piano_config.show_music_analysis:
             self.music_analysis_label = pyglet.text.Label(
@@ -438,6 +451,7 @@ class piano_window(pyglet.window.Window):
 
     def init_parameters(self):
         self.mouse_left = 1
+        self.mouse_right = 4
         self.mouse_pos = 0, 0
         self.first_time = True
         self.message_label = False
@@ -448,6 +462,7 @@ class piano_window(pyglet.window.Window):
         self.bar_offset_x = piano_config.bar_offset_x
         self.open_browse_window = False
         self.open_settings_window = False
+        self.open_choose_midi_keyboard_window = False
 
     def init_language(self):
         global language_patch
@@ -509,6 +524,9 @@ class piano_window(pyglet.window.Window):
         if self.self_midi_button.mouse_press(
                 self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 1
+        if self.self_midi_button.mouse_press(
+                self, button, mouse=self.mouse_right) and self.first_time:
+            self.open_midi_keyboard_right_click_menu()
         if self.play_midi_button.mouse_press(
                 self, button, mouse=self.mouse_left) and self.first_time:
             self.click_mode = 2
@@ -672,6 +690,8 @@ class piano_window(pyglet.window.Window):
         self.label2.draw()
         if piano_config.show_chord_details:
             self.chord_details_label.draw()
+        if piano_config.show_current_detect_key:
+            self.current_detect_key_label.draw()
         if self.message_label:
             self.label3.draw()
         if piano_config.show_music_analysis:
@@ -689,6 +709,8 @@ class piano_window(pyglet.window.Window):
         self.label2.draw()
         if piano_config.show_chord_details:
             self.chord_details_label.draw()
+        if piano_config.show_current_detect_key:
+            self.current_detect_key_label.draw()
         if self.message_label:
             self.label3.draw()
         if piano_config.show_music_analysis:
@@ -714,22 +736,15 @@ class piano_window(pyglet.window.Window):
             self.open_settings_window = False
             self.reload_settings()
 
-    def is_runnning(self):
-        import subprocess
-        process = subprocess.Popen('pgrep change_settings',
-                                   shell=True,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        my_pid, err = process.communicate()
-        if my_pid:
-            return True
-        else:
-            return False
-
-    def check_change_settings(self, dt):
-        if not self.is_runnning():
-            self.reload_settings()
-            pyglet.clock.unschedule(self.check_change_settings)
+    def open_midi_keyboard_right_click_menu(self):
+        if not self.open_choose_midi_keyboard_window:
+            self.open_choose_midi_keyboard_window = True
+            app = QtWidgets.QApplication(sys.argv)
+            dpi = (app.screens()[0]).logicalDotsPerInch()
+            current_midi_keyboard_window = browse.midi_keyboard_window(dpi=dpi)
+            app.exec()
+            del app
+            self.open_choose_midi_keyboard_window = False
 
     def reload_settings(self):
         importlib.reload(piano_config)
@@ -930,6 +945,18 @@ class piano_engine:
                     current_chord_info.pop(current_dict['other']))
             current_piano_window.chord_details_label.text = '\n'.join(
                 [f'{i}: {j}' for i, j in current_chord_info.items()])
+        if piano_config.show_current_detect_key:
+            if piano_config.current_detect_key_limit is not None and len(
+                    self.current_play_chords
+            ) > piano_config.current_detect_key_limit:
+                self.current_play_chords = mp.chord([])
+            self.current_play_chords |= current_chord
+            note_count = self.current_play_chords.count_appear(sort=True)
+            current_detect_key = mp.alg.detect_scale(
+                self.current_play_chords,
+                major_minor_preference=piano_config.major_minor_preference,
+                most_appear_num=piano_config.most_appear_num)
+            current_piano_window.current_detect_key_label.text = f'note count: {note_count}\n\n' + current_detect_key
         return current_info
 
     def init_self_pc(self):
@@ -946,6 +973,9 @@ class piano_engine:
         if piano_config.delay:
             self.stillplay = []
         self.lastshow = None
+        if piano_config.show_current_detect_key:
+            self.current_play_chords = mp.chord([])
+            current_piano_window.current_detect_key_label.text = ''
 
     def init_self_midi(self):
         if not self.midi_device_load:
@@ -985,6 +1015,9 @@ class piano_engine:
         self.last = self.current_play.copy()
         self.sostenuto_pedal_on = False
         self.soft_pedal_volume_ratio = 1
+        if piano_config.show_current_detect_key:
+            self.current_play_chords = mp.chord([])
+            current_piano_window.current_detect_key_label.text = ''
 
     def init_midi_show(self, file_name=None):
         current_piano_window.open_browse_window = True
@@ -1046,6 +1079,9 @@ class piano_engine:
         self.lastshow = None
         self.finished = False
         self.paused = False
+        if piano_config.show_current_detect_key:
+            self.current_play_chords = mp.chord([])
+            current_piano_window.current_detect_key_label.text = ''
 
     def _midi_show_init(self,
                         musicsheet,
