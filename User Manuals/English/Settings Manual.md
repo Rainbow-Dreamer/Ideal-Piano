@@ -75,14 +75,6 @@ key_settings: The dictionary of the 88 keys of the computer keyboard, please not
 
 midi_device_id: This parameter is the id of the midi device after it is connected to the midi device (e.g. midi keyboard)
 
-device_info_num: when you press shift to see current devices info, the number of devices info shows on the screen
-
-label_device_place: text position of the devices info
-
-label_device_font_size: font size of the devices info
-
-label_device_width: max width of the devices info
-
 language: the display language of the software, including main window buttons, chord names, messages and the window to choose MIDI files, currently only 'English' and 'Chinese' are supported
 
 
@@ -246,6 +238,24 @@ chord_details_label_anchor_y: vertical alignment of chord details
 chord_details_font_size: font size of chord details
 
 chord_details_label_width: max width of chord details
+
+show_current_detect_key: whether to analyze and show some of the most possible keys you are currently playing (this functionality is experimental and still under development)
+
+current_detect_key_label_place: text position of current key
+
+current_detect_key_label_anchor_x: horizontal alignment of current key
+
+current_detect_key_label_anchor_y: vertical alignment of current key
+
+current_detect_key_font_size: font size of current key
+
+current_detect_key_label_width: max width of current key
+
+major_minor_preference: config parameter of current key analysis function, whether to put major and minor as the most possible result
+
+most_appear_num : config parameter of current key analysis function, the number of possible keys
+
+current_detect_key_limit: the max number of notes to analyze when playing, if current number of notes exceed this limit, then clear the temp
 
 
 

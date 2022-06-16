@@ -1,5 +1,12 @@
 # Changelog
 
+2022-06-15
+
+* Added choose MIDI device functionality, now you can right click on `MIDI KEYBOARD` button to open the choose MIDI device window, where you can choose which MIDI device you want to use in Ideal Piano. The functionality of pressing keys to show current device is removed.
+* The functionality of detect current key you are playing by music analysis algorithm is under experimental development, the algorithm will show you some most possible keys you are currently playing, the accuracy of the algorithm needs to be improved.
+
+
+
 2022-05-30
 
 * Switch from tkinter to PyQt5 for the browse window and settings window, since on macOS there are always plenty of bugs when pyglet and tkinter work together, and tkinter is not that powerful for a GUI toolkit compares to PyQt5. After completely rewriting the codes for the browse window and settings window for PyQt5, I find that the functional logic and framework of PyQt5 is actually a lot more easier and flexible than tkinter, and there are no longer bugs appear on macOS when pyglet and PyQt5 works together.

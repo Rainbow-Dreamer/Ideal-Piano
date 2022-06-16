@@ -19,7 +19,7 @@ Other way: Change the parameter `background_image` in the settings file to the p
 
 ## What do the buttons on the main screen do?
 
-Click the `PLAY` button to enter the computer keyboard playing mode, click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode, and click `PLAY MIDI` button to enter the MIDI file playing mode. When entering one of these modes, click `GO BACK` button to go back to the initial page. Click `SETTINGS` button to open the change settings window.
+Click the `PLAY` button to enter the computer keyboard playing mode, click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode, right click `MIDI KEYBOARD` button to open the choose MIDI device window, and click `PLAY MIDI` button to enter the MIDI file playing mode. When entering one of these modes, click `GO BACK` button to go back to the initial page. Click `SETTINGS` button to open the change settings window.
 
 
 
@@ -36,8 +36,6 @@ There are Linux and macOS compatible versions, you can download at the [release 
 ### Linux
 
 You can download the Linux compatible version from the release page, which contains the Linux executable for Ideal Piano, double click to open the software to use.
-
-You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
 
 For Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. On Ubuntu you can run
 
@@ -69,14 +67,12 @@ Yes, you can, please refer to the settings manual, to be short, you can change t
 
 
 
-## What should I pay attention to when playing with a MIDI keyboard?
-
-It is better to open Ideal Piano only after the MIDI keyboard is connected to the computer, or open Ideal Piano first, don't click the MIDI keyboard button, then connect the MIDI keyboard to the computer, then click the button, so as to make sure your MIDI keyboard can be detected properly in the software. If the MIDI keyboard still does not respond, then press `shift` on your computer keyboard to display the MIDI ports currently available on your computer, you can confirm the MIDI port number you need to use by the name of the corresponding device, then change the value of setting parameter `midi_device_id` to the one you want to use MIDI port number.
-
 
 ## Why can't Ideal Piano detect my MIDI keyboard?
 
-If you open the DAW, the MIDI keyboard is already available in the DAW, then Ideal Piano can't detect your MIDI keyboard at this time, because a MIDI keyboard can only control one software at most, so at this time the DAW has already occupied the MIDI keyboard, and Ideal Piano can't detect the MIDI keyboard.
+The most possible case is that the current MIDI device id in Ideal Piano does not match with your MIDI keyboard. In this case, you can right click on `MIDI KEYBOARD` to open the choose MIDI device window to choose current MIDI device as your MIDI keyboard, you should choose the MIDI device in MIDI Input Driver box to make this works.
+
+For the other cases, if you open the DAW, the MIDI keyboard is already available in the DAW, then Ideal Piano can't detect your MIDI keyboard at this time, because a MIDI keyboard can only control one software at most, so at this time the DAW has already occupied the MIDI keyboard, and Ideal Piano can't detect the MIDI keyboard.
 
 If you want to use a MIDI keyboard in a DAW and also use Ideal Piano, there is a very simple solution.
 
