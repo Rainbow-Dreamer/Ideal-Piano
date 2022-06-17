@@ -70,7 +70,7 @@ Yes, you can, please refer to the settings manual, to be short, you can change t
 
 ## Why can't Ideal Piano detect my MIDI keyboard?
 
-The most possible case is that the current MIDI device id in Ideal Piano does not match with your MIDI keyboard. In this case, you can right click on `MIDI KEYBOARD` to open the choose MIDI device window to choose current MIDI device as your MIDI keyboard, you should choose the MIDI device in MIDI Input Driver box to make this works.
+The most possible case is that the current MIDI device id in Ideal Piano does not match with your MIDI keyboard. In this case, you can right click on `MIDI KEYBOARD` button to open the choose MIDI device window to choose current MIDI device as your MIDI keyboard, you should choose the MIDI device in MIDI Input Driver box to make this works.
 
 For the other cases, if you open the DAW, the MIDI keyboard is already available in the DAW, then Ideal Piano can't detect your MIDI keyboard at this time, because a MIDI keyboard can only control one software at most, so at this time the DAW has already occupied the MIDI keyboard, and Ideal Piano can't detect the MIDI keyboard.
 
