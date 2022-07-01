@@ -10,7 +10,8 @@ browse_language_dict = {
     'trackind': 'MIDI track number',
     'from': 'from',
     'to': 'to',
-    'melody': 'main melody off when show chords',
+    'show melody': 'show melody only',
+    'show chord': 'show chord only',
     'merge': 'merge all tracks',
     'file name': 'file name'
 }

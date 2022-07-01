@@ -1001,34 +1001,62 @@ class piano_engine:
         read_result = current_setup.read_result
         self.sheetlen = current_setup.sheetlen
         set_bpm = current_setup.set_bpm
-        self.off_melody = current_setup.off_melody
+        self.show_mode = current_setup.show_mode
         self.if_merge = current_setup.if_merge
         if self.action == 1:
             self.action = 0
             return 'back'
         if self.path and read_result:
             if read_result != 'error':
-                self.bpm, self.musicsheet, start_time, actual_start_time = read_result
+                self.bpm, self.musicsheet, start_time, actual_start_time, drum_tracks = read_result
+                original_start_time = copy(start_time)
                 self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
                     *piano_config.pitch_range)
                 start_time += new_start_time
                 self.sheetlen = len(self.musicsheet)
+                if self.sheetlen == 0:
+                    return 'back'
                 if set_bpm:
                     self.bpm = float(set_bpm)
+                    mp.write(self.musicsheet,
+                             bpm=self.bpm,
+                             start_time=start_time,
+                             name='temp.mid')
+                    self.path = 'temp.mid'
             else:
                 return 'back'
         else:
             return 'back'
 
-        if self.off_melody:
-            self.musicsheet = mp.split_chord(
-                self.musicsheet, 'hold', piano_config.melody_tol,
+        if self.show_mode != 0:
+            current_melody, current_chord, shift = mp.alg.split_all(
+                self.musicsheet, 'chord', piano_config.melody_tol,
                 piano_config.chord_tol, piano_config.get_off_overlap_notes,
                 piano_config.average_degree_length,
                 piano_config.melody_degree_tol)
+            if self.show_mode == 1:
+                self.musicsheet = current_melody
+                if shift < 0:
+                    start_time += abs(shift)
+            elif self.show_mode == 2:
+                self.musicsheet = current_chord
+                if shift >= 0:
+                    start_time += shift
             self.sheetlen = len(self.musicsheet)
-        if self.sheetlen == 0:
-            return 'back'
+            if self.sheetlen == 0:
+                return 'back'
+            if self.show_mode == 2 and drum_tracks:
+                current_musicsheet = copy(self.musicsheet)
+                for each in drum_tracks:
+                    current_musicsheet &= (each.content, each.start_time -
+                                           original_start_time)
+            else:
+                current_musicsheet = self.musicsheet
+            mp.write(current_musicsheet,
+                     bpm=self.bpm,
+                     start_time=start_time,
+                     name='temp.mid')
+            self.path = 'temp.mid'
         pygame.mixer.set_num_channels(self.sheetlen)
         self.wholenotes = self.musicsheet.notes
         self.unit_time = 4 * 60 / self.bpm
@@ -1042,7 +1070,7 @@ class piano_engine:
                                            start_time)
         if piano_config.show_music_analysis:
             self.show_music_analysis_list = [[
-                mp.add_to_last_index(self.musicsheet.interval, each[0]),
+                mp.alg.add_to_last_index(self.musicsheet.interval, each[0]),
                 each[1]
             ] for each in current_piano_window.music_analysis_list]
             self.default_show_music_analysis_list = copy(

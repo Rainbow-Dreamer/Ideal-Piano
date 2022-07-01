@@ -1107,7 +1107,8 @@ browse_language_dict = {
     'trackind': 'MIDI轨道序号',
     'from': '从',
     'to': '到',
-    'melody': '去除主旋律，只看和弦部分',
+    'show melody': '只显示主旋律',
+    'show chord': '只显示和弦',
     'merge': '合并所有音轨',
     'file name': '文件名'
 }

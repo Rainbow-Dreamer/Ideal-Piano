@@ -76,7 +76,8 @@ class browse_window(QtWidgets.QMainWindow):
         self.choose_track_ind.deleteLater()
         self.check_bpm_text.deleteLater()
         self.check_bpm.deleteLater()
-        self.main_melody.deleteLater()
+        self.show_main_melody.deleteLater()
+        self.show_chord.deleteLater()
         self.merge_all_tracks.deleteLater()
         self.filename_label.deleteLater()
         self.make_button()
@@ -88,7 +89,10 @@ class browse_window(QtWidgets.QMainWindow):
     def quit_normal(self):
         self.msg_label.setText('')
         self.parent.set_bpm = self.check_bpm.text()
-        self.parent.off_melody = self.main_melody.isChecked()
+        if self.show_main_melody.isChecked():
+            self.parent.show_mode = 1
+        elif self.show_chord.isChecked():
+            self.parent.show_mode = 2
         self.parent.if_merge = self.merge_all_tracks.isChecked()
         try:
             self.parent.track_ind_get = int(self.choose_track_ind.text())
@@ -118,9 +122,12 @@ class browse_window(QtWidgets.QMainWindow):
                     continue
                 i += 1
             actual_start_time = min(all_tracks.start_times)
+            drum_tracks = []
             if piano_config.get_off_drums:
                 while 9 in all_tracks.channels:
-                    del all_tracks[all_tracks.channels.index(9)]
+                    current_drum_track_ind = all_tracks.channels.index(9)
+                    drum_tracks.append(all_tracks[current_drum_track_ind])
+                    del all_tracks[current_drum_track_ind]
             if not self.parent.if_merge:
                 if self.parent.track_ind_get is not None:
                     all_tracks = [
@@ -185,7 +192,7 @@ class browse_window(QtWidgets.QMainWindow):
             if self.parent.set_bpm != '':
                 tempo = float(self.parent.set_bpm)
             first_track_start_time += all_track_notes.start_time
-            self.parent.read_result = tempo, all_track_notes, first_track_start_time, actual_start_time
+            self.parent.read_result = tempo, all_track_notes, first_track_start_time, actual_start_time, drum_tracks
 
         except Exception as e:
             print(str(e))
@@ -254,12 +261,21 @@ class browse_window(QtWidgets.QMainWindow):
             self.check_bpm.setMaximumWidth(100)
             self.check_bpm.move(240, 215)
             self.check_bpm.show()
-            self.main_melody = QtWidgets.QCheckBox(
-                parent=self.labelFrame, text=self.browse_dict['melody'])
-            self.main_melody.move(100, 250)
-            self.main_melody.setFont(
+            self.show_main_melody = QtWidgets.QCheckBox(
+                parent=self.labelFrame, text=self.browse_dict['show melody'])
+            self.show_main_melody.clicked.connect(
+                lambda: self.show_mode_check(0))
+            self.show_main_melody.move(50, 250)
+            self.show_main_melody.setFont(
                 set_font(QtGui.QFont('Consolas', 10), self.dpi))
-            self.main_melody.show()
+            self.show_main_melody.show()
+            self.show_chord = QtWidgets.QCheckBox(
+                parent=self.labelFrame, text=self.browse_dict['show chord'])
+            self.show_chord.clicked.connect(lambda: self.show_mode_check(1))
+            self.show_chord.move(200, 250)
+            self.show_chord.setFont(
+                set_font(QtGui.QFont('Consolas', 10), self.dpi))
+            self.show_chord.show()
             self.merge_all_tracks = QtWidgets.QCheckBox(
                 parent=self.labelFrame, text=self.browse_dict['merge'])
             self.merge_all_tracks.setFont(
@@ -267,6 +283,14 @@ class browse_window(QtWidgets.QMainWindow):
             self.merge_all_tracks.move(250, 65)
             self.merge_all_tracks.setChecked(True)
             self.merge_all_tracks.show()
+
+    def show_mode_check(self, mode=0):
+        if mode == 0:
+            if self.show_chord.isChecked():
+                self.show_chord.setChecked(False)
+        elif mode == 1:
+            if self.show_main_melody.isChecked():
+                self.show_main_melody.setChecked(False)
 
 
 class setup:
@@ -279,7 +303,7 @@ class setup:
         self.read_result = None
         self.sheetlen = None
         self.set_bpm = None
-        self.off_melody = 0
+        self.show_mode = 0
         self.if_merge = True
         app = QtWidgets.QApplication(sys.argv)
         dpi = (app.screens()[0]).logicalDotsPerInch()
