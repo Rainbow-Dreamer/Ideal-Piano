@@ -1009,7 +1009,6 @@ class piano_engine:
         if self.path and read_result:
             if read_result != 'error':
                 self.bpm, self.musicsheet, start_time, actual_start_time, drum_tracks = read_result
-                original_start_time = copy(start_time)
                 self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
                     *piano_config.pitch_range)
                 start_time += new_start_time
@@ -1047,9 +1046,10 @@ class piano_engine:
                 return 'back'
             if self.show_mode == 2 and drum_tracks:
                 current_musicsheet = copy(self.musicsheet)
+                current_musicsheet.start_time = 0
                 for each in drum_tracks:
-                    current_musicsheet &= (each.content, each.start_time -
-                                           original_start_time)
+                    current_musicsheet &= (each.content,
+                                           each.start_time - start_time)
             else:
                 current_musicsheet = self.musicsheet
             mp.write(current_musicsheet,
