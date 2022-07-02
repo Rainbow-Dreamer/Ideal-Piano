@@ -729,6 +729,7 @@ class piano_window(pyglet.window.Window):
 
     def reload_settings(self):
         importlib.reload(piano_config)
+        current_piano_engine.notedic = piano_config.key_settings
         self.init_parameters()
         self.init_language()
         self.init_keys()
@@ -1017,7 +1018,17 @@ class piano_engine:
                     return 'back'
                 if set_bpm:
                     self.bpm = float(set_bpm)
-                    mp.write(self.musicsheet,
+                    if drum_tracks:
+                        current_musicsheet = copy(self.musicsheet)
+                        current_musicsheet.start_time = 0
+                        for each in drum_tracks:
+                            current_musicsheet &= (each.content,
+                                                   each.start_time -
+                                                   start_time)
+                        drum_tracks.clear()
+                    else:
+                        current_musicsheet = self.musicsheet
+                    mp.write(current_musicsheet,
                              bpm=self.bpm,
                              start_time=start_time,
                              name='temp.mid')
@@ -1050,6 +1061,7 @@ class piano_engine:
                 for each in drum_tracks:
                     current_musicsheet &= (each.content,
                                            each.start_time - start_time)
+                drum_tracks.clear()
             else:
                 current_musicsheet = self.musicsheet
             mp.write(current_musicsheet,
