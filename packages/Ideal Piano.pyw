@@ -213,7 +213,8 @@ class piano_window(pyglet.window.Window):
                 background.width *= ratio_background
         else:
             background.width, background.height = piano_config.background_size
-        self.background = background
+        self.background = pyglet.sprite.Sprite(background, x=0, y=0)
+        self.background.opacity = piano_config.background_opacity
 
     def init_layers(self):
         self.batch = pyglet.graphics.Batch()
@@ -482,8 +483,8 @@ class piano_window(pyglet.window.Window):
                 current_type, type_name = current_type.split('/')
                 if current_type == 'image':
                     change_parameter('background_image',
-                                     current_path,
-                                     is_str=True)
+                                     repr(current_path),
+                                     is_str=False)
                     self.init_screen()
                 elif 'mid' in type_name:
                     if self.click_mode is None:
@@ -524,7 +525,7 @@ class piano_window(pyglet.window.Window):
 
     def on_draw(self):
         self.clear()
-        self.background.blit(0, 0)
+        self.background.draw()
         if not piano_config.draw_piano_keys:
             self.image_show.draw()
         if self.batch:
@@ -681,7 +682,7 @@ class piano_window(pyglet.window.Window):
 
     def redraw(self):
         self.clear()
-        self.background.blit(0, 0)
+        self.background.draw()
         if not piano_config.draw_piano_keys:
             self.image_show.draw()
         if self.batch:
