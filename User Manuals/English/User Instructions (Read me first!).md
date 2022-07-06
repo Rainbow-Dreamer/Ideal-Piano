@@ -15,6 +15,8 @@ The easiest way is to directly drag and drop local image files onto the main win
 
 Other way: Change the parameter `background_image` in the settings file to the path of the background image you want to set, save it and reopen Ideal Piano. For other parameters, please refer to the setup manual.
 
+You can adjust the transparency of background image by setting the config parameter `background_opacity` from 0 to 255 (transparent to non-transparent).
+
 
 
 ## What do the buttons on the main screen do?

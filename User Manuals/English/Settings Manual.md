@@ -27,6 +27,10 @@ background_image: background image file path
 
 background_size: background image size
 
+width_or_height_first: fill with width or height
+
+background_transparency: the transparency of background image, from 0 to 255 (transparent to non-transparent)
+
 piano_image: piano image file path
 
 piano_size: piano image size
