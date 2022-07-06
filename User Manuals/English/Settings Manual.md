@@ -305,6 +305,20 @@ piano_key_border: the width of the piano's keyboard border
 
 piano_key_border_color: piano_key_border_color, RGB tuple, `(R, G, B)`
 
+show_note_name_on_piano_key: show note name on piano keys or not
+
+show_only_start_note_name: show only note names with C or all white keys note names on piano keys
+
+piano_key_note_name_font_size: font size of note names on piano keys
+
+piano_key_note_name_bold: bold or not of note names on piano keys
+
+piano_key_note_name_color: color of note names on piano keys
+
+piano_key_note_name_pad_x: x padding of note names on piano keys
+
+piano_key_note_name_pad_y: y padding of note names on piano keys
+
 
 
 ## SoundFont file related parameters
