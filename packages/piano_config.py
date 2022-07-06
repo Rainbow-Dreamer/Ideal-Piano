@@ -241,7 +241,7 @@ black_keys_set = [0, 30, 43.85, 28.67, 28.48]
 black_keys_set_interval = 43.75
 black_keys_set_num = 7
 
-show_note_name_on_piano_key = True
+show_note_name_on_piano_key = False
 show_only_start_note_name = True
 piano_key_note_name_font_size = 12
 piano_key_note_name_bold = False
