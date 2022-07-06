@@ -222,6 +222,7 @@ class piano_window(pyglet.window.Window):
         self.piano_bg = pyglet.graphics.OrderedGroup(1)
         self.piano_key = pyglet.graphics.OrderedGroup(2)
         self.play_highlight = pyglet.graphics.OrderedGroup(3)
+        self.piano_keys_note_name = pyglet.graphics.OrderedGroup(4)
 
     def init_note_mode(self):
         if not piano_config.draw_piano_keys:
@@ -437,6 +438,38 @@ class piano_window(pyglet.window.Window):
             self.note_place = [(each.x, each.y) for each in self.piano_keys]
             self.note_num = len(self.note_place)
             self.bar_offset_x = 0
+            if piano_config.show_note_name_on_piano_key:
+                self.piano_keys_note_names_label = []
+                current_piano_keys_note_names = [
+                    mp.degree_to_note(i + 21)
+                    for i in range(len(self.piano_keys))
+                ]
+                if piano_config.show_only_start_note_name:
+                    ind = [
+                        i
+                        for i, each in enumerate(current_piano_keys_note_names)
+                        if each.name == 'C'
+                    ]
+                else:
+                    ind = [
+                        i
+                        for i, each in enumerate(current_piano_keys_note_names)
+                        if '#' not in each.name
+                    ]
+                for each in ind:
+                    current_label = pyglet.text.Label(
+                        str(current_piano_keys_note_names[each]),
+                        font_name=piano_config.fonts,
+                        font_size=piano_config.piano_key_note_name_font_size,
+                        bold=piano_config.piano_key_note_name_bold,
+                        x=self.note_place[each][0] +
+                        piano_config.piano_key_note_name_pad_x,
+                        y=self.note_place[each][1] +
+                        piano_config.piano_key_note_name_pad_y,
+                        color=piano_config.piano_key_note_name_color,
+                        batch=self.batch,
+                        group=self.piano_keys_note_name)
+                    self.piano_keys_note_names_label.append(current_label)
 
     def init_parameters(self):
         self.mouse_left = 1
