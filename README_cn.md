@@ -26,6 +26,8 @@ Ideal Piano最大的特色就是通过乐理逻辑的算法来判断当前演奏
 
 你可以设置 `show_chord_details` 为 `True` 来显示你当前正在演奏的和弦的详细信息，这对于学习和理解和弦结构有帮助。
 
+你可以把`show_note_name_on_piano_key`设置为`True`，在钢琴键上显示音符名称，默认情况下，只显示起始C音，如果你想显示所有的音符名称，你可以把`show_only_start_note_name`设置为`False`，这将显示在白键上的所有音符名称。
+
 
 
 ## 下载

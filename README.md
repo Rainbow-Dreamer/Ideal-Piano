@@ -28,6 +28,8 @@ This software also supports directly loading SoundFont files as sound source to 
 
 You can set `show_chord_details` to `True` to show chord details of current chord you are playing, which is helpful for learning and understanding chord structures.
 
+You can set `show_note_name_on_piano_key` to `True` to show note names on piano keys, by default, only the starting C notes will be shown, if you want to show all note names, you can set `show_only_start_note_name` to `False`, which will show all note names on white keys.
+
 
 
 ## Download
