@@ -31,8 +31,6 @@ width_or_height_first: fill with width or height
 
 background_transparency: the transparency of background image, from 0 to 255 (transparent to non-transparent)
 
-piano_image: piano image file path
-
 piano_size: piano image size
 
 message_color: font color for chord display, formatted as (R, G, B, A)
@@ -74,6 +72,10 @@ play_midi_place: the position of play MIDI button
 settings_image: the image file path of settings button
 
 settings_place: the position of settings button
+
+button_resize_num: the resize ratio of button size
+
+button_opacity: the opacity of button
 
 key_settings: The dictionary of the 88 keys of the computer keyboard, please note that all the files in the sound path must contain the keys you have set to
 
@@ -265,8 +267,6 @@ current_detect_key_limit: the max number of notes to analyze when playing, if cu
 
 ## Piano keyboard related parameters
 
-draw_piano_keys: set to True to enter the draw piano mode, (according to the parameters and the structure of the piano 88 keys to draw the piano keyboard, replacing the previous piano picture) In the draw piano mode, the corresponding keys will light up when the midi keyboard is played or the computer keyboard is played, including when the MIDI file is played in drop note mode, the notes will also light up when they land on the keys. The piano is drawn using black and white keys that directly follow the structure of the piano's 88 keys, according to settable parameters, and each key can change color. Underneath the drawing of the 88 keys there is a black background image, which is mainly used to show the gaps between the piano keys (for filling). You can turn off note mode (note_mode can be set to a value other than bars, bars drop) and just turn on draw piano mode, the corresponding piano key will be lit up when playing and the current note will be lit up when playing the MIDI file. It is also possible to use any of the note modes and turn on draw piano mode.
-
 white_key_width: the width of the piano's white keys (horizontal length)
 
 white_key_height: the height of the piano's white keys (vertical length)
@@ -281,6 +281,8 @@ white_key_start_x: the horizontal position of the first white key of the piano
 
 white_key_color: the color of the piano's white keys
 
+white_key_opacity: the opacity of white keys
+
 black_key_width: the width (horizontal length) of the piano's black keys
 
 black_key_height: the height of the piano's black key (vertical length)
@@ -293,6 +295,8 @@ black_key_start_x: horizontal position of the second black key of the piano
 
 black_key_color: the color of the piano's black keys
 
+black_key_opacity: the opacity of black keys
+
 black_keys_set: the relative interval between each black key in each group, except for the first black key, which is set individually, in groups of 5 (the first interval is usually 0, which means that the first black key starts from the leftmost relative position in the current group)
 
 black_keys_set_interval: the interval between every two black keysets
@@ -300,6 +304,8 @@ black_keys_set_interval: the interval between every two black keysets
 black_keys_set_num: the number of black keysets
 
 piano_background_image: the background image under the piano (to fill the gap)
+
+piano_background_opacity: the opacity of piano background image
 
 piano_key_border: the width of the piano's keyboard border
 
