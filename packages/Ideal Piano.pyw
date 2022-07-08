@@ -244,6 +244,14 @@ class piano_window(pyglet.window.Window):
             piano_config.self_midi_image = 'packages/languages/cn/midi_keyboard.png'
             piano_config.play_midi_image = 'packages/languages/cn/play_midi.png'
             piano_config.settings_image = 'packages/languages/cn/settings.png'
+        if not os.path.exists(piano_config.go_back_image):
+            piano_config.go_back_image = 'resources/go_back.png'
+        if not os.path.exists(piano_config.self_play_image):
+            piano_config.self_play_image = 'resources/play.png'
+        if not os.path.exists(piano_config.self_midi_image):
+            piano_config.self_midi_image = 'resources/play_midi.png'
+        if not os.path.exists(piano_config.settings_image):
+            piano_config.settings_image = 'resources/settings.png'
         self.go_back_button = ideal_piano_button(piano_config.go_back_image,
                                                  *piano_config.go_back_place)
         self.self_play_button = ideal_piano_button(
@@ -355,19 +363,25 @@ class piano_window(pyglet.window.Window):
         self.piano_height = piano_config.white_key_y + piano_config.white_key_height
         self.piano_keys = []
         self.initial_colors = []
-        piano_background = get_image(piano_config.piano_background_image)
-        if not piano_config.piano_size:
-            ratio = self.screen_width / piano_background.width
-            piano_background.width = self.screen_width
-            piano_background.height *= ratio
+        if piano_config.piano_background_image and os.path.exists(
+                piano_config.piano_background_image):
+            piano_background = get_image(piano_config.piano_background_image)
+            if not piano_config.piano_size:
+                ratio = self.screen_width / piano_background.width
+                piano_background.width = self.screen_width
+                piano_background.height *= ratio
+            else:
+                piano_background.width, piano_background.height = piano_config.piano_size
+            self.piano_background_show = pyglet.sprite.Sprite(
+                piano_background,
+                x=0,
+                y=0,
+                batch=self.batch,
+                group=self.piano_bg)
+            self.piano_background_show.opacity = piano_config.piano_background_opacity
         else:
-            piano_background.width, piano_background.height = piano_config.piano_size
-        self.piano_background_show = pyglet.sprite.Sprite(piano_background,
-                                                          x=0,
-                                                          y=0,
-                                                          batch=self.batch,
-                                                          group=self.piano_bg)
-        self.piano_background_show.opacity = piano_config.piano_background_opacity
+            piano_background = None
+
         for i in range(piano_config.white_keys_number):
             current_piano_key = pyglet.shapes.BorderedRectangle(
                 x=piano_config.white_key_start_x +
