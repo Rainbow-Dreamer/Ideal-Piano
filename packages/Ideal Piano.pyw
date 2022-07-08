@@ -73,6 +73,7 @@ class ideal_piano_button:
         self.x = x
         self.y = y
         self.button = pyglet.sprite.Sprite(self.img, x=self.x, y=self.y)
+        self.button.opacity = piano_config.button_opacity
         self.ranges = [self.x, self.x + self.img.width
                        ], [self.y, self.y + self.img.height]
 
@@ -225,21 +226,6 @@ class piano_window(pyglet.window.Window):
         self.piano_keys_note_name = pyglet.graphics.OrderedGroup(4)
 
     def init_note_mode(self):
-        if not piano_config.draw_piano_keys:
-            self.bar_offset_x = 9
-            image = get_image(piano_config.piano_image)
-            if not piano_config.piano_size:
-                ratio = self.screen_width / image.width
-                image.width = self.screen_width
-                image.height *= ratio
-            else:
-                image.width, image.height = piano_config.piano_size
-            self.image_show = pyglet.sprite.Sprite(image,
-                                                   x=0,
-                                                   y=0,
-                                                   batch=self.batch,
-                                                   group=self.piano_bg)
-
         current_piano_engine.plays = []
         if piano_config.note_mode == 'bars drop':
             current_piano_engine.bars_drop_time = []
@@ -369,107 +355,105 @@ class piano_window(pyglet.window.Window):
         self.piano_height = piano_config.white_key_y + piano_config.white_key_height
         self.piano_keys = []
         self.initial_colors = []
-        if piano_config.draw_piano_keys:
-            piano_background = get_image(piano_config.piano_background_image)
-            if not piano_config.piano_size:
-                ratio = self.screen_width / piano_background.width
-                piano_background.width = self.screen_width
-                piano_background.height *= ratio
-            else:
-                piano_background.width, piano_background.height = piano_config.piano_size
-            self.piano_background_show = pyglet.sprite.Sprite(
-                piano_background,
-                x=0,
-                y=0,
+        piano_background = get_image(piano_config.piano_background_image)
+        if not piano_config.piano_size:
+            ratio = self.screen_width / piano_background.width
+            piano_background.width = self.screen_width
+            piano_background.height *= ratio
+        else:
+            piano_background.width, piano_background.height = piano_config.piano_size
+        self.piano_background_show = pyglet.sprite.Sprite(piano_background,
+                                                          x=0,
+                                                          y=0,
+                                                          batch=self.batch,
+                                                          group=self.piano_bg)
+        self.piano_background_show.opacity = piano_config.piano_background_opacity
+        for i in range(piano_config.white_keys_number):
+            current_piano_key = pyglet.shapes.BorderedRectangle(
+                x=piano_config.white_key_start_x +
+                piano_config.white_key_interval * i,
+                y=piano_config.white_key_y,
+                width=piano_config.white_key_width,
+                height=piano_config.white_key_height,
+                color=piano_config.white_key_color,
                 batch=self.batch,
-                group=self.piano_bg)
-            for i in range(piano_config.white_keys_number):
+                group=self.piano_key,
+                border=piano_config.piano_key_border,
+                border_color=piano_config.piano_key_border_color)
+            current_piano_key.current_color = None
+            current_piano_key.opacity = piano_config.white_key_opacity
+            self.piano_keys.append(current_piano_key)
+            self.initial_colors.append(
+                (current_piano_key.x, piano_config.white_key_color))
+        first_black_key = pyglet.shapes.BorderedRectangle(
+            x=piano_config.black_key_first_x,
+            y=piano_config.black_key_y,
+            width=piano_config.black_key_width,
+            height=piano_config.black_key_height,
+            color=piano_config.black_key_color,
+            batch=self.batch,
+            group=self.piano_key,
+            border=piano_config.piano_key_border,
+            border_color=piano_config.piano_key_border_color)
+        first_black_key.current_color = None
+        first_black_key.opacity = piano_config.black_key_opacity
+        self.piano_keys.append(first_black_key)
+        self.initial_colors.append(
+            (first_black_key.x, piano_config.black_key_color))
+        current_start = piano_config.black_key_start_x
+        for j in range(piano_config.black_keys_set_num):
+            for k in piano_config.black_keys_set:
+                current_start += k
                 current_piano_key = pyglet.shapes.BorderedRectangle(
-                    x=piano_config.white_key_start_x +
-                    piano_config.white_key_interval * i,
-                    y=piano_config.white_key_y,
-                    width=piano_config.white_key_width,
-                    height=piano_config.white_key_height,
-                    color=piano_config.white_key_color,
+                    x=current_start,
+                    y=piano_config.black_key_y,
+                    width=piano_config.black_key_width,
+                    height=piano_config.black_key_height,
+                    color=piano_config.black_key_color,
                     batch=self.batch,
                     group=self.piano_key,
                     border=piano_config.piano_key_border,
                     border_color=piano_config.piano_key_border_color)
                 current_piano_key.current_color = None
+                current_piano_key.opacity = piano_config.black_key_opacity
                 self.piano_keys.append(current_piano_key)
                 self.initial_colors.append(
-                    (current_piano_key.x, piano_config.white_key_color))
-            first_black_key = pyglet.shapes.BorderedRectangle(
-                x=piano_config.black_key_first_x,
-                y=piano_config.black_key_y,
-                width=piano_config.black_key_width,
-                height=piano_config.black_key_height,
-                color=piano_config.black_key_color,
-                batch=self.batch,
-                group=self.piano_key,
-                border=piano_config.piano_key_border,
-                border_color=piano_config.piano_key_border_color)
-            first_black_key.current_color = None
-            self.piano_keys.append(first_black_key)
-            self.initial_colors.append(
-                (first_black_key.x, piano_config.black_key_color))
-            current_start = piano_config.black_key_start_x
-            for j in range(piano_config.black_keys_set_num):
-                for k in piano_config.black_keys_set:
-                    current_start += k
-                    current_piano_key = pyglet.shapes.BorderedRectangle(
-                        x=current_start,
-                        y=piano_config.black_key_y,
-                        width=piano_config.black_key_width,
-                        height=piano_config.black_key_height,
-                        color=piano_config.black_key_color,
-                        batch=self.batch,
-                        group=self.piano_key,
-                        border=piano_config.piano_key_border,
-                        border_color=piano_config.piano_key_border_color)
-                    current_piano_key.current_color = None
-                    self.piano_keys.append(current_piano_key)
-                    self.initial_colors.append(
-                        (current_start, piano_config.black_key_color))
-                current_start += piano_config.black_keys_set_interval
-            self.piano_keys.sort(key=lambda s: s.x)
-            self.initial_colors.sort(key=lambda s: s[0])
-            self.initial_colors = [t[1] for t in self.initial_colors]
-            self.note_place = [(each.x, each.y) for each in self.piano_keys]
-            self.note_num = len(self.note_place)
-            self.bar_offset_x = 0
-            if piano_config.show_note_name_on_piano_key:
-                self.piano_keys_note_names_label = []
-                current_piano_keys_note_names = [
-                    mp.degree_to_note(i + 21)
-                    for i in range(len(self.piano_keys))
+                    (current_start, piano_config.black_key_color))
+            current_start += piano_config.black_keys_set_interval
+        self.piano_keys.sort(key=lambda s: s.x)
+        self.initial_colors.sort(key=lambda s: s[0])
+        self.initial_colors = [t[1] for t in self.initial_colors]
+        self.note_place = [(each.x, each.y) for each in self.piano_keys]
+        self.note_num = len(self.note_place)
+        if piano_config.show_note_name_on_piano_key:
+            self.piano_keys_note_names_label = []
+            current_piano_keys_note_names = [
+                mp.degree_to_note(i + 21) for i in range(len(self.piano_keys))
+            ]
+            if piano_config.show_only_start_note_name:
+                ind = [
+                    i for i, each in enumerate(current_piano_keys_note_names)
+                    if each.name == 'C'
                 ]
-                if piano_config.show_only_start_note_name:
-                    ind = [
-                        i
-                        for i, each in enumerate(current_piano_keys_note_names)
-                        if each.name == 'C'
-                    ]
-                else:
-                    ind = [
-                        i
-                        for i, each in enumerate(current_piano_keys_note_names)
-                        if '#' not in each.name
-                    ]
-                for each in ind:
-                    current_label = pyglet.text.Label(
-                        str(current_piano_keys_note_names[each]),
-                        font_name=piano_config.fonts,
-                        font_size=piano_config.piano_key_note_name_font_size,
-                        bold=piano_config.piano_key_note_name_bold,
-                        x=self.note_place[each][0] +
-                        piano_config.piano_key_note_name_pad_x,
-                        y=self.note_place[each][1] +
-                        piano_config.piano_key_note_name_pad_y,
-                        color=piano_config.piano_key_note_name_color,
-                        batch=self.batch,
-                        group=self.piano_keys_note_name)
-                    self.piano_keys_note_names_label.append(current_label)
+            else:
+                ind = [
+                    i for i, each in enumerate(current_piano_keys_note_names)
+                    if '#' not in each.name
+                ]
+            for each in ind:
+                current_label = pyglet.text.Label(
+                    str(current_piano_keys_note_names[each]),
+                    font_name=piano_config.fonts,
+                    font_size=piano_config.piano_key_note_name_font_size,
+                    bold=piano_config.piano_key_note_name_bold,
+                    x=self.note_place[each][0] +
+                    piano_config.piano_key_note_name_pad_x,
+                    y=self.note_place[each][1] +
+                    piano_config.piano_key_note_name_pad_y,
+                    color=piano_config.piano_key_note_name_color,
+                    batch=self.batch,
+                    group=self.piano_keys_note_name)
+                self.piano_keys_note_names_label.append(current_label)
 
     def init_parameters(self):
         self.mouse_left = 1
@@ -559,8 +543,6 @@ class piano_window(pyglet.window.Window):
     def on_draw(self):
         self.clear()
         self.background.draw()
-        if not piano_config.draw_piano_keys:
-            self.image_show.draw()
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
@@ -603,9 +585,8 @@ class piano_window(pyglet.window.Window):
             current_piano_engine.still_hold.clear()
             if piano_config.note_mode == 'bars drop':
                 current_piano_engine.bars_drop_time.clear()
-        if piano_config.draw_piano_keys:
-            for k in range(len(self.piano_keys)):
-                self.piano_keys[k].color = self.initial_colors[k]
+        for k in range(len(self.piano_keys)):
+            self.piano_keys[k].color = self.initial_colors[k]
         self.label3.text = ''
 
     def _draw_window_first_time(self):
@@ -716,8 +697,6 @@ class piano_window(pyglet.window.Window):
     def redraw(self):
         self.clear()
         self.background.draw()
-        if not piano_config.draw_piano_keys:
-            self.image_show.draw()
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
@@ -1320,8 +1299,7 @@ class piano_engine:
                         current_bar = self._pc_draw_note_bar(each)
                     else:
                         current_bar = None
-                    if piano_config.draw_piano_keys:
-                        self._pc_set_piano_key_color(each, current_bar)
+                    self._pc_set_piano_key_color(each, current_bar)
             else:
                 if each not in self.last:
                     self.changed = True
@@ -1330,8 +1308,7 @@ class piano_engine:
                         current_bar = self._pc_draw_note_bar(each)
                     else:
                         current_bar = None
-                    if piano_config.draw_piano_keys:
-                        self._pc_set_piano_key_color(each, current_bar)
+                    self._pc_set_piano_key_color(each, current_bar)
 
     def _pc_draw_note_bar(self, each):
         current_note = mp.toNote(self.notedic[each])
@@ -1417,20 +1394,18 @@ class piano_engine:
                 notels = [self.notedic[t] for t in self.stillplay_obj]
         else:
             notels = [self.notedic[t] for t in self.last]
-        if piano_config.draw_piano_keys:
-            if self.lastshow:
-                for t in self.lastshow:
-                    current_piano_window.piano_keys[
-                        t.degree -
-                        21].color = current_piano_window.initial_colors[
-                            t.degree - 21]
+        if self.lastshow:
+            for t in self.lastshow:
+                current_piano_window.piano_keys[
+                    t.degree -
+                    21].color = current_piano_window.initial_colors[t.degree -
+                                                                    21]
         if notels:
             self.currentchord = mp.chord(notels)
             for k in self.currentchord:
-                if piano_config.draw_piano_keys:
-                    current_piano_key = current_piano_window.piano_keys[
-                        k.degree - 21]
-                    current_piano_key.color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_piano_key.current_color
+                current_piano_key = current_piano_window.piano_keys[k.degree -
+                                                                    21]
+                current_piano_key.color = piano_config.bar_color if piano_config.color_mode == 'normal' else current_piano_key.current_color
             self.currentchord.notes.sort(key=lambda x: x.degree)
             if self.currentchord != self.lastshow:
                 self.lastshow = self.currentchord
@@ -1478,15 +1453,13 @@ class piano_engine:
                                         piano_config.fadeout_ms)
                             self.stillplay.remove(each)
                     else:
-                        if piano_config.draw_piano_keys:
-                            current_piano_window.piano_keys[
-                                each.degree -
-                                21].color = piano_config.sustain_bar_color
-                else:
-                    if piano_config.draw_piano_keys:
                         current_piano_window.piano_keys[
                             each.degree -
                             21].color = piano_config.sustain_bar_color
+                else:
+                    current_piano_window.piano_keys[
+                        each.degree -
+                        21].color = piano_config.sustain_bar_color
             else:
                 each.count_time = self.current_time
 
@@ -1557,7 +1530,7 @@ class piano_engine:
                 current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
                 # 128 is the status code of note off in midi
-                if piano_config.draw_piano_keys and piano_config.delay_only_read_current:
+                if piano_config.delay_only_read_current:
                     if 0 <= note_number - 21 < current_piano_window.note_num:
                         current_piano_window.piano_keys[
                             note_number -
@@ -1590,19 +1563,18 @@ class piano_engine:
                             velocity / 127
                         ) if piano_config.opacity_change_by_velocity else piano_config.bar_opacity
                         self.still_hold.append([current_note, current_bar])
-                if piano_config.draw_piano_keys:
-                    if 0 <= current_note.degree - 21 < current_piano_window.note_num:
-                        current_piano_key = current_piano_window.piano_keys[
-                            current_note.degree - 21]
-                        if piano_config.color_mode == 'normal':
-                            current_piano_key.color = piano_config.bar_color
+                if 0 <= current_note.degree - 21 < current_piano_window.note_num:
+                    current_piano_key = current_piano_window.piano_keys[
+                        current_note.degree - 21]
+                    if piano_config.color_mode == 'normal':
+                        current_piano_key.color = piano_config.bar_color
+                    else:
+                        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                            current_piano_key.color = current_bar.color
                         else:
-                            if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
-                                current_piano_key.color = current_bar.color
-                            else:
-                                current_piano_key.color = (random.randint(
-                                    0, 255), random.randint(
-                                        0, 255), random.randint(0, 255))
+                            current_piano_key.color = (random.randint(0, 255),
+                                                       random.randint(0, 255),
+                                                       random.randint(0, 255))
                 if current_note not in self.current_play:
                     self.current_play.append(current_note)
                     if current_note not in self.stillplay:
@@ -1623,13 +1595,12 @@ class piano_engine:
                             piano_config.delay_only_read_current = False
                     else:
                         if not piano_config.delay_only_read_current:
-                            if piano_config.draw_piano_keys:
-                                for each in self.stillplay:
-                                    pyglet.clock.schedule_once(
-                                        self.piano_key_reset,
-                                        piano_config.delay_time -
-                                        (self.current_time - each.count_time),
-                                        each)
+                            for each in self.stillplay:
+                                pyglet.clock.schedule_once(
+                                    self.piano_key_reset,
+                                    piano_config.delay_time -
+                                    (self.current_time - each.count_time),
+                                    each)
                             self.last = copy(self.stillplay)
                             piano_config.delay_only_read_current = True
                 elif note_number == 66:
@@ -1642,13 +1613,12 @@ class piano_engine:
                         if self.sostenuto_pedal_on:
                             for each in self.stillplay:
                                 each.sustain_pedal_on = False
-                            if piano_config.draw_piano_keys:
-                                for each in self.stillplay:
-                                    pyglet.clock.schedule_once(
-                                        self.piano_key_reset,
-                                        piano_config.delay_time -
-                                        (self.current_time - each.count_time),
-                                        each)
+                            for each in self.stillplay:
+                                pyglet.clock.schedule_once(
+                                    self.piano_key_reset,
+                                    piano_config.delay_time -
+                                    (self.current_time - each.count_time),
+                                    each)
                             self.sostenuto_pedal_on = False
                 elif note_number == 67:
                     if velocity >= 64:
@@ -1798,7 +1768,7 @@ class piano_engine:
     def _midi_show_update_notes(self):
         self.playnotes.sort(key=lambda x: x.degree)
         if self.playnotes != self.lastshow:
-            if piano_config.draw_piano_keys and piano_config.note_mode != 'bars drop':
+            if piano_config.note_mode != 'bars drop':
                 if self.lastshow:
                     for each in self.lastshow:
                         if each not in self.playnotes:
@@ -1874,15 +1844,12 @@ class piano_engine:
             each.y -= current_piano_window.bar_steps
             if not each.hit_key and each.y <= piano_config.bars_drop_place:
                 each.hit_key = True
-                if piano_config.draw_piano_keys:
-                    current_piano_window.piano_keys[
-                        each.num].color = each.color
+                current_piano_window.piano_keys[each.num].color = each.color
             if each.height + each.y <= current_piano_window.piano_height:
                 each.batch = None
-                if piano_config.draw_piano_keys:
-                    current_piano_window.piano_keys[
-                        each.num].color = current_piano_window.initial_colors[
-                            each.num]
+                current_piano_window.piano_keys[
+                    each.num].color = current_piano_window.initial_colors[
+                        each.num]
                 del self.plays[i]
                 continue
             i += 1
@@ -1905,7 +1872,7 @@ class piano_engine:
             self.startplay += pause_time
 
     def _midi_show_finished(self):
-        if piano_config.draw_piano_keys and piano_config.note_mode != 'bars drop':
+        if piano_config.note_mode != 'bars drop':
             if self.lastshow:
                 for t in self.lastshow:
                     current_piano_window.piano_keys[
@@ -1927,10 +1894,9 @@ class piano_engine:
                 self.plays.clear()
                 if piano_config.note_mode == 'bars drop':
                     self.bars_drop_time.clear()
-            if piano_config.draw_piano_keys:
-                for k in range(len(current_piano_window.piano_keys)):
-                    current_piano_window.piano_keys[
-                        k].color = current_piano_window.initial_colors[k]
+            for k in range(len(current_piano_window.piano_keys)):
+                current_piano_window.piano_keys[
+                    k].color = current_piano_window.initial_colors[k]
             self.playls.clear()
             current_piano_window.label.text = ''
             current_piano_window.redraw()

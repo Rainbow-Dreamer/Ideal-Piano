@@ -5,7 +5,6 @@ background_image = 'resources/white.png'
 background_size = None
 width_or_height_first = True
 background_opacity = 255
-piano_image = 'resources/piano.png'
 piano_size = None
 message_color = (0, 0, 0, 255)
 fonts_size = 23
@@ -28,6 +27,7 @@ play_midi_place = 50, 340
 settings_image = 'resources/settings.png'
 settings_place = 50, 270
 button_resize_num = 2.3
+button_opacity = 255
 fps = 60
 
 # the key settings for playing 88 notes (from A0 to C8)
@@ -191,14 +191,14 @@ average_degree_length = 8
 melody_degree_tol = 'B4'
 
 # notes showing mode: choose one from 'bars' and 'bars drop',
-# or you can set as other names, and turn on the draw piano keys mode
+# or you can set as other names, which shows no effect
 note_mode = 'bars drop'
 bar_width = 14
 bar_height = 20
 bar_color = (124, 252, 0)
 sustain_bar_color = (124, 200, 0)
 bar_y = 178
-bar_offset_x = 6
+bar_offset_x = 0
 bar_opacity = 160
 opacity_change_by_velocity = True
 # color mode: choose one from 'normal' and 'rainbow'
@@ -220,8 +220,6 @@ sort_invisible = False
 
 play_as_midi = True
 
-draw_piano_keys = True
-
 white_key_width = 23
 white_key_height = 138
 white_key_interval = 25
@@ -229,6 +227,7 @@ white_key_y = 37
 white_keys_number = 52
 white_key_start_x = 0
 white_key_color = (255, 255, 255)
+white_key_opacity = 255
 
 black_key_width = 15
 black_key_height = 90
@@ -236,6 +235,7 @@ black_key_y = 85
 black_key_first_x = 18
 black_key_start_x = 64.467
 black_key_color = (0, 0, 0)
+black_key_opacity = 255
 
 black_keys_set = [0, 30, 43.85, 28.67, 28.48]
 black_keys_set_interval = 43.75
@@ -253,6 +253,7 @@ piano_key_border = 0
 piano_key_border_color = (100, 100, 100)
 
 piano_background_image = 'resources/piano_background.png'
+piano_background_opacity = 255
 
 show_music_analysis = False
 music_analysis_file = None
