@@ -1386,11 +1386,10 @@ class chord:
                 else:
                     current_name = current.name
                 if current_name in transdict:
-                    temp.notes[k] = mp.toNote(
-                        f'{transdict[current_name]}{current.num}',
-                        current.duration,
-                        current.volume,
-                        channel=current.channel)
+                    current_note = mp.closest_note(current,
+                                                   transdict[current_name])
+                    temp.notes[k] = current.reset(name=current_note.name,
+                                                  num=current_note.num)
         return temp
 
     def __getitem__(self, ind):
@@ -1996,9 +1995,16 @@ class chord:
                      rootpitch=pitch,
                      start_time=copy(self.start_time))
 
-    def near_voicing(self, other, keep_root=True, root_lower=False):
-        temp = self.standardize()
-        other = other.standardize()
+    def near_voicing(self,
+                     other,
+                     keep_root=True,
+                     root_lower=False,
+                     standardize=True):
+        if standardize:
+            temp = self.standardize()
+            other = other.standardize()
+        else:
+            temp = copy(self)
         original_duration = temp.get_duration()
         original_volume = temp.get_volume()
         if keep_root:
@@ -2090,6 +2096,12 @@ class chord:
         if isinstance(pitch, str):
             pitch = mp.toNote(pitch)
         return self + (pitch.degree - self[0].degree)
+
+    def reset_same_octave(self, octave):
+        temp = copy(self)
+        for each in temp.notes:
+            each.num = octave
+        return temp
 
     def reset_same_channel(self, channel=None):
         for each in self.notes:
