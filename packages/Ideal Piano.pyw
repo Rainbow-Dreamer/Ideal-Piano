@@ -231,11 +231,19 @@ class piano_window(pyglet.window.Window):
             current_piano_engine.bars_drop_time = []
             distances = self.screen_height - self.piano_height
             self.bars_drop_interval = piano_config.bars_drop_interval
-            self.bar_steps = (distances / self.bars_drop_interval
-                              ) / piano_config.adjust_ratio
+            if self.bars_drop_interval > 2:
+                current_adjust_ratio = (piano_config.adjust_ratio /
+                                        (self.bars_drop_interval / 2)) * 1.97
+            else:
+                current_adjust_ratio = piano_config.adjust_ratio
+            self.bar_steps = (distances /
+                              self.bars_drop_interval) / current_adjust_ratio
+            self.bar_unit = piano_config.bar_unit / (self.bars_drop_interval /
+                                                     2)
         else:
             self.bar_steps = piano_config.bar_steps
             self.bars_drop_interval = 0
+            self.bar_unit = piano_config.bar_unit
 
     def init_screen_buttons(self):
         if piano_config.language == 'Chinese':
@@ -959,11 +967,20 @@ class piano_engine:
                 self.current_play_chords = mp.chord([])
             self.current_play_chords |= current_chord
             note_count = self.current_play_chords.count_appear(sort=True)
-            current_detect_key = mp.alg.detect_scale(
-                self.current_play_chords,
-                major_minor_preference=piano_config.major_minor_preference,
-                most_appear_num=piano_config.most_appear_num)
-            current_piano_window.current_detect_key_label.text = f'note count: {note_count}\n\n' + current_detect_key
+            if piano_config.current_detect_key_algorithm == 0:
+                current_detect_key = mp.alg.detect_scale(
+                    self.current_play_chords,
+                    major_minor_preference=piano_config.major_minor_preference,
+                    most_appear_num=piano_config.most_appear_num)
+                current_detect_key_text = current_detect_key
+            elif piano_config.current_detect_key_algorithm == 1:
+                current_detect_key = mp.alg.detect_scale2(
+                    self.current_play_chords,
+                    major_minor_preference=piano_config.major_minor_preference)
+                current_detect_key_text = current_detect_key
+            if piano_config.current_detect_key_show_note_count:
+                current_detect_key_text = f'note count: {note_count} / {len(self.current_play_chords)}\n\n' + current_detect_key_text
+            current_piano_window.current_detect_key_label.text = current_detect_key_text
         return current_info
 
     def init_self_pc(self):
@@ -1734,8 +1751,8 @@ class piano_engine:
                         x=places[0] + current_piano_window.bar_offset_x,
                         y=current_piano_window.screen_height,
                         width=piano_config.bar_width,
-                        height=piano_config.bar_unit * current_note.duration /
-                        (self.bpm / 130),
+                        height=current_piano_window.bar_unit *
+                        current_note.duration / (self.bpm / 130),
                         color=current_note.own_color
                         if piano_config.use_track_colors else
                         (piano_config.bar_color
@@ -1762,7 +1779,7 @@ class piano_engine:
             x=places[0] + current_piano_window.bar_offset_x,
             y=piano_config.bar_y,
             width=piano_config.bar_width,
-            height=piano_config.bar_unit * current_note.duration /
+            height=current_piano_window.bar_unit * current_note.duration /
             (self.bpm / 130),
             color=current_note.own_color if piano_config.use_track_colors else
             (piano_config.bar_color if piano_config.color_mode == 'normal' else

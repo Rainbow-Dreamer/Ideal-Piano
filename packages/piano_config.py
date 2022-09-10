@@ -204,11 +204,11 @@ opacity_change_by_velocity = True
 # color mode: choose one from 'normal' and 'rainbow'
 color_mode = 'normal'
 bar_steps = 6
-bar_unit = 400
+bar_unit = 350
 bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 173
-adjust_ratio = 62
+adjust_ratio = 74
 bar_border = 5
 bar_border_color = (100, 100, 100)
 
@@ -297,11 +297,13 @@ chord_details_font_size = 15
 chord_details_label_width = 500
 
 show_current_detect_key = False
-current_detect_key_label_place = (230, 550)
+current_detect_key_show_note_count = False
+current_detect_key_label_place = (230, 570)
 current_detect_key_label_anchor_x = 'left'
 current_detect_key_label_anchor_y = 'baseline'
 current_detect_key_font_size = 15
 current_detect_key_label_width = 1000
-major_minor_preference = False
+current_detect_key_algorithm = 1
+major_minor_preference = True
 most_appear_num = 5
-current_detect_key_limit = 100
+current_detect_key_limit = 200
