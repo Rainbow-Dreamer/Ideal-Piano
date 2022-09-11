@@ -83,11 +83,13 @@ midi_device_id: This parameter is the id of the midi device after it is connecte
 
 language: the display language of the software, including main window buttons, chord names, messages and the window to choose MIDI files, currently only 'English' and 'Chinese' are supported
 
+fps: frames per second of the screen
+
 
 
 ## pygame mixer initialization parameters
 
-frequency, size, channel, buffer, max_num_channels
+frequency, size, channel, buffer, max_num_channels, global_volume
 
 (please refer to pygame's mixer module documentation online)
 
@@ -101,7 +103,7 @@ repeat_key: key to repeat playback
 
 unpause_key: key to continue (while paused)
 
-global_volume: total volume, max 1, min 0
+pause_key_clear_notes: whether to clear the display of all currently played notes when pausing
 
 delay: whether to give a certain delay to the tone after it is released
 
@@ -110,8 +112,6 @@ delay_time: the delay time (in seconds)
 fadeout_ms: the time in milliseconds to fade out after the note is played
 
 touch_interval: the interval between the end of a note and its replay when the same note is played continuously, in seconds
-
-pause_key_clear_notes: whether to clear the display of all currently played notes when pausing
 
 delay_only_read_current: When a note is delayed (not pressed), the chord judgment does not include those notes that are still delayed, only those that are currently pressed
 
@@ -144,6 +144,8 @@ show_key: whether to show the name of the keys of the computer keyboard when pla
 show_chord: Whether or not the chord is analyzed in real time by musical logic
 
 show_notes: whether to show the current notes in real time when playing
+
+show_notes_delay: the delay of the display of currently playing notes and chord types relative to the notes played
 
 get_off_drums: If True, in midi playback mode, if you choose to merge all tracks, the drum tracks will be removed after the MIDI file is read (if any) to avoid the demo chords being scrambled by the drum notes.
 
@@ -221,15 +223,15 @@ bars_drop_place: the specified position (height) that the note bar will drop to 
 
 adjust_ratio: A parameter that adjusts the accuracy of the bar drop to the specified position, generally not needed
 
+bar_border: the width of the bar's border
+
+bar_border_color: the border color of the note bar, it is the RGB tuple, `(R, G, B)`.
+
 use_track_colors: whether to use different colors on different tracks and instruments
 
 tracks_colors: list of colors for different tracks and instruments, RGB parameter
 
 use_default_tracks_colors: whether to use set track colors or use randomly generated colors for different tracks
-
-bar_border: the width of the bar's border
-
-bar_border_color: the border color of the note bar, it is the RGB tuple, `(R, G, B)`.
 
 show_chord_accidentals: show notes and chord types in sharp or flat accidentals, the values could be `'sharp'` or `'flat'`, the default value is `'sharp'`
 
@@ -247,6 +249,8 @@ chord_details_label_width: max width of chord details
 
 show_current_detect_key: whether to analyze and show some of the most possible keys you are currently playing (this functionality is experimental and still under development)
 
+current_detect_key_show_note_count: whether to show current notes counts
+
 current_detect_key_label_place: text position of current key
 
 current_detect_key_label_anchor_x: horizontal alignment of current key
@@ -256,6 +260,8 @@ current_detect_key_label_anchor_y: vertical alignment of current key
 current_detect_key_font_size: font size of current key
 
 current_detect_key_label_width: max width of current key
+
+current_detect_key_algorithm: the key analysis algorithm to use, currently there are 2 algorithms to choose, corresponding to 0 and 1
 
 major_minor_preference: config parameter of current key analysis function, whether to put major and minor as the most possible result
 
@@ -303,14 +309,6 @@ black_keys_set_interval: the interval between every two black keysets
 
 black_keys_set_num: the number of black keysets
 
-piano_background_image: the background image under the piano (to fill the gap)
-
-piano_background_opacity: the opacity of piano background image
-
-piano_key_border: the width of the piano's keyboard border
-
-piano_key_border_color: piano_key_border_color, RGB tuple, `(R, G, B)`
-
 show_note_name_on_piano_key: show note name on piano keys or not
 
 show_only_start_note_name: show only note names with C or all white keys note names on piano keys
@@ -324,6 +322,14 @@ piano_key_note_name_color: color of note names on piano keys
 piano_key_note_name_pad_x: x padding of note names on piano keys
 
 piano_key_note_name_pad_y: y padding of note names on piano keys
+
+piano_key_border: the width of the piano's keyboard border
+
+piano_key_border_color: piano_key_border_color, RGB tuple, `(R, G, B)`
+
+piano_background_image: the background image under the piano (to fill the gap)
+
+piano_background_opacity: the opacity of piano background image
 
 
 

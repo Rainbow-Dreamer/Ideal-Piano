@@ -1,4 +1,4 @@
-# basic screen settings
+'''screen related parameters'''
 
 screen_size = (1300, 650)
 background_image = 'resources/white.png'
@@ -100,20 +100,24 @@ key_settings = {
 }
 
 midi_device_id = 1
+language = 'English'
 
-# operation key settings for pause, unpause, repeat and so on
-pause_key = 'space'
-repeat_key = 'ctrl'
-unpause_key = 'enter'
-pause_key_clear_notes = False
+'''init parameters of the pygame mixer'''
 
-# these are the init parameters of the mixer
 frequency = 44100
 size = -16
 channel = 2
 buffer = 1024
 max_num_channels = 100
 global_volume = 0.6
+
+'''keyboard playing and MIDI files playing parameters'''
+
+# operation key settings for pause, unpause, repeat and so on
+pause_key = 'space'
+repeat_key = 'ctrl'
+unpause_key = 'enter'
+pause_key_clear_notes = False
 
 # if delay is set to True, when you are self playing, the sounds will
 # last for delay_time seconds
@@ -142,19 +146,6 @@ sound_path = 'resources/sounds'
 # when the mode is in 'show' mode, the delay time for the sounds
 show_delay_time = 1
 
-# these are the parameters for chord types detections
-# change_from_first: detection result is preferentially chosen as changed from another chord(flat or sharp some notes)
-# original_first: detection result is preferentially chosen as a variation of the original position of the chord(i.e. no inversion or any changes to the notes of the chord)
-inv_num = False
-change_from_first = True
-original_first = True
-same_note_special = False
-whole_detect = True
-return_fromchord = False
-poly_chord_first = False
-root_position_return_first = True
-alter_notes_show_degree = True
-
 # if this is set to True, then you enable the config key during the playing
 config_enable = True
 
@@ -182,13 +173,40 @@ show_key = False
 # detect chord types when the current notes change
 show_chord = True
 show_notes = True
+show_notes_delay = 0.4
 
-# the parameters of the function split_melody
+# when play midi files, if you choose to merge all tracks, get_off_drums
+# set to True will not merge the drum tracks if your midi file has
+get_off_drums = True
+sort_invisible = False
+play_as_midi = True
+pitch_range = ('A0', 'C8')
+soft_pedal_volume = 0.2
+
+'''chord types detection parameters'''
+
+# these are the parameters for chord types detections
+# change_from_first: detection result is preferentially chosen as changed from another chord(flat or sharp some notes)
+# original_first: detection result is preferentially chosen as a variation of the original position of the chord(i.e. no inversion or any changes to the notes of the chord)
+inv_num = False
+change_from_first = True
+original_first = True
+same_note_special = False
+whole_detect = True
+return_fromchord = False
+poly_chord_first = False
+root_position_return_first = True
+alter_notes_show_degree = True
+
+'''the parameters of the function split_melody'''
+
 melody_tol = 10
 chord_tol = 9
 get_off_overlap_notes = False
 average_degree_length = 8
 melody_degree_tol = 'B4'
+
+''' note display related parameters'''
 
 # notes showing mode: choose one from 'bars' and 'bars drop',
 # or you can set as other names, which shows no effect
@@ -208,60 +226,9 @@ bar_unit = 350
 bar_hold_increase = 5
 bars_drop_interval = 2
 bars_drop_place = 173
-adjust_ratio = 74
+adjust_ratio = 70
 bar_border = 5
 bar_border_color = (100, 100, 100)
-
-# when play midi files, if you choose to merge all tracks, get_off_drums
-# set to True will not merge the drum tracks if your midi file has
-get_off_drums = True
-
-sort_invisible = False
-
-play_as_midi = True
-
-white_key_width = 23
-white_key_height = 138
-white_key_interval = 25
-white_key_y = 37
-white_keys_number = 52
-white_key_start_x = 0
-white_key_color = (255, 255, 255)
-white_key_opacity = 255
-
-black_key_width = 15
-black_key_height = 90
-black_key_y = 85
-black_key_first_x = 18
-black_key_start_x = 64.467
-black_key_color = (0, 0, 0)
-black_key_opacity = 255
-
-black_keys_set = [0, 30, 43.85, 28.67, 28.48]
-black_keys_set_interval = 43.75
-black_keys_set_num = 7
-
-show_note_name_on_piano_key = False
-show_only_start_note_name = True
-piano_key_note_name_font_size = 12
-piano_key_note_name_bold = False
-piano_key_note_name_color = (0, 0, 0, 255)
-piano_key_note_name_pad_x = 2
-piano_key_note_name_pad_y = 5
-
-piano_key_border = 0
-piano_key_border_color = (100, 100, 100)
-
-piano_background_image = 'resources/piano_background.png'
-piano_background_opacity = 255
-
-show_music_analysis = False
-music_analysis_file = None
-music_analysis_place = (250, 500)
-key_header = 'current key: '
-music_analysis_width = 1300
-music_analysis_fonts_size = 20
-
 use_track_colors = True
 tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
                  (255, 0, 255), (0, 128, 0), (0, 191, 255), (0, 255, 127),
@@ -269,24 +236,6 @@ tracks_colors = [(0, 255, 0), (255, 255, 0), (0, 0, 255), (0, 255, 255),
                  (124, 252, 0), (238, 130, 238), (218, 112, 214),
                  (255, 20, 147)]
 use_default_tracks_colors = True
-pitch_range = ('A0', 'C8')
-
-use_soundfont = False
-play_use_soundfont = False
-sf2_path = 'resources/gm.sf2'
-bank = 0
-preset = 0
-sf2_duration = 6
-sf2_decay = 1
-sf2_volume = 100
-sf2_mode = 0
-
-soft_pedal_volume = 0.2
-
-render_as_audio = False
-
-language = 'English'
-
 show_chord_accidentals = 'sharp'
 
 show_chord_details = False
@@ -307,3 +256,57 @@ current_detect_key_algorithm = 1
 major_minor_preference = True
 most_appear_num = 5
 current_detect_key_limit = 200
+
+'''piano keyboard related parameters'''
+
+white_key_width = 23
+white_key_height = 138
+white_key_interval = 25
+white_key_y = 37
+white_keys_number = 52
+white_key_start_x = 0
+white_key_color = (255, 255, 255)
+white_key_opacity = 255
+black_key_width = 15
+black_key_height = 90
+black_key_y = 85
+black_key_first_x = 18
+black_key_start_x = 64.467
+black_key_color = (0, 0, 0)
+black_key_opacity = 255
+black_keys_set = [0, 30, 43.85, 28.67, 28.48]
+black_keys_set_interval = 43.75
+black_keys_set_num = 7
+show_note_name_on_piano_key = False
+show_only_start_note_name = True
+piano_key_note_name_font_size = 12
+piano_key_note_name_bold = False
+piano_key_note_name_color = (0, 0, 0, 255)
+piano_key_note_name_pad_x = 2
+piano_key_note_name_pad_y = 5
+piano_key_border = 0
+piano_key_border_color = (100, 100, 100)
+piano_background_image = 'resources/piano_background.png'
+piano_background_opacity = 255
+
+'''SoundFont related parameters'''
+
+use_soundfont = False
+play_use_soundfont = False
+sf2_path = 'resources/gm.sf2'
+bank = 0
+preset = 0
+sf2_duration = 6
+sf2_decay = 1
+sf2_volume = 100
+sf2_mode = 0
+render_as_audio = False
+
+'''composition related parameters'''
+
+show_music_analysis = False
+music_analysis_file = None
+music_analysis_place = (250, 500)
+key_header = 'current key: '
+music_analysis_width = 1300
+music_analysis_fonts_size = 20

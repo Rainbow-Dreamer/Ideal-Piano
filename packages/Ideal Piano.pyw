@@ -587,6 +587,8 @@ class piano_window(pyglet.window.Window):
                 piano_config.delay_only_read_current = True
             elif self.mode_num == 2:
                 pyglet.clock.unschedule(current_piano_engine.midi_file_play)
+                pyglet.clock.unschedule(
+                    current_piano_engine._midi_show_update_notes_text)
                 if piano_config.show_music_analysis:
                     self.music_analysis_label.text = ''
                 if piano_config.play_as_midi:
@@ -1138,6 +1140,8 @@ class piano_engine:
         if piano_config.show_current_detect_key:
             self.current_play_chords = mp.chord([])
             current_piano_window.current_detect_key_label.text = ''
+        if piano_config.note_mode != 'bars drop':
+            piano_config.show_notes_delay = 0
 
     def _midi_show_init(self,
                         musicsheet,
@@ -1808,16 +1812,23 @@ class piano_engine:
                                 21].color = current_piano_window.initial_colors[
                                     each.degree - 21]
             self.lastshow = self.playnotes
-            if piano_config.show_notes:
-                current_piano_window.label.text = self._show_notes(
-                    self.playnotes)
-            if piano_config.show_chord and any(
-                    type(t) == mp.note for t in self.playnotes):
-                chordtype = self._detect_chord(self.playnotes)
-                current_piano_window.label2.text = str(
-                    chordtype
-                ) if not piano_config.sort_invisible else get_off_sort(
-                    str(chordtype))
+            if not piano_config.show_notes_delay:
+                self._midi_show_update_notes_text(playnotes=self.playnotes)
+            else:
+                pyglet.clock.schedule_once(self._midi_show_update_notes_text,
+                                           piano_config.show_notes_delay,
+                                           playnotes=self.playnotes)
+
+    def _midi_show_update_notes_text(self, dt=None, playnotes=None):
+        if piano_config.show_notes:
+            current_piano_window.label.text = self._show_notes(playnotes)
+        if piano_config.show_chord and any(
+                type(t) == mp.note for t in playnotes):
+            chordtype = self._detect_chord(playnotes)
+            current_piano_window.label2.text = str(
+                chordtype
+            ) if not piano_config.sort_invisible else get_off_sort(
+                str(chordtype))
 
     def _midi_show_set_piano_key_color(self, current_note):
         current_piano_key = current_piano_window.piano_keys[current_note.degree
