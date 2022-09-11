@@ -589,6 +589,9 @@ class piano_window(pyglet.window.Window):
                 pyglet.clock.unschedule(current_piano_engine.midi_file_play)
                 pyglet.clock.unschedule(
                     current_piano_engine._midi_show_update_notes_text)
+                pyglet.clock.unschedule(
+                    current_piano_engine._midi_show_finished)
+                current_piano_engine.counter = 0
                 if piano_config.show_music_analysis:
                     self.music_analysis_label.text = ''
                 if piano_config.play_as_midi:
@@ -1137,6 +1140,7 @@ class piano_engine:
         self.lastshow = None
         self.finished = False
         self.paused = False
+        self.counter = 0
         if piano_config.show_current_detect_key:
             self.current_play_chords = mp.chord([])
             current_piano_window.current_detect_key_label.text = ''
@@ -1691,7 +1695,11 @@ class piano_engine:
         else:
             self._midi_show_pause()
         if self.finished:
-            self._midi_show_finished()
+            if piano_config.note_mode == 'bars drop' and piano_config.show_notes_delay:
+                pyglet.clock.schedule_once(self._midi_show_finished,
+                                           piano_config.show_notes_delay)
+            else:
+                self._midi_show_finished()
 
     def _midi_show_playing(self):
         self.currentime = time.time() - self.startplay
@@ -1815,9 +1823,14 @@ class piano_engine:
             if not piano_config.show_notes_delay:
                 self._midi_show_update_notes_text(playnotes=self.playnotes)
             else:
-                pyglet.clock.schedule_once(self._midi_show_update_notes_text,
-                                           piano_config.show_notes_delay,
-                                           playnotes=self.playnotes)
+                if self.counter == 0:
+                    self._midi_show_update_notes_text(playnotes=self.playnotes)
+                else:
+                    pyglet.clock.schedule_once(
+                        self._midi_show_update_notes_text,
+                        piano_config.show_notes_delay,
+                        playnotes=self.playnotes)
+            self.counter += 1
 
     def _midi_show_update_notes_text(self, dt=None, playnotes=None):
         if piano_config.show_notes:
@@ -1913,7 +1926,7 @@ class piano_engine:
             pause_time = pause_stop - self.pause_start
             self.startplay += pause_time
 
-    def _midi_show_finished(self):
+    def _midi_show_finished(self, dt=None):
         if piano_config.note_mode != 'bars drop':
             if self.lastshow:
                 for t in self.lastshow:
@@ -1936,6 +1949,9 @@ class piano_engine:
                 self.plays.clear()
                 if piano_config.note_mode == 'bars drop':
                     self.bars_drop_time.clear()
+                    pyglet.clock.unschedule(self._midi_show_update_notes_text)
+                    pyglet.clock.unschedule(self._midi_show_finished)
+                    self.counter = 0
             for k in range(len(current_piano_window.piano_keys)):
                 current_piano_window.piano_keys[
                     k].color = current_piano_window.initial_colors[k]
