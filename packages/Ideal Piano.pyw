@@ -975,12 +975,13 @@ class piano_engine:
             if piano_config.current_detect_key_algorithm == 0:
                 current_detect_key = mp.alg.detect_scale(
                     self.current_play_chords,
-                    major_minor_preference=piano_config.major_minor_preference,
-                    most_appear_num=piano_config.most_appear_num)
+                    most_appear_num=piano_config.most_appear_num,
+                    major_minor_preference=piano_config.major_minor_preference)
                 current_detect_key_text = current_detect_key
             elif piano_config.current_detect_key_algorithm == 1:
                 current_detect_key = mp.alg.detect_scale2(
                     self.current_play_chords,
+                    most_appear_num=piano_config.most_appear_num,
                     major_minor_preference=piano_config.major_minor_preference)
                 current_detect_key_text = current_detect_key
             if piano_config.current_detect_key_show_note_count:
