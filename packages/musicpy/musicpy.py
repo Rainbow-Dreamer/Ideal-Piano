@@ -373,7 +373,7 @@ def read(name,
             instruments.append(current_program[0] + 1)
         else:
             instruments.append(1)
-    chords_list = [each[1] for each in all_tracks]
+    chords_list = [each[0] for each in all_tracks]
     pan_list = [k.pan_list for k in chords_list]
     volume_list = [k.volume_list for k in chords_list]
     tracks_names_list = [[k.name for k in each if k.type == 'track_name']
@@ -418,31 +418,31 @@ def read(name,
         if remain_tracks_length > 1:
             available_tracks = concat(remain_available_tracks)
             pitch_bends = concat([
-                i[1].split(pitch_bend, get_time=True)
+                i[0].split(pitch_bend, get_time=True)
                 for i in remain_all_tracks
             ])
             for each in remain_all_tracks:
-                each[1].clear_pitch_bend('all')
+                each[0].clear_pitch_bend('all')
             start_time_ls = [j[2] for j in remain_all_tracks]
             first_track_ind = start_time_ls.index(min(start_time_ls))
             remain_all_tracks.insert(0, remain_all_tracks.pop(first_track_ind))
             first_track = remain_all_tracks[0]
             tempos, all_track_notes, first_track_start_time = first_track
             for i in remain_all_tracks[1:]:
-                all_track_notes &= (i[1], i[2] - first_track_start_time)
+                all_track_notes &= (i[0], i[2] - first_track_start_time)
             all_track_notes.other_messages = concat(
-                [each[1].other_messages for each in remain_all_tracks])
+                [each[0].other_messages for each in remain_all_tracks])
             all_track_notes += pitch_bends
             all_track_notes.pan_list = concat(
-                [k[1].pan_list for k in remain_all_tracks])
+                [k[0].pan_list for k in remain_all_tracks])
             all_track_notes.volume_list = concat(
-                [k[1].volume_list for k in remain_all_tracks])
-            all_tracks = [tempos, all_track_notes, first_track_start_time]
+                [k[0].volume_list for k in remain_all_tracks])
+            all_tracks = [all_track_notes, tempos, first_track_start_time]
         else:
             available_tracks = remain_available_tracks[0]
             all_tracks = remain_all_tracks[0]
-        pan_list = all_tracks[1].pan_list
-        volume_list = all_tracks[1].volume_list
+        pan_list = all_tracks[0].pan_list
+        volume_list = all_tracks[0].volume_list
         current_instruments_list = [[
             i for i in available_tracks
             if i.type == 'program_change' and i.channel == k
@@ -459,7 +459,7 @@ def read(name,
                                        len(channels_list)):
             tracks_names_list = [f'Channel {i+1}' for i in channels_list]
             rename_track_names = True
-        result_merge_track = all_tracks[1]
+        result_merge_track = all_tracks[0]
         result_piece.tracks = [chord([]) for i in range(len(channels_list))]
         result_piece.instruments = [
             reverse_instruments[i] for i in instruments
@@ -690,7 +690,7 @@ def midi_to_chord(current_midi,
     result.volume_list = volume_list
     result.other_messages = other_messages
     if bpm is not None:
-        return [bpm, result, start_time]
+        return [result, bpm, start_time]
     else:
         return [result, start_time]
 
@@ -1353,10 +1353,15 @@ def chord_progression(chords,
                       volumes=None,
                       chords_interval=None,
                       merge=True,
-                      scale=None):
+                      scale=None,
+                      separator=','):
     if scale:
         return scale.chord_progression(chords, durations, intervals, volumes,
                                        chords_interval, merge)
+    if isinstance(chords, str):
+        if ' ' not in separator:
+            chords = chords.replace(' ', '')
+        chords = chords.split(separator)
     chords = [(i, ) if isinstance(i, str) else i for i in chords]
     chords_len = len(chords)
     if not isinstance(durations, list):
@@ -1373,10 +1378,13 @@ def chord_progression(chords,
                       volumes[i] if volumes else volumes)
     if merge:
         result = chords[0]
+        current_interval = 0
         for i in range(1, chords_len):
             if chords_interval:
-                result |= chords_interval[i - 1]
-            result |= chords[i]
+                current_interval += chords_interval[i - 1]
+                result = result & (chords[i], current_interval)
+            else:
+                result |= chords[i]
         return result
     else:
         return chords
@@ -1945,6 +1953,7 @@ for each in [
         volume
 ]:
     each.reset = reset
+    each.__hash__ = lambda self: hash(repr(self))
 
 for each in [
         controller_event, copyright_event, key_signature, sysex, text_event,
@@ -1952,6 +1961,7 @@ for each in [
         channel_pressure, program_change, track_name
 ]:
     each.__repr__ = lambda self: f'{self.__class__.__name__}({", ".join(["=".join([i, str(j)]) for i, j in self.__dict__.items()])})'
+    each.__hash__ = lambda self: hash(repr(self))
 
 if __name__ == '__main__' or __name__ == 'musicpy':
     import algorithms as alg

@@ -131,23 +131,23 @@ class browse_window(QtWidgets.QMainWindow):
             if not self.parent.if_merge:
                 if self.parent.track_ind_get is not None:
                     all_tracks = [
-                        (current_bpm,
-                         all_tracks.tracks[self.parent.track_ind_get],
+                        (all_tracks.tracks[self.parent.track_ind_get],
+                         current_bpm,
                          all_tracks.start_times[self.parent.track_ind_get])
                     ]
                 else:
-                    all_tracks = [(current_bpm, all_tracks.tracks[0],
+                    all_tracks = [(all_tracks.tracks[0], current_bpm,
                                    all_tracks.start_times[0])]
-                all_tracks[0][1].reset_track(0)
+                all_tracks[0][0].reset_track(0)
             else:
-                all_tracks = [(current_bpm, all_tracks.tracks[i],
+                all_tracks = [(all_tracks.tracks[i], current_bpm,
                                all_tracks.start_times[i])
                               for i in range(len(all_tracks.tracks))]
 
             pitch_bends = mp.concat(
-                [i[1].split(mp.pitch_bend, get_time=True) for i in all_tracks])
+                [i[0].split(mp.pitch_bend, get_time=True) for i in all_tracks])
             for each in all_tracks:
-                each[1].clear_pitch_bend('all')
+                each[0].clear_pitch_bend('all')
             start_time_ls = [j[2] for j in all_tracks]
             first_track_ind = start_time_ls.index(min(start_time_ls))
             all_tracks.insert(0, all_tracks.pop(first_track_ind))
@@ -177,10 +177,10 @@ class browse_window(QtWidgets.QMainWindow):
                                     [random.randint(0, 255) for j in range(3)])
                             colors.append(current_color)
             first_track = all_tracks[0]
-            tempo, all_track_notes, first_track_start_time = first_track
+            all_track_notes, tempo, first_track_start_time = first_track
             for i in range(len(all_tracks)):
                 current = all_tracks[i]
-                current_track = current[1]
+                current_track = current[0]
                 if piano_config.use_track_colors:
                     current_color = colors[i]
                     for each in current_track:
@@ -192,14 +192,14 @@ class browse_window(QtWidgets.QMainWindow):
             if self.parent.set_bpm != '':
                 tempo = float(self.parent.set_bpm)
             first_track_start_time += all_track_notes.start_time
-            self.parent.read_result = tempo, all_track_notes, first_track_start_time, actual_start_time, drum_tracks
+            self.parent.read_result = all_track_notes, tempo, first_track_start_time, actual_start_time, drum_tracks
 
         except Exception as e:
             print(str(e))
             self.parent.read_result = 'error'
 
         if self.parent.read_result != 'error':
-            self.parent.sheetlen = len(self.parent.read_result[1])
+            self.parent.sheetlen = len(self.parent.read_result[0])
             self.close()
         else:
             self.msg_label.setText(self.browse_dict['out of index'])

@@ -1058,7 +1058,7 @@ class piano_engine:
             return 'back'
         if self.path and read_result:
             if read_result != 'error':
-                self.bpm, self.musicsheet, start_time, actual_start_time, drum_tracks = read_result
+                self.musicsheet, self.bpm, start_time, actual_start_time, drum_tracks = read_result
                 self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
                     *piano_config.pitch_range)
                 start_time += new_start_time
