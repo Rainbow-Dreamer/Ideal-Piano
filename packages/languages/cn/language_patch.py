@@ -855,6 +855,17 @@ chd = getchord
 
 def trans(obj, pitch=4, duration=0.25, interval=None):
     obj = obj.replace(' ', '')
+    if obj.count('/') > 1:
+        current_parts = obj.split('/')
+        current_parts = [int(i) if i.isdigit() else i for i in current_parts]
+        result = trans(current_parts[0], pitch, duration, interval)
+        for each in current_parts[1:]:
+            if each in standard:
+                each = standard_dict.get(each, each)
+            elif not isinstance(each, int):
+                each = trans(each, pitch, duration, interval)
+            result /= each
+        return result
     if obj in standard:
         return chd(obj,
                    'M',
