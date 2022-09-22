@@ -213,8 +213,22 @@ class piano_window(pyglet.window.Window):
                 background.height = self.screen_height
                 background.width *= ratio_background
         else:
-            background.width, background.height = piano_config.background_size
-        self.background = pyglet.sprite.Sprite(background, x=0, y=0)
+            if not piano_config.background_fix_original_ratio:
+                background.width, background.height = piano_config.background_size
+            else:
+                current_width, current_height = piano_config.background_size
+                if piano_config.width_or_height_first:
+                    ratio_background = current_width / background.width
+                    background.width = current_width
+                    background.height *= ratio_background
+                else:
+                    ratio_background = current_height / background.height
+                    background.height = current_height
+                    background.width *= ratio_background
+        self.background = pyglet.sprite.Sprite(
+            background,
+            x=piano_config.background_place[0],
+            y=piano_config.background_place[1])
         self.background.opacity = piano_config.background_opacity
 
     def init_layers(self):

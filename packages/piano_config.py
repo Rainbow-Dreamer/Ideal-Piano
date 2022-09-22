@@ -2,9 +2,11 @@
 
 screen_size = (1300, 650)
 background_image = 'resources/white.png'
-background_size = None
+background_size = (1303, 650)
 width_or_height_first = True
+background_fix_original_ratio = True
 background_opacity = 255
+background_place = (-1, 0)
 piano_size = None
 message_color = (0, 0, 0, 255)
 fonts_size = 23
