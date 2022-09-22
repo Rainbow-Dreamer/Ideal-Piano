@@ -29,7 +29,11 @@ background_size: background image size
 
 width_or_height_first: fill with width or height
 
-background_transparency: the transparency of background image, from 0 to 255 (transparent to non-transparent)
+background_fix_original_ratio: whether to adjust background image according to the original size ratio
+
+background_opacity: the transparency of background image, from 0 to 255 (transparent to non-transparent)
+
+background_place: position of background image on the screen
 
 piano_size: piano image size
 
