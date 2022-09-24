@@ -735,6 +735,21 @@ drum_types = {
 }
 
 drum_mapping = {
+    'K': 36,
+    'H': 42,
+    'S': 40,
+    'S2': 38,
+    'OH': 46,
+    'PH': 44,
+    'HC': 39,
+    'K2': 35,
+    'C': 57,
+    'C2': 49,
+    '0': -1,
+    '-': -2
+}
+
+drum_mapping2 = {
     '0': 36,
     '1': 42,
     '2': 40,
@@ -744,7 +759,9 @@ drum_mapping = {
     '6': 39,
     '7': 35,
     '8': 57,
-    '9': 49
+    '9': 49,
+    'x': -1,
+    '-': -2
 }
 
 drum_set_dict = {
@@ -759,3 +776,7 @@ drum_set_dict = {
     57: 'Sound FX Kit'
 }
 drum_set_dict_reverse = {j: i for i, j in drum_set_dict.items()}
+
+drum_keywords = [
+    'r', 'd', 'a', 't', 'l', 'n', 's', 'v', 'dl', 'di', 'dv', 'al', 'ai', 'av'
+]

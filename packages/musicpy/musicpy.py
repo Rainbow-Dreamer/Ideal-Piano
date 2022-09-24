@@ -5,13 +5,12 @@ import chunk
 from io import BytesIO
 import midiutil
 import mido
-from ast import literal_eval
 
 if __name__ == '__main__' or __name__ == 'musicpy':
-    from database import *
+    import database
     from structures import *
 else:
-    from .database import *
+    from . import database
     from .structures import *
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -50,7 +49,7 @@ def toNote(notename, duration=0.25, volume=100, pitch=4, channel=None):
 
 
 def degree_to_note(degree, duration=0.25, volume=100, channel=None):
-    name = standard_reverse[degree % 12]
+    name = database.standard_reverse[degree % 12]
     num = (degree // 12) - 1
     return note(name, num, duration, volume, channel)
 
@@ -62,7 +61,7 @@ def degrees_to_chord(ls, *args, **kwargs):
 def note_to_degree(obj):
     if not isinstance(obj, note):
         obj = toNote(obj)
-    return standard[obj.name] + 12 * (obj.num + 1)
+    return database.standard[obj.name] + 12 * (obj.num + 1)
 
 
 def trans_note(notename, duration=0.25, volume=100, pitch=4, channel=None):
@@ -70,7 +69,7 @@ def trans_note(notename, duration=0.25, volume=100, pitch=4, channel=None):
     if not num:
         num = pitch
     else:
-        num = eval(num)
+        num = int(num)
     name = ''.join([x for x in notename if not x.isdigit()])
     return note(name, num, duration, volume, channel)
 
@@ -166,11 +165,11 @@ def getchord(start,
     mode = mode.lower().replace(' ', '')
     initial = start.degree
     chordlist = [start]
-    interval_premode = chordTypes(premode, mode=1, index=ind)
+    interval_premode = database.chordTypes(premode, mode=1, index=ind)
     if interval_premode != 'not found':
         interval = interval_premode
     else:
-        interval_mode = chordTypes(mode, mode=1, index=ind)
+        interval_mode = database.chordTypes(mode, mode=1, index=ind)
         if interval_mode != 'not found':
             interval = interval_mode
         else:
@@ -462,7 +461,7 @@ def read(name,
         result_merge_track = all_tracks[0]
         result_piece.tracks = [chord([]) for i in range(len(channels_list))]
         result_piece.instruments = [
-            reverse_instruments[i] for i in instruments
+            database.reverse_instruments[i] for i in instruments
         ]
         result_piece.instruments_numbers = instruments
         result_piece.track_names = tracks_names_list
@@ -813,7 +812,7 @@ def write(current_chord,
     track_number, start_times, instruments_numbers, bpm, tracks_contents, track_names, channels, pan_msg, volume_msg = \
     current_chord.track_number, current_chord.start_times, current_chord.instruments_numbers, current_chord.bpm, current_chord.tracks, current_chord.track_names, current_chord.channels, current_chord.pan, current_chord.volume
     instruments_numbers = [
-        i if isinstance(i, int) else INSTRUMENTS[i]
+        i if isinstance(i, int) else database.INSTRUMENTS[i]
         for i in instruments_numbers
     ]
     MyMIDI = midiutil.MidiFile.MIDIFile(track_number,
@@ -972,29 +971,34 @@ def add_other_messages(MyMIDI, other_messages, write_type='piece'):
             pass
 
 
-def modulation(current_chord, old_scale, new_scale):
+def modulation(current_chord, old_scale, new_scale, **args):
     '''
     change notes (including both of melody and chords) in the given piece
     of music from a given scale to another given scale, and return
     the new changing piece of music.
     '''
-    return current_chord.modulation(old_scale, new_scale)
+    return current_chord.modulation(old_scale, new_scale, **args)
 
 
 def trans(obj, pitch=4, duration=0.25, interval=None):
     obj = obj.replace(' ', '')
+    if ':' in obj:
+        current = obj.split(':')
+        current[0] = toNote(current[0])
+        return trans(f'{current[0].name}{current[1]}', current[0].num,
+                     duration, interval)
     if obj.count('/') > 1:
         current_parts = obj.split('/')
         current_parts = [int(i) if i.isdigit() else i for i in current_parts]
         result = trans(current_parts[0], pitch, duration, interval)
         for each in current_parts[1:]:
-            if each in standard:
-                each = standard_dict.get(each, each)
+            if each in database.standard:
+                each = database.standard_dict.get(each, each)
             elif not isinstance(each, int):
                 each = trans(each, pitch, duration, interval)
             result /= each
         return result
-    if obj in standard:
+    if obj in database.standard:
         return chd(obj,
                    'M',
                    pitch=pitch,
@@ -1010,7 +1014,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
         if N == 2:
             first = obj[0]
             types = obj[1]
-            if first in standard and types in chordTypes:
+            if first in database.standard and types in database.chordTypes:
                 return chd(first,
                            types,
                            pitch=pitch,
@@ -1019,7 +1023,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
         elif N > 2:
             first_two = obj[:2]
             type1 = obj[2:]
-            if first_two in standard and type1 in chordTypes:
+            if first_two in database.standard and type1 in database.chordTypes:
                 return chd(first_two,
                            type1,
                            pitch=pitch,
@@ -1027,7 +1031,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
                            intervals=interval)
             first_one = obj[0]
             type2 = obj[1:]
-            if first_one in standard and type2 in chordTypes:
+            if first_one in database.standard and type2 in database.chordTypes:
                 return chd(first_one,
                            type2,
                            pitch=pitch,
@@ -1042,9 +1046,9 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
                 return (first_chord / int(part2)) % (duration, interval)
             elif part2[-1] == '!' and part2[:-1].isdigit():
                 return (first_chord @ int(part2[:-1])) % (duration, interval)
-            elif part2 in standard:
-                if part2 not in standard2:
-                    part2 = standard_dict[part2]
+            elif part2 in database.standard:
+                if part2 not in database.standard2:
+                    part2 = database.standard_dict[part2]
                 first_chord_notenames = first_chord.names()
                 if part2 in first_chord_notenames and part2 != first_chord_notenames[
                         0]:
@@ -1153,197 +1157,14 @@ def build(*tracks_list, **kwargs):
 def translate(pattern,
               default_duration=1 / 8,
               default_interval=0,
-              default_volume=100):
-    start_time = 0
-    notes = []
-    pattern_intervals = []
-    pattern_durations = []
-    pattern_volumes = []
-    pattern = pattern.replace(' ', '').replace('\n', '')
-    units = pattern.split(',')
-    repeat_times = 1
-    whole_set = False
-    left_part_symbol_inds = [
-        i - 1 for i in range(len(pattern)) if pattern[i] == '{'
-    ]
-    right_part_symbol_inds = [0] + [
-        i + 2 for i in range(len(pattern)) if pattern[i] == '}'
-    ][:-1]
-    part_ranges = [[right_part_symbol_inds[k], left_part_symbol_inds[k]]
-                   for k in range(len(left_part_symbol_inds))]
-    parts = [pattern[k[0]:k[1]] for k in part_ranges]
-    part_counter = 0
-    named_dict = dict()
-    part_replace_ind1 = 0
-    part_replace_ind2 = 0
-    if units[0].startswith('!'):
-        whole_set = True
-        whole_set_values = units[0][1:].split(';')
-        whole_set_values = [k.replace('|', ',') for k in whole_set_values]
-        whole_set_values = process_settings(whole_set_values)
-        return translate(
-            ','.join(units[1:]),
-            default_duration=default_duration,
-            default_interval=default_interval,
-            default_volume=default_volume).special_set(*whole_set_values)
-    elif units[-1].startswith('!'):
-        whole_set = True
-        whole_set_values = units[-1][1:].split(';')
-        whole_set_values = [k.replace('|', ',') for k in whole_set_values]
-        whole_set_values = process_settings(whole_set_values)
-        return translate(
-            ','.join(units[:-1]),
-            default_duration=default_duration,
-            default_interval=default_interval,
-            default_volume=default_volume).special_set(*whole_set_values)
-    for i in units:
-        if i == '':
-            continue
-        if i[0] == '{' and i[-1] == '}':
-            part_replace_ind2 = len(notes)
-            current_part = parts[part_counter]
-            part_counter += 1
-            part_settings = i[1:-1].split('|')
-            find_default = False
-            for each in part_settings:
-                if each.startswith('de:'):
-                    find_default = True
-                    current_default_settings = each[3:].split(';')
-                    current_default_settings = process_settings(
-                        current_default_settings)
-                    if current_default_settings[0] is None:
-                        current_default_settings[0] = 1 / 8
-                    if current_default_settings[1] is None:
-                        current_default_settings[1] = 0
-                    if current_default_settings[2] is None:
-                        current_default_settings[2] = 100
-                    current_part_notes = translate(
-                        current_part,
-                        default_duration=current_default_settings[0],
-                        default_interval=current_default_settings[1],
-                        default_volume=current_default_settings[2])
-                    break
-            if not find_default:
-                current_part_notes = translate(
-                    current_part,
-                    default_duration=default_duration,
-                    default_interval=default_interval,
-                    default_volume=default_volume)
-            for each in part_settings:
-                if each.startswith('!'):
-                    current_settings = each[1:].split(';')
-                    current_settings = [
-                        k.replace('`', ',') for k in current_settings
-                    ]
-                    current_settings = process_settings(current_settings)
-                    current_part_notes = current_part_notes.special_set(
-                        *current_settings)
-                elif each.isdigit():
-                    current_part_notes %= int(each)
-                elif each.startswith('$'):
-                    named_dict[each] = current_part_notes
-            notes[
-                part_replace_ind1:part_replace_ind2] = current_part_notes.notes
-            pattern_intervals[part_replace_ind1:
-                              part_replace_ind2] = current_part_notes.interval
-            pattern_durations[
-                part_replace_ind1:
-                part_replace_ind2] = current_part_notes.get_duration()
-            pattern_volumes[part_replace_ind1:
-                            part_replace_ind2] = current_part_notes.get_volume(
-                            )
-            part_replace_ind1 = len(notes)
-        elif i[0] == '[' and i[-1] == ']':
-            current_content = i[1:-1]
-            current_interval = process_settings([current_content])[0]
-            if pattern_intervals:
-                pattern_intervals[-1] += current_interval
-            else:
-                start_time += current_interval
-        elif '(' in i and i[-1] == ')':
-            repeat_times = int(i[i.index('(') + 1:-1])
-            repeat_part = i[:i.index('(')]
-            if repeat_part.startswith('$'):
-                if '[' in repeat_part and ']' in repeat_part:
-                    current_drum_settings = (
-                        repeat_part[repeat_part.index('[') +
-                                    1:repeat_part.index(']')].replace(
-                                        '|', ',')).split(';')
-                    repeat_part = repeat_part[:repeat_part.index('[')]
-                    current_drum_settings = process_settings(
-                        current_drum_settings)
-                    repeat_part = named_dict[repeat_part].special_set(
-                        *current_drum_settings)
-                else:
-                    repeat_part = named_dict[repeat_part]
-            else:
-                repeat_part = translate(repeat_part,
-                                        default_duration=default_duration,
-                                        default_interval=default_interval,
-                                        default_volume=default_volume)
-            current_notes = repeat_part % repeat_times
-            notes.extend(current_notes.notes)
-            pattern_intervals.extend(current_notes.interval)
-            pattern_durations.extend(current_notes.get_duration())
-            pattern_volumes.extend(current_notes.get_volume())
-        elif '[' in i and ']' in i:
-            current_drum_settings = (i[i.index('[') + 1:i.index(']')].replace(
-                '|', ',')).split(';')
-            current_drum_settings = process_settings(current_drum_settings)
-            config_part = i[:i.index('[')]
-            if config_part.startswith('$'):
-                if '(' in config_part and ')' in config_part:
-                    repeat_times = int(config_part[config_part.index('(') +
-                                                   1:-1])
-                    config_part = config_part[:config_part.index('(')]
-                    config_part = named_dict[config_part] % repeat_times
-                else:
-                    config_part = named_dict[config_part]
-            else:
-                config_part = translate(config_part,
-                                        default_duration=default_duration,
-                                        default_interval=default_interval,
-                                        default_volume=default_volume)
-            current_notes = config_part.special_set(*current_drum_settings)
-            notes.extend(current_notes.notes)
-            pattern_intervals.extend(current_notes.interval)
-            pattern_durations.extend(current_notes.get_duration())
-            pattern_volumes.extend(current_notes.get_volume())
-        elif ';' in i:
-            same_time_notes = i.split(';')
-            current_notes = [
-                translate(k,
-                          default_duration=default_duration,
-                          default_interval=default_interval,
-                          default_volume=default_volume)
-                for k in same_time_notes
-            ]
-            current_notes = concat(
-                [k.set(interval=0)
-                 for k in current_notes[:-1]] + [current_notes[-1]])
-            for j in current_notes.notes[:-1]:
-                j.keep_same_time = True
-            notes.extend(current_notes.notes)
-            pattern_intervals.extend(current_notes.interval)
-            pattern_durations.extend(current_notes.get_duration())
-            pattern_volumes.extend(current_notes.get_volume())
-        elif i.startswith('$'):
-            current_notes = named_dict[i]
-            notes.extend(current_notes.notes)
-            pattern_intervals.extend(current_notes.interval)
-            pattern_durations.extend(current_notes.get_duration())
-            pattern_volumes.extend(current_notes.get_volume())
-        else:
-            notes.append(N(i))
-            pattern_intervals.append(default_interval)
-            pattern_durations.append(default_duration)
-            pattern_volumes.append(default_volume)
-
-    intervals = pattern_intervals
-    durations = pattern_durations
-    volumes = pattern_volumes
-    result = chord(notes) % (durations, intervals, volumes)
-    result.start_time = start_time
+              default_volume=100,
+              start_time=None):
+    result = drum(pattern,
+                  default_duration=default_duration,
+                  start_time=start_time,
+                  default_interval=default_interval,
+                  default_volume=default_volume,
+                  translate_mode=1).notes
     return result
 
 
@@ -1522,7 +1343,7 @@ def relative_note(a, b):
     a_name, b_name, accidental_a, accidental_b = a[0], b[0], a[1:], b[1:]
     if len_a == 1 and len_b > 1 and a_name == b_name:
         return a + '♮'
-    if a in standard:
+    if a in database.standard:
         a = note(a, 5)
     else:
         a = note(a_name, 5)
@@ -1538,7 +1359,7 @@ def relative_note(a, b):
             pass
         else:
             return f'unrecognizable accidentals {accidental_a}'
-    if b in standard:
+    if b in database.standard:
         b = note(b, 5)
     else:
         b = note(b_name, 5)
@@ -1630,7 +1451,7 @@ def read_notes(note_ls, rootpitch=4):
                 intervals[-1] += each.duration
         elif isinstance(each, str):
             if each.startswith('tempo'):
-                current = [literal_eval(k) for k in each.split(';')[1:]]
+                current = [eval(k) for k in each.split(';')[1:]]
                 current_tempo = tempo(*current)
                 notes_result.append(current_tempo)
                 intervals.append(0)
@@ -1638,11 +1459,11 @@ def read_notes(note_ls, rootpitch=4):
                 current = each.split(';')[1:]
                 length = len(current)
                 if length > 2:
-                    current = [literal_eval(k) for k in current[:2]] + [
-                        current[2]
-                    ] + [literal_eval(k) for k in current[3:]]
+                    current = [eval(k) for k in current[:2]] + [current[2]] + [
+                        eval(k) for k in current[3:]
+                    ]
                 else:
-                    current = [literal_eval(k) for k in current]
+                    current = [eval(k) for k in current]
                 current_pitch_bend = pitch_bend(*current)
                 notes_result.append(current_pitch_bend)
                 intervals.append(0)
@@ -1775,8 +1596,8 @@ def process_settings(settings):
     interval = settings[1]
     if duration[-1] == '.':
         settings[0] = process_dotted_note(duration)
-    elif ',' in duration:
-        duration = duration.split(',')
+    elif ';' in duration:
+        duration = duration.split(';')
         duration = [
             process_dotted_note(i) if i[-1] == '.' else
             (1 / eval(i[1:]) if i[0] == '.' else eval(i)) for i in duration
@@ -1790,8 +1611,8 @@ def process_settings(settings):
         settings[0] = eval(duration)
     if interval[-1] == '.':
         settings[1] = process_dotted_note(interval)
-    elif ',' in interval:
-        interval = interval.split(',')
+    elif ';' in interval:
+        interval = interval.split(';')
         interval = [
             process_dotted_note(i) if i[-1] == '.' else
             (1 / eval(i[1:]) if i[0] == '.' else eval(i)) for i in interval
@@ -1806,7 +1627,7 @@ def process_settings(settings):
     if settings[2] == 'n':
         settings[2] = None
     else:
-        settings[2] = eval(settings[2])
+        settings[2] = list(eval(settings[2].replace(';', ',')))
     return settings
 
 
@@ -1928,7 +1749,7 @@ def piece_process_normalize_tempo(self, bpm, first_track_start_time):
     self.start_times = new_start_times
 
 
-def closest_note(note1, note2):
+def closest_note(note1, note2, get_distance=False):
     if not isinstance(note1, note):
         note1 = toNote(note1)
     if isinstance(note2, note):
@@ -1938,8 +1759,46 @@ def closest_note(note1, note2):
         note(note2, note1.num - 1),
         note(note2, note1.num + 1)
     ]
-    result = min(current_note, key=lambda s: abs(s.degree - note1.degree))
+    if not get_distance:
+        result = min(current_note, key=lambda s: abs(s.degree - note1.degree))
+        return result
+    else:
+        distances = [[i, abs(i.degree - note1.degree)] for i in current_note]
+        distances.sort(key=lambda s: s[1])
+        result = distances[0]
+        return result
+
+
+def closest_note_from_chord(note1, chord1):
+    if not isinstance(note1, note):
+        note1 = toNote(note1)
+    names = [database.standard_dict.get(i, i) for i in chord1.names()]
+    current_name = database.standard_dict.get(note1.name, note1.name)
+    if current_name in names:
+        result = note1
+    else:
+        distances = [
+            closest_note(note1, i, get_distance=True) for i in chord1.notes
+        ]
+        distances.sort(key=lambda s: s[1])
+        result = distances[0][0]
     return result
+
+
+def note_range(note1, note2):
+    current_range = list(range(note1.degree, note2.degree))
+    result = [degree_to_note(i) for i in current_range]
+    return result
+
+
+def adjust_to_scale(current_chord, current_scale):
+    temp = copy(current_chord)
+    current_notes = current_scale.getScale()
+    for i, each in enumerate(temp):
+        current_note = closest_note_from_chord(each, current_notes)
+        each.name = current_note.name
+        each.num = current_note.num
+    return temp
 
 
 C = trans
@@ -1954,6 +1813,7 @@ for each in [
 ]:
     each.reset = reset
     each.__hash__ = lambda self: hash(repr(self))
+    each.copy = lambda self: copy(self)
 
 for each in [
         controller_event, copyright_event, key_signature, sysex, text_event,
@@ -1961,7 +1821,9 @@ for each in [
         channel_pressure, program_change, track_name
 ]:
     each.__repr__ = lambda self: f'{self.__class__.__name__}({", ".join(["=".join([i, str(j)]) for i, j in self.__dict__.items()])})'
+    each.reset = reset
     each.__hash__ = lambda self: hash(repr(self))
+    each.copy = lambda self: copy(self)
 
 if __name__ == '__main__' or __name__ == 'musicpy':
     import algorithms as alg
