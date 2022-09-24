@@ -304,6 +304,7 @@ class sf2_loader:
     def __init__(self, file=None):
         self.file = []
         self.synth = fluidsynth.Synth()
+        self.apply_synth_settings()
         self.sfid_list = []
         self._current_channel = 0
         self.current_sfid = 1
@@ -311,6 +312,22 @@ class sf2_loader:
         self.current_preset = 0
         if file:
             self.load(file)
+
+    def change_setting(self, parameter, value):
+        self.synth.setting(f'synth.{parameter}', value)
+
+    def apply_synth_settings(self):
+        self.change_setting('gain', 0.2)
+        self.change_setting('reverb.active', 0)
+        reverb_parameters = ['damp', 'level', 'room-size', 'width']
+        current_reverb_values = [0.0, 0.9, 0.2, 0.5]
+        chorus_parameters = ['depth', 'level', 'nr', 'speed']
+        current_chorus_values = [8.0, 2.0, 3, 0.3]
+        for i, each in enumerate(reverb_parameters):
+            self.change_setting(f'reverb.{each}', current_reverb_values[i])
+        self.change_setting('chorus.active', 0)
+        for i, each in enumerate(chorus_parameters):
+            self.change_setting(f'chorus.{each}', current_chorus_values[i])
 
     @property
     def current_channel(self):
@@ -1215,6 +1232,7 @@ class sf2_player:
     def __init__(self, file=None):
         self.file = []
         self.synth = fluidsynth.Synth()
+        self.apply_synth_settings()
         self.sfid_list = []
         self.playing = False
         if file:
@@ -1257,6 +1275,22 @@ soundfonts id: {self.sfid_list}'''
         current_sfid = self.sfid_list[ind]
         self.synth.sfunload(current_sfid)
         del self.sfid_list[ind]
+
+    def change_setting(self, parameter, value):
+        self.synth.setting(f'synth.{parameter}', value)
+
+    def apply_synth_settings(self):
+        self.change_setting('gain', 0.2)
+        self.change_setting('reverb.active', 0)
+        reverb_parameters = ['damp', 'level', 'room-size', 'width']
+        current_reverb_values = [0.0, 0.9, 0.2, 0.5]
+        chorus_parameters = ['depth', 'level', 'nr', 'speed']
+        current_chorus_values = [8.0, 2.0, 3, 0.3]
+        for i, each in enumerate(reverb_parameters):
+            self.change_setting(f'reverb.{each}', current_reverb_values[i])
+        self.change_setting('chorus.active', 0)
+        for i, each in enumerate(chorus_parameters):
+            self.change_setting(f'chorus.{each}', current_chorus_values[i])
 
     def play_midi_file(self, filename):
         if not self.synth.midi_driver:
