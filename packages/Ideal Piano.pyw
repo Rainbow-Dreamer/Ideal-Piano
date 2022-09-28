@@ -1,7 +1,8 @@
 import random
 from change_settings import change_parameter
 
-piano_config = json_module.json_module('packages/piano_config.json')
+piano_config_path = 'packages/piano_config.json'
+piano_config = json_module.json_module(piano_config_path)
 
 app = QtWidgets.QApplication(sys.argv)
 del app
@@ -525,7 +526,7 @@ class piano_window(pyglet.window.Window):
         msg_box = QtWidgets.QMessageBox()
         msg_box.setWindowTitle('Error')
         msg_box.setText(
-            'It seems that FluidSynth is not installed on your computer, FluidSynth is required to play using SoundFont files as you set use_soundfont = True or play_use_soundfont = True, please install FluidSynth and then try to reopen again. You can use Ideal Piano as usual, as now the use soundfont config parameters will be set to False.'
+            'It seems that FluidSynth is nozt installed on your computer, FluidSynth is required to play using SoundFont files as you set use_soundfont = True or play_use_soundfont = True, please install FluidSynth and then try to reopen again. You can use Ideal Piano as usual, as now the use soundfont config parameters will be set to False.'
         )
         msg_box.exec()
 
@@ -537,9 +538,10 @@ class piano_window(pyglet.window.Window):
             if current_type:
                 current_type, type_name = current_type.split('/')
                 if current_type == 'image':
-                    change_parameter('background_image',
-                                     repr(current_path),
-                                     is_str=False)
+                    current_path = current_path.replace('\\', '/')
+                    change_parameter('background_image', current_path,
+                                     piano_config_path)
+                    piano_config.background_image = current_path
                     self.init_screen()
                 elif 'mid' in type_name:
                     if self.click_mode is None:
@@ -768,7 +770,7 @@ class piano_window(pyglet.window.Window):
             app = QtWidgets.QApplication(sys.argv)
             dpi = (app.screens()[0]).logicalDotsPerInch()
             current_config_window = config_window(
-                dpi=dpi, config_path='packages/piano_config.json')
+                dpi=dpi, config_path=piano_config_path)
             app.exec()
             del app
             self.open_settings_window = False
@@ -786,7 +788,7 @@ class piano_window(pyglet.window.Window):
 
     def reload_settings(self):
         global piano_config
-        piano_config = json_module.json_module('packages/piano_config.json')
+        piano_config = json_module.json_module(piano_config_path)
         current_piano_engine.notedic = piano_config.key_settings
         self.init_parameters()
         self.init_language()

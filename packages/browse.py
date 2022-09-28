@@ -6,7 +6,8 @@ import importlib
 from PyQt5 import QtGui, QtWidgets
 from change_settings import change_parameter
 
-piano_config = json_module.json_module('packages/piano_config.json')
+piano_config_path = 'packages/piano_config.json'
+piano_config = json_module.json_module(piano_config_path)
 
 
 def set_font(font, dpi):
@@ -197,7 +198,8 @@ class browse_window(QtWidgets.QMainWindow):
             self.parent.read_result = all_track_notes, tempo, first_track_start_time, actual_start_time, drum_tracks
 
         except Exception as e:
-            print(str(e))
+            import traceback
+            print(traceback.format_exc())
             self.parent.read_result = 'error'
 
         if self.parent.read_result != 'error':
@@ -299,7 +301,7 @@ class setup:
 
     def __init__(self, browse_dict, file_name=None):
         global piano_config
-        piano_config = json_module.json_module('packages/piano_config.json')
+        piano_config = json_module.json_module(piano_config_path)
         self.file_path = None
         self.action = 0
         self.track_ind_get = None
@@ -389,9 +391,8 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
             i[1] for i in self.midi_inputs
         ].index(current_midi_input)][0]
         try:
-            change_parameter('midi_device_id',
-                             str(current_midi_device_id),
-                             is_str=False)
+            change_parameter('midi_device_id', current_midi_device_id,
+                             piano_config_path)
         except:
             import traceback
             print(traceback.format_exc())
