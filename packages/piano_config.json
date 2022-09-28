@@ -1,0 +1,399 @@
+{
+    "screen_size": [
+        1300,
+        650
+    ],
+    "background_image": "resources/white.png",
+    "background_size": [
+        1303,
+        650
+    ],
+    "width_or_height_first": true,
+    "background_fix_original_ratio": true,
+    "background_opacity": 255,
+    "background_place": [
+        -1,
+        0
+    ],
+    "piano_size": null,
+    "message_color": [
+        0,
+        0,
+        0,
+        255
+    ],
+    "fonts_size": 23,
+    "label1_place": [
+        300,
+        400
+    ],
+    "label2_place": [
+        300,
+        350
+    ],
+    "label3_place": [
+        300,
+        450
+    ],
+    "label_anchor_x": "left",
+    "label_anchor_y": "center",
+    "label_width": 1000,
+    "fonts": "Consolas",
+    "bold": true,
+    "go_back_image": "resources/go_back.png",
+    "go_back_place": [
+        50,
+        550
+    ],
+    "self_play_image": "resources/play.png",
+    "self_play_place": [
+        50,
+        480
+    ],
+    "self_midi_image": "resources/midi_keyboard.png",
+    "self_midi_place": [
+        50,
+        410
+    ],
+    "play_midi_image": "resources/play_midi.png",
+    "play_midi_place": [
+        50,
+        340
+    ],
+    "settings_image": "resources/settings.png",
+    "settings_place": [
+        50,
+        270
+    ],
+    "button_resize_num": 2.3,
+    "button_opacity": 255,
+    "fps": 60,
+    "key_settings": {
+        "z": "A#1",
+        "x": "B1",
+        "c": "C2",
+        "v": "C#2",
+        "b": "D2",
+        "n": "D#2",
+        "m": "E2",
+        ",": "F2",
+        ".": "F#2",
+        "/": "G2",
+        "a": "G#2",
+        "s": "A2",
+        "d": "A#2",
+        "f": "B2",
+        "g": "C3",
+        "h": "C#3",
+        "j": "D3",
+        "k": "D#3",
+        "l": "E3",
+        ";": "F3",
+        "'": "F#3",
+        "enter": "G3",
+        "tab": "G#3",
+        "q": "A3",
+        "w": "A#3",
+        "e": "B3",
+        "r": "C4",
+        "t": "C#4",
+        "y": "D4",
+        "u": "D#4",
+        "i": "E4",
+        "o": "F4",
+        "p": "F#4",
+        "[": "G4",
+        "]": "G#4",
+        "\\": "A4",
+        "`": "A#4",
+        "1": "B4",
+        "2": "C5",
+        "3": "C#5",
+        "4": "D5",
+        "5": "D#5",
+        "6": "E5",
+        "7": "F5",
+        "8": "F#5",
+        "9": "G5",
+        "0": "G#5",
+        "-": "A5",
+        "=": "A#5",
+        "backspace": "B5",
+        "f1": "C6",
+        "f2": "C#6",
+        "f3": "D6",
+        "f4": "D#6",
+        "f5": "E6",
+        "f6": "F6",
+        "f7": "F#6",
+        "f8": "G6",
+        "f9": "G#6",
+        "f10": "A6",
+        "f11": "A#6",
+        "f12": "B6"
+    },
+    "midi_device_id": 1,
+    "language": "English",
+    "frequency": 44100,
+    "size": -16,
+    "channel": 2,
+    "buffer": 1024,
+    "max_num_channels": 100,
+    "global_volume": 0.6,
+    "pause_key": "space",
+    "repeat_key": "ctrl",
+    "unpause_key": "enter",
+    "pause_key_clear_notes": false,
+    "delay": true,
+    "delay_time": 3,
+    "fadeout_ms": 100,
+    "touch_interval": 0.1,
+    "delay_only_read_current": true,
+    "sound_format": "mp3",
+    "sound_path": "resources/sounds",
+    "show_delay_time": 1,
+    "config_enable": true,
+    "config_key": "lctrl",
+    "volume_up": "=",
+    "volume_down": "-",
+    "volume_change_unit": 0.01,
+    "change_delay": "d",
+    "change_read_current": "c",
+    "change_pause_key_clear_notes": "x",
+    "load_sound": true,
+    "show_key": false,
+    "show_chord": true,
+    "show_notes": true,
+    "show_notes_delay": 0.4,
+    "get_off_drums": true,
+    "sort_invisible": false,
+    "play_as_midi": true,
+    "pitch_range": [
+        "A0",
+        "C8"
+    ],
+    "soft_pedal_volume": 0.2,
+    "inv_num": false,
+    "change_from_first": true,
+    "original_first": true,
+    "same_note_special": false,
+    "whole_detect": true,
+    "return_fromchord": false,
+    "poly_chord_first": false,
+    "root_position_return_first": true,
+    "alter_notes_show_degree": true,
+    "melody_tol": 10,
+    "chord_tol": 9,
+    "get_off_overlap_notes": false,
+    "average_degree_length": 8,
+    "melody_degree_tol": "B4",
+    "note_mode": "bars drop",
+    "bar_width": 14,
+    "bar_height": 20,
+    "bar_color": [
+        124,
+        252,
+        0
+    ],
+    "sustain_bar_color": [
+        124,
+        200,
+        0
+    ],
+    "bar_y": 178,
+    "bar_offset_x": 0,
+    "bar_opacity": 160,
+    "opacity_change_by_velocity": true,
+    "color_mode": "normal",
+    "bar_steps": 6,
+    "bar_unit": 350,
+    "bar_hold_increase": 5,
+    "bars_drop_interval": 2,
+    "bars_drop_place": 173,
+    "adjust_ratio": 70,
+    "bar_border": 5,
+    "bar_border_color": [
+        100,
+        100,
+        100
+    ],
+    "use_track_colors": true,
+    "tracks_colors": [
+        [
+            0,
+            255,
+            0
+        ],
+        [
+            255,
+            255,
+            0
+        ],
+        [
+            0,
+            0,
+            255
+        ],
+        [
+            0,
+            255,
+            255
+        ],
+        [
+            255,
+            0,
+            255
+        ],
+        [
+            0,
+            128,
+            0
+        ],
+        [
+            0,
+            191,
+            255
+        ],
+        [
+            0,
+            255,
+            127
+        ],
+        [
+            0,
+            128,
+            128
+        ],
+        [
+            0,
+            0,
+            128
+        ],
+        [
+            255,
+            215,
+            0
+        ],
+        [
+            255,
+            165,
+            0
+        ],
+        [
+            124,
+            252,
+            0
+        ],
+        [
+            238,
+            130,
+            238
+        ],
+        [
+            218,
+            112,
+            214
+        ],
+        [
+            255,
+            20,
+            147
+        ]
+    ],
+    "use_default_tracks_colors": true,
+    "show_chord_accidentals": "sharp",
+    "show_chord_details": false,
+    "chord_details_label_place": [
+        750,
+        500
+    ],
+    "chord_details_label_anchor_x": "left",
+    "chord_details_label_anchor_y": "baseline",
+    "chord_details_font_size": 15,
+    "chord_details_label_width": 500,
+    "show_current_detect_key": false,
+    "current_detect_key_show_note_count": false,
+    "current_detect_key_label_place": [
+        230,
+        570
+    ],
+    "current_detect_key_label_anchor_x": "left",
+    "current_detect_key_label_anchor_y": "baseline",
+    "current_detect_key_font_size": 15,
+    "current_detect_key_label_width": 1000,
+    "current_detect_key_algorithm": 1,
+    "major_minor_preference": true,
+    "most_appear_num": 5,
+    "current_detect_key_limit": 200,
+    "white_key_width": 23,
+    "white_key_height": 138,
+    "white_key_interval": 25,
+    "white_key_y": 37,
+    "white_keys_number": 52,
+    "white_key_start_x": 0,
+    "white_key_color": [
+        255,
+        255,
+        255
+    ],
+    "white_key_opacity": 255,
+    "black_key_width": 15,
+    "black_key_height": 90,
+    "black_key_y": 85,
+    "black_key_first_x": 18,
+    "black_key_start_x": 64.467,
+    "black_key_color": [
+        0,
+        0,
+        0
+    ],
+    "black_key_opacity": 255,
+    "black_keys_set": [
+        0,
+        30,
+        43.85,
+        28.67,
+        28.48
+    ],
+    "black_keys_set_interval": 43.75,
+    "black_keys_set_num": 7,
+    "show_note_name_on_piano_key": false,
+    "show_only_start_note_name": true,
+    "piano_key_note_name_font_size": 12,
+    "piano_key_note_name_bold": false,
+    "piano_key_note_name_color": [
+        0,
+        0,
+        0,
+        255
+    ],
+    "piano_key_note_name_pad_x": 2,
+    "piano_key_note_name_pad_y": 5,
+    "piano_key_border": 0,
+    "piano_key_border_color": [
+        100,
+        100,
+        100
+    ],
+    "piano_background_image": "resources/piano_background.png",
+    "piano_background_opacity": 255,
+    "use_soundfont": false,
+    "play_use_soundfont": false,
+    "sf2_path": "resources/gm.sf2",
+    "bank": 0,
+    "preset": 0,
+    "sf2_duration": 6,
+    "sf2_decay": 1,
+    "sf2_volume": 100,
+    "sf2_mode": 0,
+    "render_as_audio": false,
+    "show_music_analysis": false,
+    "music_analysis_file": null,
+    "music_analysis_place": [
+        250,
+        500
+    ],
+    "key_header": "current key: ",
+    "music_analysis_width": 1300,
+    "music_analysis_fonts_size": 20
+}

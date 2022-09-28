@@ -1,10 +1,12 @@
 import musicpy as mp
 import os
 import sys
-import piano_config
+import json_module
 import importlib
 from PyQt5 import QtGui, QtWidgets
 from change_settings import change_parameter
+
+piano_config = json_module.json_module('packages/piano_config.json')
 
 
 def set_font(font, dpi):
@@ -296,7 +298,8 @@ class browse_window(QtWidgets.QMainWindow):
 class setup:
 
     def __init__(self, browse_dict, file_name=None):
-        importlib.reload(piano_config)
+        global piano_config
+        piano_config = json_module.json_module('packages/piano_config.json')
         self.file_path = None
         self.action = 0
         self.track_ind_get = None

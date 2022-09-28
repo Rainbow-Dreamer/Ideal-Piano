@@ -1,6 +1,8 @@
 import random
 from change_settings import change_parameter
 
+piano_config = json_module.json_module('packages/piano_config.json')
+
 app = QtWidgets.QApplication(sys.argv)
 del app
 
@@ -765,7 +767,8 @@ class piano_window(pyglet.window.Window):
             os.chdir(abs_path)
             app = QtWidgets.QApplication(sys.argv)
             dpi = (app.screens()[0]).logicalDotsPerInch()
-            current_config_window = config_window(dpi=dpi)
+            current_config_window = config_window(
+                dpi=dpi, config_path='packages/piano_config.json')
             app.exec()
             del app
             self.open_settings_window = False
@@ -782,7 +785,8 @@ class piano_window(pyglet.window.Window):
             self.open_choose_midi_keyboard_window = False
 
     def reload_settings(self):
-        importlib.reload(piano_config)
+        global piano_config
+        piano_config = json_module.json_module('packages/piano_config.json')
         current_piano_engine.notedic = piano_config.key_settings
         self.init_parameters()
         self.init_language()

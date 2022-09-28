@@ -18,7 +18,7 @@ from pydub import AudioSegment
 import browse
 import musicpy as mp
 from ast import literal_eval
-import piano_config
+import json_module
 from change_settings import config_window
 from copy import deepcopy as copy
 import importlib
