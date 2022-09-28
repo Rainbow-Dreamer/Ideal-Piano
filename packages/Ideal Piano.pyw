@@ -1,5 +1,8 @@
 import random
-from change_settings import change_parameter
+import browse
+import musicpy as mp
+import json_module
+from change_settings import config_window, change_parameter
 
 piano_config_path = 'packages/piano_config.json'
 piano_config = json_module.json_module(piano_config_path)
