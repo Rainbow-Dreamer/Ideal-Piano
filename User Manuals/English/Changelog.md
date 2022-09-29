@@ -1,5 +1,17 @@
 # Changelog
 
+2022-07-08
+
+* Added functionality to adjust the opacity of background image, buttons, piano keys.
+
+
+
+2022-07-06
+
+* Added functionality to display note names on piano keys.
+
+
+
 2022-06-15
 
 * Added choose MIDI device functionality, now you can right click on `MIDI KEYBOARD` button to open the choose MIDI device window, where you can choose which MIDI device you want to use in Ideal Piano. The functionality of pressing keys to show current device is removed.
