@@ -995,18 +995,31 @@ class piano_engine:
                 self.current_play_chords = mp.chord([])
             self.current_play_chords |= current_chord
             note_count = self.current_play_chords.count_appear(sort=True)
+            current_detect_key_text = ''
             if piano_config.current_detect_key_algorithm == 0:
                 current_detect_key = mp.alg.detect_scale(
                     self.current_play_chords,
-                    most_appear_num=piano_config.most_appear_num,
-                    major_minor_preference=piano_config.major_minor_preference)
+                    most_appear_num=piano_config.
+                    current_detect_key_most_appear_num,
+                    major_minor_preference=piano_config.
+                    current_detect_key_major_minor_preference)
                 current_detect_key_text = current_detect_key
             elif piano_config.current_detect_key_algorithm == 1:
                 current_detect_key = mp.alg.detect_scale2(
                     self.current_play_chords,
-                    most_appear_num=piano_config.most_appear_num,
-                    major_minor_preference=piano_config.major_minor_preference)
+                    most_appear_num=piano_config.
+                    current_detect_key_most_appear_num,
+                    major_minor_preference=piano_config.
+                    current_detect_key_major_minor_preference)
                 current_detect_key_text = current_detect_key
+            elif piano_config.current_detect_key_algorithm == 2:
+                if self.detect_key_info:
+                    current_range, current_keys = self.detect_key_info[0]
+                    if current_range[0] <= self.currentime <= current_range[1]:
+                        current_detect_key_text = current_keys
+                    elif self.currentime > current_range[1]:
+                        self.detect_key_info.pop(0)
+                        current_detect_key_text = self.detect_key_info[0][1]
             if piano_config.current_detect_key_show_note_count:
                 current_detect_key_text = f'note count: {note_count} / {len(self.current_play_chords)}\n\n' + current_detect_key_text
             current_piano_window.current_detect_key_label.text = current_detect_key_text
@@ -1151,8 +1164,34 @@ class piano_engine:
         # 2 means it has stopped playing
         self.musicsheet.start_time = start_time
         self.musicsheet.actual_start_time = actual_start_time
+
+        if piano_config.show_current_detect_key:
+            if piano_config.current_detect_key_algorithm == 2:
+                self.detect_key_info = mp.alg.detect_scale3(
+                    self.musicsheet,
+                    get_scales=True,
+                    most_appear_num=piano_config.
+                    current_detect_key_most_appear_num,
+                    major_minor_preference=piano_config.
+                    current_detect_key_major_minor_preference,
+                    unit=piano_config.current_detect_key_unit,
+                    key_accuracy_tol=piano_config.
+                    current_detect_key_key_accuracy_tol)
+                for each in self.detect_key_info:
+                    each[1] = ', '.join(
+                        [f'{i.start.name} {i.mode}' for i in each[1]])
+
         self.playls = self._midi_show_init(self.musicsheet, self.unit_time,
                                            start_time)
+
+        if piano_config.show_current_detect_key:
+            if piano_config.current_detect_key_algorithm == 2:
+                start = start_time * self.unit_time + current_piano_window.bars_drop_interval
+                for each in self.detect_key_info:
+                    current_start, current_stop = each[0]
+                    current_start = start + self.unit_time * current_start
+                    current_stop = start + self.unit_time * current_stop
+                    each[0] = [current_start, current_stop]
         if piano_config.show_music_analysis:
             self.show_music_analysis_list = [[
                 mp.alg.add_to_last_index(self.musicsheet.interval, each[0]),
@@ -1990,6 +2029,9 @@ class piano_engine:
             self.lastshow = None
             self.playnotes.clear()
             self.finished = False
+            if piano_config.show_current_detect_key:
+                self.current_play_chords = mp.chord([])
+                current_piano_window.current_detect_key_label.text = ''
 
 
 current_piano_engine = piano_engine()
