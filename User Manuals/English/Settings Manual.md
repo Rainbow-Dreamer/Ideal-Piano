@@ -265,13 +265,17 @@ current_detect_key_font_size: font size of current key
 
 current_detect_key_label_width: max width of current key
 
-current_detect_key_algorithm: the key analysis algorithm to use, currently there are 2 algorithms to choose, corresponding to 0 and 1
+current_detect_key_algorithm: the key analysis algorithm to use, currently there are 3 algorithms to choose, corresponding to 0, 1, 2
 
-major_minor_preference: config parameter of current key analysis function, whether to put major and minor as the most possible result
+current_detect_key_major_minor_preference: config parameter of current key analysis function, whether to put major and minor as the most possible result
 
-most_appear_num : config parameter of current key analysis function, the number of possible keys
+current_detect_key_most_appear_num : config parameter of current key analysis function, the number of possible keys
 
 current_detect_key_limit: the max number of notes to analyze when playing, if current number of notes exceed this limit, then clear the temp
+
+current_detect_key_unit: the unit in bars to slice a piece in ranges, for the third key analysis algorithm (detect_scale3)
+
+current_detect_key_key_accuracy_tol: the minimum accuracy in float of percentage of a part of piece to be detected as a key, for the third key analysis algorithm (detect_scale3)
 
 
 
