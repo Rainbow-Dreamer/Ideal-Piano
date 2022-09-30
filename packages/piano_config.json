@@ -326,7 +326,7 @@
     "current_detect_key_most_appear_num": 5,
     "current_detect_key_limit": 200,
     "current_detect_key_unit": 5,
-    "current_detect_key_key_accuracy_tol": 0.95,
+    "current_detect_key_key_accuracy_tol": 0.9,
     "white_key_width": 23,
     "white_key_height": 138,
     "white_key_interval": 25,
