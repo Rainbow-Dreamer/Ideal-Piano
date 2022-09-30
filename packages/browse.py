@@ -261,7 +261,13 @@ class browse_window(QtWidgets.QMainWindow):
                                                    text='BPM')
             self.check_bpm_text.move(155, 215)
             self.check_bpm_text.show()
-            self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame)
+            self.current_file_tempo = round(mp.find_first_tempo(self.filename),
+                                            3)
+            if self.current_file_tempo.is_integer():
+                self.current_file_tempo = int(self.current_file_tempo)
+            self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame,
+                                                 text=str(
+                                                     self.current_file_tempo))
             self.check_bpm.setMaximumWidth(100)
             self.check_bpm.move(240, 215)
             self.check_bpm.show()
