@@ -47,6 +47,8 @@ Ideal Piano can display detailed information about the chord that is currently p
 
 Change `show_current_detect_key` to `True` to display the key that is currently playing. There are currently 3 key analysis algorithms to choose from, set the value of `current_detect_key_algorithm` to 0, 1, or 2. The default 3rd algorithm is suitable for analyzing MIDI files with modulations. This algorithm analyzes the whole piece before displaying it, so it cannot be used for real-time performance. If you want to display current key while playing in real time, you can choose the 1st and 2nd algorithm to determine the keys. Both algorithms analyze the keys in real time, but are not as accurate as the 3rd algorithm.
 
+By default, the key detection algorithm only detects major or minor keys, change `current_detect_key_major_minor_preference` to `True` to include detections for church modes like dorian, lydian.
+
 
 
 ## Is there a compatible version for Linux and macOS?
