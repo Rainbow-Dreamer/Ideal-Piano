@@ -360,7 +360,7 @@
     "black_keys_set_interval": 43.75,
     "black_keys_set_num": 7,
     "show_note_name_on_piano_key": false,
-    "show_only_start_note_name": true,
+    "show_only_start_note_name": false,
     "piano_key_note_name_font_size": 12,
     "piano_key_note_name_bold": false,
     "piano_key_note_name_color": [

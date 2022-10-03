@@ -31,6 +31,24 @@ When you are playing a MIDI file in Ideal Piano, by default you can press `space
 
 
 
+## How do I show the corresponding note names on piano keys?
+
+Change the parameter `show_note_name_on_piano_key` to `True` to display the corresponding note names on piano keys. The default is to show the note name of each white key, you can also change `show_only_start_note_name` to `True` to show only the keys with C as the note name.
+
+
+
+## How do I display the details of current chord?
+
+Ideal Piano can display detailed information about the chord that is currently playing, including the root note, chord type, inversions, omissions, altered notes, voicings, etc. Change the parameter `show_chord_details` to `True` to display the details of the chord that is currently playing.
+
+
+
+## How do I display the key that is currently playing?
+
+Change `show_current_detect_key` to `True` to display the key that is currently playing. There are currently 3 key analysis algorithms to choose from, set the value of `current_detect_key_algorithm` to 0, 1, or 2. The default 3rd algorithm is suitable for analyzing MIDI files with modulations. This algorithm analyzes the whole piece before displaying it, so it cannot be used for real-time performance. If you want to display current key while playing in real time, you can choose the 1st and 2nd algorithm to determine the keys. Both algorithms analyze the keys in real time, but are not as accurate as the 3rd algorithm.
+
+
+
 ## Is there a compatible version for Linux and macOS?
 
 There are Linux and macOS compatible versions, you can download at the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest) of Ideal Piano on github. For the installation of Linux and macOS versions, here are the instructions.
