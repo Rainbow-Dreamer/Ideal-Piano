@@ -164,7 +164,7 @@
     "show_key": false,
     "show_chord": true,
     "show_notes": true,
-    "show_notes_delay": 0.4,
+    "show_notes_delay": 0,
     "get_off_drums": true,
     "sort_invisible": false,
     "play_as_midi": true,
@@ -210,7 +210,7 @@
     "bar_hold_increase": 5,
     "bars_drop_interval": 2,
     "bars_drop_place": 173,
-    "adjust_ratio": 70,
+    "adjust_ratio": 62,
     "bar_border": 5,
     "bar_border_color": [
         100,
