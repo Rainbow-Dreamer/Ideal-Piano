@@ -1126,7 +1126,7 @@ class piano_engine:
                         current_musicsheet = self.musicsheet
                     mp.write(current_musicsheet,
                              bpm=self.bpm,
-                             start_time=start_time,
+                             start_time=actual_start_time,
                              name='temp.mid')
                     self.path = 'temp.mid'
             else:
@@ -1326,7 +1326,7 @@ class piano_engine:
                 self.bars_drop_time.clear()
             self.start = start_time * unit_time + current_piano_window.bars_drop_interval
             self._midi_show_init_note_list(musicsheet, unit_time, playls)
-            pyglet.clock.schedule_once(midi_file_play,
+            pyglet.clock.schedule_once(self.midi_file_play,
                                        current_piano_window.bars_drop_interval)
         current_piano_window.label.text = ''
         current_piano_window.label.draw()
@@ -1893,10 +1893,9 @@ class piano_engine:
             if not piano_config.show_notes_delay:
                 self._midi_show_update_notes_text(playnotes=self.playnotes)
             else:
-                pyglet.clock.schedule_once(
-                    self._midi_show_update_notes_text,
-                    piano_config.show_notes_delay,
-                    playnotes=self.playnotes)
+                pyglet.clock.schedule_once(self._midi_show_update_notes_text,
+                                           piano_config.show_notes_delay,
+                                           playnotes=self.playnotes)
 
     def _midi_show_update_notes_text(self, dt=None, playnotes=None):
         if piano_config.show_notes:
