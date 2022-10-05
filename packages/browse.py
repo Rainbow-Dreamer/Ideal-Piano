@@ -102,35 +102,18 @@ class browse_window(QtWidgets.QMainWindow):
         except:
             pass
         try:
-            try:
-                all_tracks = mp.read(self.parent.file_path,
-                                     get_off_drums=False)
-                if len(all_tracks) == 1:
-                    if piano_config.get_off_drums and any(
-                            i.channel == 9 for i in all_tracks.tracks[0]):
-                        all_tracks = mp.read(self.parent.file_path,
-                                             get_off_drums=False,
-                                             split_channels=True)
-            except:
-                all_tracks = mp.read(self.parent.file_path,
-                                     get_off_drums=False,
-                                     split_channels=True)
+            all_tracks = mp.read(self.parent.file_path, get_off_drums=False)
             all_tracks.normalize_tempo()
+            all_tracks.only_notes()
             current_bpm = all_tracks.bpm
-            i = 0
-            while i < len(all_tracks):
-                current_track = all_tracks.tracks[i]
-                if all(not isinstance(k, mp.note) for k in current_track):
-                    del all_tracks[i]
-                    continue
-                i += 1
             actual_start_time = min(all_tracks.start_times)
             drum_tracks = []
             if piano_config.get_off_drums:
-                while 9 in all_tracks.channels:
-                    current_drum_track_ind = all_tracks.channels.index(9)
-                    drum_tracks.append(all_tracks[current_drum_track_ind])
-                    del all_tracks[current_drum_track_ind]
+                drum_tracks = [
+                    all_tracks[i] for i, each in enumerate(all_tracks.channels)
+                    if each == 9
+                ]
+                all_tracks.get_off_drums()
             if not self.parent.if_merge:
                 if self.parent.track_ind_get is not None:
                     all_tracks = [
@@ -193,7 +176,10 @@ class browse_window(QtWidgets.QMainWindow):
                                         current[2] - first_track_start_time)
             all_track_notes += pitch_bends
             if self.parent.set_bpm != '':
-                tempo = float(self.parent.set_bpm)
+                if float(self.parent.set_bpm) == round(tempo, 3):
+                    self.parent.set_bpm = None
+                else:
+                    tempo = float(self.parent.set_bpm)
             first_track_start_time += all_track_notes.start_time
             self.parent.read_result = all_track_notes, tempo, first_track_start_time, actual_start_time, drum_tracks
 
