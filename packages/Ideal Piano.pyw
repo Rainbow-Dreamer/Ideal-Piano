@@ -1135,11 +1135,12 @@ class piano_engine:
             return 'back'
 
         if self.show_mode != 0:
-            current_melody, current_chord, shift = mp.alg.split_all(
+            current_melody, current_chord = mp.alg.split_all(
                 self.musicsheet, 'chord', piano_config.melody_tol,
                 piano_config.chord_tol, piano_config.get_off_overlap_notes,
                 piano_config.average_degree_length,
                 piano_config.melody_degree_tol)
+            shift = current_chord.start_time - current_melody.start_time
             if self.show_mode == 1:
                 self.musicsheet = current_melody
                 if shift < 0:
