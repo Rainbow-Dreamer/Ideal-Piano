@@ -791,6 +791,8 @@ class piano_window(pyglet.window.Window):
             app.exec()
             del app
             self.open_choose_midi_keyboard_window = False
+            global piano_config
+            piano_config = json_module.json_module(piano_config_path)
 
     def reload_settings(self):
         global piano_config

@@ -349,9 +349,14 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.midi_ports = self.midi_inputs + self.midi_outputs
         self.midi_input_box = QtWidgets.QComboBox(self)
         self.midi_input_box.setFixedWidth(400)
+        midi_inputs_id = [i[0] for i in self.midi_inputs]
+        current_ind = 0
+        if piano_config.midi_device_id in midi_inputs_id:
+            current_ind = midi_inputs_id.index(piano_config.midi_device_id)
         self.midi_input_box.addItems([i[1] for i in self.midi_inputs])
         self.midi_input_box.move(200, 70)
         self.midi_input_box.activated.connect(self.change_midi_device_id)
+        self.midi_input_box.setCurrentIndex(current_ind)
         self.midi_input_label = QtWidgets.QLabel(self,
                                                  text='MIDI Input Driver')
         self.midi_input_label.setFont(
