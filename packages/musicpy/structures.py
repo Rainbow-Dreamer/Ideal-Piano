@@ -316,7 +316,7 @@ class chord:
         result = temp[start_ind:to_ind]
         result += chord(changes)
         result.other_messages = [
-            i for i in result.other_messages if ind1 <= i.time / 4 < ind2
+            i for i in result.other_messages if ind1 <= i.start_time < ind2
         ]
         result.start_time = actual_start_time
         return result
@@ -1583,8 +1583,6 @@ class chord:
         pitch_bend_msg = self.split(pitch_bend, get_time=True)
         self.clear_pitch_bend('all')
         mp.process_normalize_tempo(self, tempo_changes_ranges, bpm)
-        for each in self.other_messages:
-            each.start_time = each.time / 4
         other_types = pitch_bend_msg.notes + self.other_messages
         if pan_msg:
             other_types += pan_msg
@@ -1612,7 +1610,7 @@ class chord:
             if isinstance(each, (pitch_bend, pan, volume)):
                 each.start_time = current_start_time
             else:
-                each.time = current_start_time * 4
+                each.start_time = current_start_time
         del other_types_chord[0]
         for each in other_types_chord.notes:
             if isinstance(each, pitch_bend):
@@ -1653,9 +1651,9 @@ class chord:
                 if each.start_time < 0:
                     each.start_time = 0
         for each in temp.other_messages:
-            each.time += time * 4
-            if each.time < 0:
-                each.time = 0
+            each.start_time += time
+            if each.start_time < 0:
+                each.start_time = 0
         if pan_msg or volume_msg:
             return temp, pan_msg, volume_msg
         else:
@@ -2171,9 +2169,9 @@ class chord:
                         each.start_time = 0
         if msg:
             for each in self.other_messages:
-                each.time += start_time * 4
-                if each.time < 0:
-                    each.time = 0
+                each.start_time += start_time
+                if each.start_time < 0:
+                    each.start_time = 0
 
     def with_start(self, start_time):
         temp = copy(self)
@@ -3597,7 +3595,7 @@ class piece:
             k += 1
         track_inds = [each.track_ind for each in temp.tracks]
         temp.other_messages = [
-            i for i in temp.other_messages if ind1 <= i.time / 4 < ind2
+            i for i in temp.other_messages if ind1 <= i.start_time < ind2
         ]
         temp.other_messages = [
             i for i in temp.other_messages if i.track in track_inds
@@ -3686,9 +3684,9 @@ class piece:
                             each.start_time = 0
             if msg:
                 for each in current_track.other_messages:
-                    each.time += current_start_time * 4
-                    if each.time < 0:
-                        each.time = 0
+                    each.start_time += current_start_time
+                    if each.start_time < 0:
+                        each.start_time = 0
             if pan_volume:
                 current_pan = self.pan[i]
                 current_volume = self.volume[i]
@@ -4913,21 +4911,21 @@ class controller_event:
     def __init__(self,
                  track=0,
                  channel=0,
-                 time=0,
+                 start_time=0,
                  controller_number=None,
                  parameter=None):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.controller_number = controller_number
         self.parameter = parameter
 
 
 class copyright_event:
 
-    def __init__(self, track=0, time=0, notice=None):
+    def __init__(self, track=0, start_time=0, notice=None):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.notice = notice[:127] if notice else notice
 
 
@@ -4935,12 +4933,12 @@ class key_signature:
 
     def __init__(self,
                  track=0,
-                 time=0,
+                 start_time=0,
                  accidentals=None,
                  accidental_type=None,
                  mode=None):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.accidentals = accidentals
         self.accidental_type = accidental_type
         self.mode = mode
@@ -4948,18 +4946,18 @@ class key_signature:
 
 class sysex:
 
-    def __init__(self, track=0, time=0, manID=None, payload=None):
+    def __init__(self, track=0, start_time=0, manID=None, payload=None):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.manID = manID
         self.payload = payload
 
 
 class text_event:
 
-    def __init__(self, track=0, time=0, text=''):
+    def __init__(self, track=0, start_time=0, text=''):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.text = text
 
 
@@ -4967,13 +4965,13 @@ class time_signature:
 
     def __init__(self,
                  track=0,
-                 time=0,
+                 start_time=0,
                  numerator=None,
                  denominator=None,
                  clocks_per_tick=None,
                  notes_per_quarter=8):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.numerator = numerator
         self.denominator = denominator
         self.clocks_per_tick = clocks_per_tick
@@ -4984,14 +4982,14 @@ class universal_sysex:
 
     def __init__(self,
                  track=0,
-                 time=0,
+                 start_time=0,
                  code=None,
                  subcode=None,
                  payload=None,
                  sysExChannel=127,
                  realTime=False):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.code = code
         self.subcode = subcode
         self.payload = payload
@@ -5004,7 +5002,7 @@ class rpn:
     def __init__(self,
                  track=0,
                  channel=0,
-                 time=0,
+                 start_time=0,
                  controller_msb=None,
                  controller_lsb=None,
                  data_msb=None,
@@ -5013,7 +5011,7 @@ class rpn:
                  registered=True):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.controller_msb = controller_msb
         self.controller_lsb = controller_lsb
         self.data_msb = data_msb
@@ -5027,12 +5025,12 @@ class tuning_bank:
     def __init__(self,
                  track=0,
                  channel=0,
-                 time=0,
+                 start_time=0,
                  bank=None,
                  time_order=False):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.bank = bank
         self.time_order = time_order
 
@@ -5042,39 +5040,39 @@ class tuning_program:
     def __init__(self,
                  track=0,
                  channel=0,
-                 time=0,
+                 start_time=0,
                  program=None,
                  time_order=False):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.program = program
         self.time_order = time_order
 
 
 class channel_pressure:
 
-    def __init__(self, track=0, channel=0, time=0, pressure_value=None):
+    def __init__(self, track=0, channel=0, start_time=0, pressure_value=None):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.pressure_value = pressure_value
 
 
 class program_change:
 
-    def __init__(self, track=0, channel=0, time=0, program=0):
+    def __init__(self, track=0, channel=0, start_time=0, program=0):
         self.track = track
         self.channel = channel
-        self.time = time * 4
+        self.start_time = start_time
         self.program = program
 
 
 class track_name:
 
-    def __init__(self, track=0, time=0, name=''):
+    def __init__(self, track=0, start_time=0, name=''):
         self.track = track
-        self.time = time * 4
+        self.start_time = start_time
         self.name = name
 
 
