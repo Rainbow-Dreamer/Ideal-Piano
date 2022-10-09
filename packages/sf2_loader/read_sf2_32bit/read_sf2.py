@@ -141,7 +141,7 @@ def get_timestamps(current_chord,
     if not ignore_other_messages:
         other_messages_part = [
             general_event('message',
-                          bar_to_real_time(i.time / 4, bpm, 1) / 1000, i)
+                          bar_to_real_time(i.start_time, bpm, 1) / 1000, i)
             for i in current_chord.other_messages
         ]
         result += other_messages_part
@@ -150,9 +150,10 @@ def get_timestamps(current_chord,
             general_event(
                 'message',
                 bar_to_real_time(i.start_time, bpm, 1) / 1000,
-                mp.controller_event(channel=i.channel,
-                                    controller_number=10,
-                                    parameter=i.value)) for i in pan
+                mp.event('control_change',
+                         channel=i.channel,
+                         control=10,
+                         value=i.value)) for i in pan
         ]
         result += pan_part
     if volume:
@@ -160,9 +161,10 @@ def get_timestamps(current_chord,
             general_event(
                 'message',
                 bar_to_real_time(i.start_time, bpm, 1) / 1000,
-                mp.controller_event(channel=i.channel,
-                                    controller_number=7,
-                                    parameter=i.value)) for i in volume
+                mp.event('control_change',
+                         channel=i.channel,
+                         control=7,
+                         value=i.value)) for i in volume
         ]
         result += volume_part
     result.sort(key=lambda s: (s.start_time, s.event_type))
@@ -825,14 +827,13 @@ current preset name: {self.get_current_instrument()}'''
                 current_channel = each.channel if each.channel is not None else channel
                 self.synth.pitch_bend(current_channel, each.value)
             elif current.event_type == 'message':
-                if isinstance(each, mp.controller_event):
+                if each.type == 'control_change':
                     current_channel = each.channel if each.channel is not None else channel
-                    if each.controller_number == 0 and current_channel not in channel_dict:
+                    if each.control == 0 and current_channel not in channel_dict:
                         channel_dict[current_channel] = self.channel_info(
                             current_channel)
-                    self.synth.cc(current_channel, each.controller_number,
-                                  each.parameter)
-                elif isinstance(each, mp.program_change):
+                    self.synth.cc(current_channel, each.control, each.value)
+                elif each.type == 'program_change':
                     current_channel = each.channel if each.channel is not None else channel
                     if not self.valid_channel(current_channel):
                         self.change_sfid(self.sfid_list[0], current_channel)

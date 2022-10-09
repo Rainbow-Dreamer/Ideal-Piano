@@ -257,7 +257,7 @@ class chord:
         return chord(notes, interval=intervals, start_time=temp.start_time)
 
     def get_msg(self, types):
-        return [i for i in self.other_messages if isinstance(i, types)]
+        return [i for i in self.other_messages if i.type == types]
 
     def cut(self, ind1=0, ind2=None, start_time=0, return_inds=False):
         # get parts of notes between two bars
@@ -2118,8 +2118,7 @@ class chord:
 
     def clear_program_change(self):
         self.other_messages = [
-            i for i in self.other_messages
-            if not isinstance(i, program_change)
+            i for i in self.other_messages if i.type != 'program_change'
         ]
 
     def clear_other_messages(self, types=None):
@@ -2127,7 +2126,7 @@ class chord:
             self.other_messages.clear()
         else:
             self.other_messages = [
-                i for i in self.other_messages if not isinstance(i, types)
+                i for i in self.other_messages if i.type != types
             ]
 
     def dotted(self, ind=-1, num=1, duration=True, interval=False):
@@ -2782,13 +2781,6 @@ class circle_of_fifths:
                 ind = ind % 12
             return self.inner[ind]
 
-    def draw(self, inner=False):
-        if not inner:
-            return '\n         C \n    F         G\n   Bb          D\n  Eb            A\n   Ab          E  \n    Db        B\n         Gb'
-
-        else:
-            return '\n            C \n        F   Am   G\n     Bb  Dm    Em   D\n        Gm        Bm  \n    Eb Cm        F#m  A\n      Fm        C#m\n   Ab  Bbm   G#m    E  \n      Db   Ebm   B\n           Gb'
-
     def get(self, ind, mode=0):
         if mode == 0:
             return self[ind]
@@ -2839,12 +2831,6 @@ class circle_of_fourths(circle_of_fifths):
 
     def __repr__(self):
         return f'circle of fourths\nouter circle: {self.outer}\ninner circle: {self.inner}\ndirection: clockwise'
-
-    def draw(self, inner=False):
-        if not inner:
-            return '\n         C \n    G         F\n   D          Bb\n  A            Eb\n   E          Ab  \n    B        Db\n        Gb'
-        else:
-            return '\n            C \n        G   Am   F\n     D   Em    Dm   Bb\n        Bm       Gm  \n    A  F#m        Cm  Eb\n      C#m        Fm\n   E   G#m    Bbm    Ab  \n      B   Ebm   Db\n           Gb'
 
 
 class piece:
@@ -3282,11 +3268,10 @@ class piece:
 
     def get_msg(self, types, ind=None):
         if ind is None:
-            return [i for i in self.other_messages if isinstance(i, types)]
+            return [i for i in self.other_messages if i.type == types]
         else:
             return [
-                i for i in self.tracks[ind].other_messages
-                if isinstance(i, types)
+                i for i in self.tracks[ind].other_messages if i.type == types
             ]
 
     def add_pan(self,
@@ -3407,18 +3392,20 @@ class piece:
             whole_pan = mp.concat(temp.pan)
             whole_volume = mp.concat(temp.volume)
             pan_msg = [
-                controller_event(channel=i.channel,
-                                 track=i.track,
-                                 time=i.start_time,
-                                 controller_number=10,
-                                 parameter=i.value) for i in whole_pan
+                event('control_change',
+                      channel=i.channel,
+                      track=i.track,
+                      start_time=i.start_time,
+                      control=10,
+                      value=i.value) for i in whole_pan
             ]
             volume_msg = [
-                controller_event(channel=i.channel,
-                                 track=i.track,
-                                 time=i.start_time,
-                                 controller_number=7,
-                                 parameter=i.value) for i in whole_volume
+                event('control_change',
+                      channel=i.channel,
+                      track=i.track,
+                      start_time=i.start_time,
+                      control=7,
+                      value=i.value) for i in whole_volume
             ]
             first_track.other_messages += pan_msg
             first_track.other_messages += volume_msg
@@ -3543,7 +3530,7 @@ class piece:
                   ind1=None,
                   ind2=None,
                   mode='seconds',
-                  normalize_tempo=False,
+                  normalize_tempo=True,
                   audio_mode=0):
         merged_result, temp_bpm, start_time = self.merge()
         if bpm is not None:
@@ -3764,8 +3751,7 @@ class piece:
             for each in self.tracks:
                 each.clear_program_change()
         self.other_messages = [
-            i for i in self.other_messages
-            if not isinstance(i, program_change)
+            i for i in self.other_messages if i.type != 'program_change'
         ]
 
     def clear_other_messages(self, types=None, apply_tracks=True):
@@ -3776,7 +3762,7 @@ class piece:
             self.other_messages.clear()
         else:
             self.other_messages = [
-                i for i in self.other_messages if not isinstance(i, types)
+                i for i in self.other_messages if i.type != types
             ]
 
     def change_instruments(self, instruments, ind=None):
@@ -4004,41 +3990,6 @@ class pitch_bend:
         if vol > 127:
             vol = 127
         self.volume = vol
-
-    def set_channel(self, channel):
-        self.channel = channel
-
-    def with_channel(self, channel):
-        temp = copy(self)
-        temp.channel = channel
-        return temp
-
-
-class tuning:
-
-    def __init__(self,
-                 tuning_dict,
-                 track=None,
-                 sysExChannel=127,
-                 realTime=True,
-                 tuningProgam=0,
-                 channel=None):
-        self.tuning_dict = tuning_dict
-        keys = list(self.tuning_dict.keys())
-        values = list(self.tuning_dict.values())
-        keys = [
-            i.degree if isinstance(i, note) else mp.toNote(i).degree
-            for i in keys
-        ]
-        self.tunings = [(keys[i], values[i]) for i in range(len(keys))]
-        self.track = track
-        self.sysExChannel = sysExChannel
-        self.realTime = realTime
-        self.tuningProgam = tuningProgam
-        self.channel = channel
-
-    def __repr__(self):
-        return f'tuning: {self.tuning_dict}'
 
     def set_channel(self, channel):
         self.channel = channel
@@ -4370,7 +4321,7 @@ class drum:
                   default_interval=1 / 8,
                   default_volume=100,
                   translate_mode=0):
-        rest_symbol = 'x'
+        rest_symbol = '0'
         continue_symbol = '-'
         if -1 in mapping.values():
             rest_symbol = [i for i, j in mapping.items() if j == -1][0]
@@ -4446,8 +4397,7 @@ class drum:
                         current_part)
                 for each in current_part:
                     if each.startswith('i:'):
-                        current_extra_interval = mp.process_settings(
-                            [each[2:]])[0]
+                        current_extra_interval = mp.process_note(each[2:])
                         if current_intervals:
                             current_intervals[-1][-1] += current_extra_interval
                         else:
@@ -4509,16 +4459,29 @@ class drum:
                     if each_note in [rest_symbol, continue_symbol]
                 ]
                 if symbol_inds:
+                    last_symbol_ind = None
+                    last_symbol_start_ind = None
                     for ind in symbol_inds:
-                        current_symbol = current_notes[ind]
-                        if current_symbol == rest_symbol and ind > 0:
-                            current_intervals[ind -
-                                              1] += current_intervals[ind]
-                        elif current_symbol == continue_symbol and ind > 0:
-                            current_intervals[ind -
-                                              1] += current_intervals[ind]
-                            current_durations[ind -
-                                              1] += current_durations[ind]
+                        if ind > 0:
+                            if last_symbol_ind is None:
+                                last_symbol_ind = ind
+                                last_symbol_start_ind = ind - 1
+                            else:
+                                if ind != last_symbol_ind + 1:
+                                    last_symbol_ind = ind
+                                    last_symbol_start_ind = ind - 1
+                            current_symbol = current_notes[ind]
+                            if current_symbol == rest_symbol:
+                                current_intervals[
+                                    last_symbol_start_ind] += current_intervals[
+                                        ind]
+                            elif current_symbol == continue_symbol:
+                                current_intervals[
+                                    last_symbol_start_ind] += current_intervals[
+                                        ind]
+                                current_durations[
+                                    last_symbol_start_ind] += current_durations[
+                                        ind]
                     current_length = len(current_notes)
                     current_notes = [
                         current_notes[j] for j in range(current_length)
@@ -4628,22 +4591,20 @@ class drum:
                 elif current_setting_keyword == 'r':
                     current_repeat_times = int(current_content)
                 elif current_setting_keyword == 't':
-                    current_fix_length = mp.process_settings([current_content
-                                                              ])[0]
+                    current_fix_length = mp.process_note(current_content)
                 elif current_setting_keyword == 'i':
                     if current_content == '.':
-                        current_append_intervals = current_append_durations
-                    else:
-                        current_append_intervals = mp.process_settings(
-                            ['n', current_content, 'n'])[1]
+                        current_append_intervals = mp.process_note(
+                            current_content,
+                            mode=1,
+                            value2=current_append_durations)
                     if not isinstance(current_append_intervals, list):
                         current_append_intervals = [
                             current_append_intervals
                             for k in current_append_notes
                         ]
                 elif current_setting_keyword == 'l':
-                    current_append_durations = mp.process_settings(
-                        [current_content, 'n', 'n'])[0]
+                    current_append_durations = mp.process_note(current_content)
                     if not isinstance(current_append_durations, list):
                         current_append_durations = [
                             current_append_durations
@@ -4651,8 +4612,8 @@ class drum:
                         ]
                         custom_durations = True
                 elif current_setting_keyword == 'v':
-                    current_append_volumes = mp.process_settings(
-                        ['n', 'n', current_content])[2]
+                    current_append_volumes = mp.process_note(current_content,
+                                                             mode=2)
                     if not isinstance(current_append_volumes, list):
                         current_append_volumes = [
                             current_append_volumes
@@ -4795,7 +4756,7 @@ class drum:
         for each in current_keyword:
             keyword, content = each.split(':')
             if keyword == 't':
-                current_part_fix_length = mp.process_settings([content])[0]
+                current_part_fix_length = mp.process_note(content)
             elif keyword == 'r':
                 current_part_repeat_times = int(content)
             elif keyword == 'n':
@@ -4807,22 +4768,17 @@ class drum:
                 current_part_all_same_duration, current_part_all_same_interval, current_part_all_same_volume = mp.process_settings(
                     content.split(';'))
             elif keyword == 'dl':
-                current_part_default_duration = mp.process_settings([content
-                                                                     ])[0]
+                current_part_default_duration = mp.process_note(content)
             elif keyword == 'di':
-                current_part_default_interval = mp.process_settings([content
-                                                                     ])[0]
+                current_part_default_interval = mp.process_note(content)
             elif keyword == 'dv':
-                current_part_default_volume = mp.process_settings([content])[0]
+                current_part_default_volume = mp.process_note(content, mode=2)
             elif keyword == 'al':
-                current_part_all_same_duration = mp.process_settings([content
-                                                                      ])[0]
+                current_part_all_same_duration = mp.process_note(content)
             elif keyword == 'al':
-                current_part_all_same_interval = mp.process_settings([content
-                                                                      ])[0]
+                current_part_all_same_interval = mp.process_note(content)
             elif keyword == 'al':
-                current_part_all_same_volume = mp.process_settings([content
-                                                                    ])[0]
+                current_part_all_same_volume = mp.process_note(content, mode=2)
         return current_part_default_duration, current_part_default_interval, current_part_default_volume, current_part_repeat_times, current_part_all_same_duration, current_part_all_same_interval, current_part_all_same_volume, current_part_fix_length, current_part_name
 
     def _translate_global_keyword_parser(self, global_keywords):
@@ -4837,7 +4793,7 @@ class drum:
         for each in global_keywords:
             keyword, content = each[1:].split(':')
             if keyword == 't':
-                global_fix_length = mp.process_settings([content])[0]
+                global_fix_length = mp.process_note(content)
             elif keyword == 'r':
                 global_repeat_times = int(content)
             elif keyword == 'd':
@@ -4847,17 +4803,17 @@ class drum:
                 global_all_same_duration, global_all_same_interval, global_all_same_volume = mp.process_settings(
                     content.split(';'))
             elif keyword == 'dl':
-                global_default_duration = mp.process_settings([content])[0]
+                global_default_duration = mp.process_note(content)
             elif keyword == 'di':
-                global_default_interval = mp.process_settings([content])[0]
+                global_default_interval = mp.process_note(content)
             elif keyword == 'dv':
-                global_default_volume = mp.process_settings([content])[0]
+                global_default_volume = mp.process_note(content, mode=2)
             elif keyword == 'al':
-                global_all_same_duration = mp.process_settings([content])[0]
+                global_all_same_duration = mp.process_note(content)
             elif keyword == 'al':
-                global_all_same_interval = mp.process_settings([content])[0]
+                global_all_same_interval = mp.process_note(content)
             elif keyword == 'al':
-                global_all_same_volume = mp.process_settings([content])[0]
+                global_all_same_volume = mp.process_note(content, mode=2)
         return global_default_duration, global_default_interval, global_default_volume, global_repeat_times, global_all_same_duration, global_all_same_interval, global_all_same_volume, global_fix_length
 
     def play(self, *args, **kwargs):
@@ -4897,183 +4853,19 @@ class drum:
     def set(self, durations=None, intervals=None, volumes=None):
         return self % (durations, intervals, volumes)
 
-    def info(self):
-        return f"[drum] {self.name if self.name else ''}\ninstrument: {database.drum_set_dict[self.instrument] if self.instrument in database.drum_set_dict else 'unknown'}\n{', '.join([database.drum_types[k.degree] for k in self.notes])} with interval {self.notes.interval}"
-
     def with_start(self, start_time):
         temp = copy(self)
         temp.notes.start_time = start_time
         return temp
 
 
-class controller_event:
+class event:
 
-    def __init__(self,
-                 track=0,
-                 channel=0,
-                 start_time=0,
-                 controller_number=None,
-                 parameter=None):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.controller_number = controller_number
-        self.parameter = parameter
-
-
-class copyright_event:
-
-    def __init__(self, track=0, start_time=0, notice=None):
+    def __init__(self, type, track=0, start_time=0, **kwargs):
+        self.type = type
         self.track = track
         self.start_time = start_time
-        self.notice = notice[:127] if notice else notice
-
-
-class key_signature:
-
-    def __init__(self,
-                 track=0,
-                 start_time=0,
-                 accidentals=None,
-                 accidental_type=None,
-                 mode=None):
-        self.track = track
-        self.start_time = start_time
-        self.accidentals = accidentals
-        self.accidental_type = accidental_type
-        self.mode = mode
-
-
-class sysex:
-
-    def __init__(self, track=0, start_time=0, manID=None, payload=None):
-        self.track = track
-        self.start_time = start_time
-        self.manID = manID
-        self.payload = payload
-
-
-class text_event:
-
-    def __init__(self, track=0, start_time=0, text=''):
-        self.track = track
-        self.start_time = start_time
-        self.text = text
-
-
-class time_signature:
-
-    def __init__(self,
-                 track=0,
-                 start_time=0,
-                 numerator=None,
-                 denominator=None,
-                 clocks_per_tick=None,
-                 notes_per_quarter=8):
-        self.track = track
-        self.start_time = start_time
-        self.numerator = numerator
-        self.denominator = denominator
-        self.clocks_per_tick = clocks_per_tick
-        self.notes_per_quarter = notes_per_quarter
-
-
-class universal_sysex:
-
-    def __init__(self,
-                 track=0,
-                 start_time=0,
-                 code=None,
-                 subcode=None,
-                 payload=None,
-                 sysExChannel=127,
-                 realTime=False):
-        self.track = track
-        self.start_time = start_time
-        self.code = code
-        self.subcode = subcode
-        self.payload = payload
-        self.sysExChannel = sysExChannel
-        self.realTime = realTime
-
-
-class rpn:
-
-    def __init__(self,
-                 track=0,
-                 channel=0,
-                 start_time=0,
-                 controller_msb=None,
-                 controller_lsb=None,
-                 data_msb=None,
-                 data_lsb=None,
-                 time_order=False,
-                 registered=True):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.controller_msb = controller_msb
-        self.controller_lsb = controller_lsb
-        self.data_msb = data_msb
-        self.data_lsb = data_lsb
-        self.time_order = time_order
-        self.registered = registered
-
-
-class tuning_bank:
-
-    def __init__(self,
-                 track=0,
-                 channel=0,
-                 start_time=0,
-                 bank=None,
-                 time_order=False):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.bank = bank
-        self.time_order = time_order
-
-
-class tuning_program:
-
-    def __init__(self,
-                 track=0,
-                 channel=0,
-                 start_time=0,
-                 program=None,
-                 time_order=False):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.program = program
-        self.time_order = time_order
-
-
-class channel_pressure:
-
-    def __init__(self, track=0, channel=0, start_time=0, pressure_value=None):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.pressure_value = pressure_value
-
-
-class program_change:
-
-    def __init__(self, track=0, channel=0, start_time=0, program=0):
-        self.track = track
-        self.channel = channel
-        self.start_time = start_time
-        self.program = program
-
-
-class track_name:
-
-    def __init__(self, track=0, start_time=0, name=''):
-        self.track = track
-        self.start_time = start_time
-        self.name = name
+        self.__dict__.update(kwargs)
 
 
 class rest:
