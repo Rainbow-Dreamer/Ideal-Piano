@@ -10,8 +10,7 @@ import pygame
 import pygame.midi
 import time
 import pyglet
-import mido
-import midiutil
+import mido_fix
 from PyQt5 import QtGui, QtWidgets, QtCore
 import py
 from pydub import AudioSegment
