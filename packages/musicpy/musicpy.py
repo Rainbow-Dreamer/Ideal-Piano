@@ -471,20 +471,19 @@ def read(name,
             i.name for i in available_tracks if i.type == 'track_name'
         ]
         rename_track_names = False
-        if (not tracks_names_list) or (len(tracks_names_list) !=
-                                       len(channels_list)):
+        if (not tracks_names_list) or (len(tracks_names_list) != channels_num):
             tracks_names_list = [f'Channel {i+1}' for i in channels_list]
             rename_track_names = True
         result_merge_track = all_tracks[0]
         result_piece = piece(
-            tracks=[chord([]) for i in range(len(channels_list))],
+            tracks=[chord([]) for i in range(channels_num)],
             instruments=[database.reverse_instruments[i] for i in instruments],
             bpm=whole_bpm,
             track_names=tracks_names_list,
             channels=channels_list,
             name=os.path.splitext(os.path.basename(name))[0],
-            pan=[[] for i in range(len(channels_list))],
-            volume=[[] for i in range(len(channels_list))])
+            pan=[[] for i in range(channels_num)],
+            volume=[[] for i in range(channels_num)])
         result_piece.reconstruct(result_merge_track,
                                  all_tracks[2],
                                  include_empty_track=True)
@@ -939,6 +938,146 @@ def find_first_tempo(file, is_file=False):
             if msg.type == 'set_tempo':
                 return mido.tempo2bpm(msg.tempo)
     return 120
+
+
+def get_ticks_per_beat(file, is_file=False):
+    if is_file:
+        file.seek(0)
+        try:
+            current_midi = mido.MidiFile(file=file, clip=True)
+            file.close()
+        except Exception as OSError:
+            file.seek(0)
+            current_midi = mido.MidiFile(file=riff_to_midi(file), clip=True)
+            file.close()
+    else:
+        try:
+            current_midi = mido.MidiFile(file, clip=True)
+        except Exception as OSError:
+            current_midi = mido.MidiFile(file=riff_to_midi(file), clip=True)
+    return current_midi.ticks_per_beat
+
+
+def chord_to_piece(current_chord, bpm=120, start_time=0, has_track_num=False):
+    channels_numbers = [i.channel for i in current_chord] + [
+        i.channel
+        for i in current_chord.other_messages if hasattr(i, 'channel')
+    ]
+    channels_list = []
+    for each in channels_numbers:
+        if each not in channels_list:
+            channels_list.append(each)
+    channels_list = [i for i in channels_list if i is not None]
+    if not channels_list:
+        channels_list = [0]
+    channels_num = len(channels_list)
+    current_start_time = start_time + current_chord.start_time
+    pan_list = [
+        pan(i.value,
+            mode='value',
+            start_time=i.start_time,
+            channel=i.channel,
+            track=i.track) for i in current_chord.other_messages
+        if i.type == 'control_change' and i.control == 10
+    ]
+    volume_list = [
+        volume(i.value,
+               mode='value',
+               start_time=i.start_time,
+               channel=i.channel,
+               track=i.track) for i in current_chord.other_messages
+        if i.type == 'control_change' and i.control == 7
+    ]
+    track_names_msg = [[
+        i for i in current_chord.other_messages
+        if i.type == 'track_name' and i.track == j
+    ] for j in range(channels_num)]
+    track_names_msg = [i[0] for i in track_names_msg if i]
+    if not track_names_msg:
+        track_names_list = []
+    else:
+        if not has_track_num and all(
+                hasattr(i, 'channel') for i in track_names_msg):
+            track_names_channels = [i.channel for i in track_names_msg]
+            current_track_names = [
+                track_names_msg[track_names_channels.index(i)]
+                for i in channels_list
+            ]
+        else:
+            current_track_names = track_names_msg
+        track_names_list = [i.name for i in current_track_names]
+    rename_track_names = False
+    if (not track_names_list) or (len(track_names_list) != channels_num):
+        track_names_list = [f'Channel {i+1}' for i in range(channels_num)]
+        rename_track_names = True
+    if not has_track_num:
+        for each in current_chord.notes:
+            each.track_num = channels_list.index(
+                each.channel) if each.channel is not None else 0
+            if isinstance(each, pitch_bend) and each.track != each.track_num:
+                each.track = each.track_num
+        for each in current_chord.other_messages:
+            if hasattr(each, 'channel') and each.channel is not None:
+                each.track = channels_list.index(each.channel)
+        for each in pan_list:
+            if each.channel is not None:
+                each.track = channels_list.index(each.channel)
+        for each in volume_list:
+            if each.channel is not None:
+                each.track = channels_list.index(each.channel)
+    result_piece = piece(tracks=[chord([]) for i in range(channels_num)],
+                         bpm=bpm,
+                         pan=[[] for i in range(channels_num)],
+                         volume=[[] for i in range(channels_num)])
+    result_piece.reconstruct(current_chord,
+                             current_start_time,
+                             include_empty_track=True)
+    if result_piece.channels:
+        if len(result_piece.channels) != channels_num:
+            pan_list = [
+                i for i in pan_list if i.channel in result_piece.channels
+            ]
+            volume_list = [
+                i for i in volume_list if i.channel in result_piece.channels
+            ]
+            for each in pan_list:
+                each.track = result_piece.channels.index(each.channel)
+            for each in volume_list:
+                each.track = result_piece.channels.index(each.channel)
+            for k in range(len(result_piece.tracks)):
+                for each in result_piece.tracks[k].notes:
+                    if isinstance(each, pitch_bend):
+                        each.track = k
+            current_chord.other_messages = [
+                i for i in current_chord.other_messages
+                if not (hasattr(i, 'channel')
+                        and i.channel not in result_piece.channels)
+            ]
+            for each in current_chord.other_messages:
+                if hasattr(each, 'channel'):
+                    each.track = result_piece.channels.index(each.channel)
+    result_piece.other_messages = current_chord.other_messages
+    for k in range(len(result_piece)):
+        current_other_messages = [
+            i for i in result_piece.other_messages if i.track == k
+        ]
+        result_piece.tracks[k].other_messages = current_other_messages
+        current_pan = [i for i in pan_list if i.track == k]
+        result_piece.pan[k] = current_pan
+        current_volume = [i for i in volume_list if i.track == k]
+        result_piece.volume[k] = current_volume
+    result_piece.track_names = track_names_list
+    result_piece.other_messages = concat(
+        [i.other_messages for i in result_piece.tracks], start=[])
+    current_instruments_list = [[
+        i for i in result_piece.other_messages
+        if i.type == 'program_change' and i.track == k
+    ] for k in range(len(result_piece))]
+    instruments = [
+        each[0].program + 1 if each else 1 for each in current_instruments_list
+    ]
+    result_piece.change_instruments(instruments)
+    return result_piece
 
 
 def modulation(current_chord, old_scale, new_scale, **args):
@@ -1683,6 +1822,14 @@ def adjust_to_scale(current_chord, current_scale):
         each.name = current_note.name
         each.num = current_note.num
     return temp
+
+
+def dataclass_repr(s, keywords=None):
+    if not keywords:
+        result = f"{type(s).__name__}({', '.join([f'{i}={j}' for i, j in vars(s).items()])})"
+    else:
+        result = f"{type(s).__name__}({', '.join([f'{i}={vars(s)[i]}' for i in keywords])})"
+    return result
 
 
 C = trans
