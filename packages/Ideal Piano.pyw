@@ -1423,7 +1423,7 @@ class piano_engine:
                     self._pc_set_piano_key_color(each, current_bar)
 
     def _pc_draw_note_bar(self, each):
-        current_note = mp.toNote(self.notedic[each])
+        current_note = mp.to_note(self.notedic[each])
         places = current_piano_window.note_place[current_note.degree - 21]
         current_bar = pyglet.shapes.BorderedRectangle(
             x=places[0] + current_piano_window.bar_offset_x,
@@ -1442,7 +1442,7 @@ class piano_engine:
         return current_bar
 
     def _pc_set_piano_key_color(self, each, current_bar=None):
-        current_note = mp.toNote(self.notedic[each])
+        current_note = mp.to_note(self.notedic[each])
         current_piano_key = current_piano_window.piano_keys[current_note.degree
                                                             - 21]
         if piano_config.color_mode == 'normal':
