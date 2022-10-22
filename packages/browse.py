@@ -3,8 +3,9 @@ import os
 import sys
 import json_module
 import importlib
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 from change_settings import change_parameter
+from threading import Thread
 
 piano_config_path = 'packages/piano_config.json'
 piano_config = json_module.json_module(piano_config_path)
@@ -14,6 +15,101 @@ def set_font(font, dpi):
     if dpi != 96.0:
         font.setPointSize(font.pointSize() * (96.0 / dpi))
     return font
+
+
+def find_first_tempo(filename, current_tempo):
+    result = round(mp.find_first_tempo(filename), 3)
+    current_tempo.append(result)
+
+
+def read_midi_file(self, state, result):
+    try:
+        all_tracks = mp.read(self.parent.file_path, get_off_drums=False)
+        all_tracks.normalize_tempo()
+        all_tracks.get_off_not_notes()
+        current_bpm = all_tracks.bpm
+        actual_start_time = min(all_tracks.start_times)
+        drum_tracks = []
+        if piano_config.get_off_drums:
+            drum_tracks = [
+                all_tracks[i] for i, each in enumerate(all_tracks.channels)
+                if each == 9
+            ]
+            all_tracks.get_off_drums()
+        if not self.parent.if_merge:
+            if self.parent.track_ind_get is not None:
+                all_tracks = [
+                    (all_tracks.tracks[self.parent.track_ind_get], current_bpm,
+                     all_tracks.start_times[self.parent.track_ind_get])
+                ]
+            else:
+                all_tracks = [(all_tracks.tracks[0], current_bpm,
+                               all_tracks.start_times[0])]
+            all_tracks[0][0].reset_track(0)
+        else:
+            all_tracks = [(all_tracks.tracks[i], current_bpm,
+                           all_tracks.start_times[i])
+                          for i in range(len(all_tracks.tracks))]
+
+        pitch_bends = mp.concat(
+            [i[0].split(mp.pitch_bend, get_time=True) for i in all_tracks])
+        for each in all_tracks:
+            each[0].clear_pitch_bend('all')
+        start_time_ls = [j[2] for j in all_tracks]
+        first_track_ind = start_time_ls.index(min(start_time_ls))
+        all_tracks.insert(0, all_tracks.pop(first_track_ind))
+        if piano_config.use_track_colors:
+            color_num = len(all_tracks)
+            import random
+            if not piano_config.use_default_tracks_colors:
+                colors = []
+                for i in range(color_num):
+                    current_color = tuple(
+                        [random.randint(0, 255) for j in range(3)])
+                    while (colors == (255, 255, 255)) or (current_color
+                                                          in colors):
+                        current_color = tuple(
+                            [random.randint(0, 255) for j in range(3)])
+                    colors.append(current_color)
+            else:
+                colors = piano_config.tracks_colors
+                colors_len = len(colors)
+                if colors_len < color_num:
+                    for k in range(color_num - colors_len):
+                        current_color = tuple(
+                            [random.randint(0, 255) for j in range(3)])
+                        while (colors == (255, 255, 255)) or (current_color
+                                                              in colors):
+                            current_color = tuple(
+                                [random.randint(0, 255) for j in range(3)])
+                        colors.append(current_color)
+        first_track = all_tracks[0]
+        all_track_notes, tempo, first_track_start_time = first_track
+        for i in range(len(all_tracks)):
+            current = all_tracks[i]
+            current_track = current[0]
+            if piano_config.use_track_colors:
+                current_color = colors[i]
+                for each in current_track:
+                    each.own_color = current_color
+            if i > 0:
+                all_track_notes &= (current_track,
+                                    current[2] - first_track_start_time)
+        all_track_notes += pitch_bends
+        if self.parent.set_bpm != '':
+            if float(self.parent.set_bpm) == round(tempo, 3):
+                self.parent.set_bpm = None
+            else:
+                tempo = float(self.parent.set_bpm)
+        first_track_start_time += all_track_notes.start_time
+        result.append([
+            all_track_notes, tempo, first_track_start_time, actual_start_time,
+            drum_tracks
+        ])
+        state.append(True)
+    except:
+        import traceback
+        state.append(traceback.format_exc())
 
 
 class Dialog(QtWidgets.QMainWindow):
@@ -31,6 +127,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.parent = parent
         self.browse_dict = browse_dict
         self.dpi = dpi
+        self.current_reading = False
         self.setWindowTitle(self.browse_dict['choose'])
         self.setMinimumSize(600, 420)
 
@@ -84,6 +181,8 @@ class browse_window(QtWidgets.QMainWindow):
         self.merge_all_tracks.deleteLater()
         self.filename_label.deleteLater()
         self.make_button()
+        self.msg_label.setText('')
+        self.current_reading = False
 
     def go_back(self):
         self.parent.action = 1
@@ -101,98 +200,34 @@ class browse_window(QtWidgets.QMainWindow):
             self.parent.track_ind_get = int(self.choose_track_ind.text())
         except:
             pass
-        try:
-            all_tracks = mp.read(self.parent.file_path, get_off_drums=False)
-            all_tracks.normalize_tempo()
-            all_tracks.get_off_not_notes()
-            current_bpm = all_tracks.bpm
-            actual_start_time = min(all_tracks.start_times)
-            drum_tracks = []
-            if piano_config.get_off_drums:
-                drum_tracks = [
-                    all_tracks[i] for i, each in enumerate(all_tracks.channels)
-                    if each == 9
-                ]
-                all_tracks.get_off_drums()
-            if not self.parent.if_merge:
-                if self.parent.track_ind_get is not None:
-                    all_tracks = [
-                        (all_tracks.tracks[self.parent.track_ind_get],
-                         current_bpm,
-                         all_tracks.start_times[self.parent.track_ind_get])
-                    ]
-                else:
-                    all_tracks = [(all_tracks.tracks[0], current_bpm,
-                                   all_tracks.start_times[0])]
-                all_tracks[0][0].reset_track(0)
-            else:
-                all_tracks = [(all_tracks.tracks[i], current_bpm,
-                               all_tracks.start_times[i])
-                              for i in range(len(all_tracks.tracks))]
+        state = []
+        result = []
+        current_read_midi_file_thread = Thread(target=read_midi_file,
+                                               args=(self, state, result))
+        current_read_midi_file_thread.start()
+        self.current_reading = True
+        self.wait_read_midi_file(state, result)
+        self.msg_label.setText('Reading MIDI files, please wait...')
 
-            pitch_bends = mp.concat(
-                [i[0].split(mp.pitch_bend, get_time=True) for i in all_tracks])
-            for each in all_tracks:
-                each[0].clear_pitch_bend('all')
-            start_time_ls = [j[2] for j in all_tracks]
-            first_track_ind = start_time_ls.index(min(start_time_ls))
-            all_tracks.insert(0, all_tracks.pop(first_track_ind))
-            if piano_config.use_track_colors:
-                color_num = len(all_tracks)
-                import random
-                if not piano_config.use_default_tracks_colors:
-                    colors = []
-                    for i in range(color_num):
-                        current_color = tuple(
-                            [random.randint(0, 255) for j in range(3)])
-                        while (colors == (255, 255, 255)) or (current_color
-                                                              in colors):
-                            current_color = tuple(
-                                [random.randint(0, 255) for j in range(3)])
-                        colors.append(current_color)
-                else:
-                    colors = piano_config.tracks_colors
-                    colors_len = len(colors)
-                    if colors_len < color_num:
-                        for k in range(color_num - colors_len):
-                            current_color = tuple(
-                                [random.randint(0, 255) for j in range(3)])
-                            while (colors == (255, 255, 255)) or (current_color
-                                                                  in colors):
-                                current_color = tuple(
-                                    [random.randint(0, 255) for j in range(3)])
-                            colors.append(current_color)
-            first_track = all_tracks[0]
-            all_track_notes, tempo, first_track_start_time = first_track
-            for i in range(len(all_tracks)):
-                current = all_tracks[i]
-                current_track = current[0]
-                if piano_config.use_track_colors:
-                    current_color = colors[i]
-                    for each in current_track:
-                        each.own_color = current_color
-                if i > 0:
-                    all_track_notes &= (current_track,
-                                        current[2] - first_track_start_time)
-            all_track_notes += pitch_bends
-            if self.parent.set_bpm != '':
-                if float(self.parent.set_bpm) == round(tempo, 3):
-                    self.parent.set_bpm = None
-                else:
-                    tempo = float(self.parent.set_bpm)
-            first_track_start_time += all_track_notes.start_time
-            self.parent.read_result = all_track_notes, tempo, first_track_start_time, actual_start_time, drum_tracks
-
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-            self.parent.read_result = 'error'
-
-        if self.parent.read_result != 'error':
-            self.parent.sheetlen = len(self.parent.read_result[0])
-            self.close()
+    def wait_read_midi_file(self, state, result):
+        if not self.current_reading:
+            return
+        if not state:
+            QtCore.QTimer.singleShot(
+                200, lambda: self.wait_read_midi_file(state, result))
         else:
-            self.msg_label.setText(self.browse_dict['out of index'])
+            if not self.current_reading:
+                return
+            current_state = state[0]
+            if current_state is not True:
+                self.parent.read_result = 'error'
+            else:
+                self.parent.read_result = result[0]
+            if self.parent.read_result != 'error':
+                self.parent.sheetlen = len(self.parent.read_result[0])
+                self.close()
+            else:
+                self.msg_label.setText(self.browse_dict['out of index'])
 
     def fileDialog(self, file_name=None):
         last_path = ''
@@ -247,14 +282,7 @@ class browse_window(QtWidgets.QMainWindow):
                                                    text='BPM')
             self.check_bpm_text.move(155, 215)
             self.check_bpm_text.show()
-            self.current_file_tempo = round(mp.find_first_tempo(self.filename),
-                                            3)
-            if isinstance(self.current_file_tempo,
-                          float) and self.current_file_tempo.is_integer():
-                self.current_file_tempo = int(self.current_file_tempo)
-            self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame,
-                                                 text=str(
-                                                     self.current_file_tempo))
+            self.check_bpm = QtWidgets.QLineEdit(parent=self.labelFrame)
             self.check_bpm.setMaximumWidth(100)
             self.check_bpm.move(240, 215)
             self.check_bpm.show()
@@ -280,6 +308,24 @@ class browse_window(QtWidgets.QMainWindow):
             self.merge_all_tracks.move(250, 65)
             self.merge_all_tracks.setChecked(True)
             self.merge_all_tracks.show()
+
+            current_tempo = []
+            current_find_first_tempo_thread = Thread(target=find_first_tempo,
+                                                     args=(self.filename,
+                                                           current_tempo))
+            current_find_first_tempo_thread.start()
+            self.wait_find_first_tempo(current_tempo)
+
+    def wait_find_first_tempo(self, current_tempo):
+        if not current_tempo:
+            QtCore.QTimer.singleShot(
+                200, lambda: self.wait_find_first_tempo(current_tempo))
+        else:
+            self.current_file_tempo = current_tempo[0]
+            if isinstance(self.current_file_tempo,
+                          float) and self.current_file_tempo.is_integer():
+                self.current_file_tempo = int(self.current_file_tempo)
+            self.check_bpm.setText(str(self.current_file_tempo))
 
     def show_mode_check(self, mode=0):
         if mode == 0:

@@ -1,4 +1,5 @@
 import random
+from threading import Thread
 import browse
 import musicpy as mp
 import json_module
@@ -37,13 +38,15 @@ def get_off_sort(a):
     return '/'.join(each_chord)
 
 
-def load(dic, path, file_format, volume):
+def load(dic, path, file_format, volume, current_wavdic=None):
     wavedict = {
         i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
         for i in dic
     }
     if volume != None:
         [wavedict[x].set_volume(volume) for x in wavedict]
+    if current_wavdic is not None:
+        current_wavdic.append(wavedict)
     return wavedict
 
 
@@ -674,38 +677,11 @@ class piano_window(pyglet.window.Window):
 
     def _main_window_enter_mode(self):
         if self.mode_num == 0:
-            current_piano_engine.init_self_pc()
-            self.label.text = language_patch.ideal_piano_language_dict[
-                'finished']
-            self.label.draw()
-            self.func = current_piano_engine.mode_self_pc
             self.not_first()
-            pyglet.clock.schedule_interval(self.func, 1 / piano_config.fps)
+            current_piano_engine.init_self_pc()
         elif self.mode_num == 1:
-            try:
-                current_piano_engine.init_self_midi()
-                if not current_piano_engine.device:
-                    self.label.text = language_patch.ideal_piano_language_dict[
-                        'no MIDI input']
-                    self.mode_num = 3
-                    self.reset_click_mode()
-                    self.label.draw()
-                else:
-                    self.label.text = language_patch.ideal_piano_language_dict[
-                        'finished']
-                    self.label.draw()
-                    self.func = current_piano_engine.mode_self_midi
-                    self.not_first()
-                    pyglet.clock.schedule_interval(self.func,
-                                                   1 / piano_config.fps)
-            except Exception as e:
-                current_piano_engine.has_load(False)
-                pygame.midi.quit()
-                self.label.text = language_patch.ideal_piano_language_dict[
-                    'no MIDI input']
-                self.mode_num = 3
-                self.reset_click_mode()
-                self.label.draw()
+            self.not_first()
+            current_piano_engine.init_self_midi()
         elif self.mode_num == 2:
             if not self.open_browse_window:
                 init_result = current_piano_engine.init_midi_show()
@@ -942,7 +918,8 @@ class piano_engine:
                     current_piano_window.current_sf2_player.current_midi_file)
 
         else:
-            pygame.mixer.music.play()
+            current_thread = Thread(target=pygame.mixer.music.play)
+            current_thread.start()
 
     def piano_key_reset(self, dt, each):
         current_piano_window.piano_keys[
@@ -1039,56 +1016,125 @@ class piano_engine:
 
     def init_self_pc(self):
         if not piano_config.play_use_soundfont:
-            self.wavdic = load(self.notedic, piano_config.sound_path,
-                               piano_config.sound_format,
-                               piano_config.global_volume)
+            current_wavdic = []
+            current_thread = Thread(
+                target=load,
+                args=(self.notedic, piano_config.sound_path,
+                      piano_config.sound_format, piano_config.global_volume,
+                      current_wavdic))
+            current_thread.start()
         else:
-            self.wavdic = load_sf2(self.notedic,
-                                   current_piano_window.current_sf2,
-                                   piano_config.global_volume)
-        self.last = []
-        self.changed = False
-        if piano_config.delay:
-            self.stillplay = []
-        self.lastshow = None
-        if piano_config.show_current_detect_key:
-            self.current_play_chords = mp.chord([])
-            current_piano_window.current_detect_key_label.text = ''
+            current_wavdic = []
+            current_thread = Thread(
+                target=load_sf2,
+                args=(self.notedic, current_piano_window.current_sf2,
+                      piano_config.global_volume, current_wavdic))
+            current_thread.start()
+        self.wait_self_pc_load(current_wavdic)
+
+    def wait_self_pc_load(self, current_wavdic):
+        if current_piano_window.click_mode is None:
+            return
+        if not current_wavdic:
+            pyglet.clock.schedule_once(
+                lambda dt: self.wait_self_pc_load(current_wavdic), 0.2)
+        else:
+            if current_piano_window.click_mode is None:
+                return
+            self.wavdic = current_wavdic[0]
+            self.last = []
+            self.changed = False
+            if piano_config.delay:
+                self.stillplay = []
+            self.lastshow = None
+            if piano_config.show_current_detect_key:
+                self.current_play_chords = mp.chord([])
+                current_piano_window.current_detect_key_label.text = ''
+
+            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                'finished']
+            current_piano_window.label.draw()
+            current_piano_window.func = current_piano_engine.mode_self_pc
+            pyglet.clock.schedule_interval(current_piano_window.func,
+                                           1 / piano_config.fps)
 
     def init_self_midi(self):
-        if not self.midi_device_load:
-            self.device = None
-            self.has_load(True)
-            pygame.midi.init()
-            self.device = pygame.midi.Input(piano_config.midi_device_id)
-        else:
-            if self.device:
-                self.device.close()
-                pygame.midi.quit()
+        try:
+            if not self.midi_device_load:
+                self.device = None
+                self.has_load(True)
                 pygame.midi.init()
                 self.device = pygame.midi.Input(piano_config.midi_device_id)
-        notenames = os.listdir(piano_config.sound_path)
-        notenames = [x[:x.index('.')] for x in notenames]
-        if piano_config.load_sound:
-            if not piano_config.play_use_soundfont:
-                self.wavdic = load({i: i
-                                    for i in notenames},
-                                   piano_config.sound_path,
-                                   piano_config.sound_format,
-                                   piano_config.global_volume)
             else:
-                self.wavdic = load_sf2({i: i
-                                        for i in notenames},
-                                       current_piano_window.current_sf2,
-                                       piano_config.global_volume)
-        self.current_play = []
-        self.stillplay = []
-        self.last = self.current_play.copy()
-        self.sostenuto_pedal_on = False
-        self.soft_pedal_volume_ratio = 1
-        if piano_config.show_current_detect_key:
-            self.current_play_chords = mp.chord([])
-            current_piano_window.current_detect_key_label.text = ''
+                if self.device:
+                    self.device.close()
+                    pygame.midi.quit()
+                    pygame.midi.init()
+                    self.device = pygame.midi.Input(
+                        piano_config.midi_device_id)
+            notenames = os.listdir(piano_config.sound_path)
+            notenames = [x[:x.index('.')] for x in notenames]
+            if piano_config.load_sound:
+                if not piano_config.play_use_soundfont:
+                    current_wavdic = []
+                    current_thread = Thread(target=load,
+                                            args=({i: i
+                                                   for i in notenames
+                                                   }, piano_config.sound_path,
+                                                  piano_config.sound_format,
+                                                  piano_config.global_volume,
+                                                  current_wavdic))
+                    current_thread.start()
+                else:
+                    current_wavdic = []
+                    current_thread = Thread(
+                        target=load_sf2,
+                        args=({i: i
+                               for i in notenames
+                               }, current_piano_window.current_sf2,
+                              piano_config.global_volume, current_wavdic))
+                    current_thread.start()
+                self.wait_self_midi_load(current_wavdic)
+            self.current_play = []
+            self.stillplay = []
+            self.last = self.current_play.copy()
+            self.sostenuto_pedal_on = False
+            self.soft_pedal_volume_ratio = 1
+            if piano_config.show_current_detect_key:
+                self.current_play_chords = mp.chord([])
+                current_piano_window.current_detect_key_label.text = ''
+        except Exception as e:
+            self.has_load(False)
+            pygame.midi.quit()
+            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                'no MIDI input']
+            current_piano_window.mode_num = 3
+            current_piano_window.reset_click_mode()
+            current_piano_window.label.draw()
+
+    def wait_self_midi_load(self, current_wavdic):
+        if current_piano_window.click_mode is None:
+            return
+        if not current_wavdic:
+            pyglet.clock.schedule_once(
+                lambda dt: self.wait_self_midi_load(current_wavdic), 0.2)
+        else:
+            if current_piano_window.click_mode is None:
+                return
+            self.wavdic = current_wavdic[0]
+            if not self.device:
+                current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                    'no MIDI input']
+                current_piano_window.mode_num = 3
+                current_piano_window.reset_click_mode()
+                current_piano_window.label.draw()
+            else:
+                current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                    'finished']
+                current_piano_window.label.draw()
+                current_piano_window.func = self.mode_self_midi
+                pyglet.clock.schedule_interval(current_piano_window.func,
+                                               1 / piano_config.fps)
 
     def init_midi_show(self, file_name=None):
         current_piano_window.open_browse_window = True
@@ -2039,7 +2085,8 @@ class piano_engine:
                 self.detect_key_info_ind = 0
 
 
-current_piano_engine = piano_engine()
-current_piano_window = piano_window()
-pyglet.clock.schedule_interval(update, 1 / piano_config.fps)
-pyglet.app.run()
+if __name__ == '__main__':
+    current_piano_engine = piano_engine()
+    current_piano_window = piano_window()
+    pyglet.clock.schedule_interval(update, 1 / piano_config.fps)
+    pyglet.app.run()
