@@ -24,7 +24,7 @@ INTERVAL = {
     21: '大十三度'
 }
 
-chordTypes = match({
+chordTypes = database.match({
     ('大三和弦', 'major', 'M', 'maj', 'majorthird'): ((4, 7), ),
     ('小三和弦', 'minor', 'm', 'minorthird', 'min', '-'): ((3, 7), ),
     ('大七和弦', 'maj7', 'M7', 'major7th', 'majorseventh'): ((4, 7, 11), ),
@@ -150,8 +150,8 @@ def omit_from(a, b, showls=False, alter_notes_show_degree=False):
         b_first_note = b[0].degree
         omitnotes_degree = []
         for j in omitnotes:
-            current = reverse_degree_match[b[b_notes.index(j)].degree -
-                                           b_first_note]
+            current = database.reverse_degree_match[b[b_notes.index(j)].degree
+                                                    - b_first_note]
             if current == 'not found':
                 omitnotes_degree.append(j)
             else:
@@ -201,7 +201,7 @@ def change_from(a,
             b_first_note = b[0].degree
             for i in range(len(changes)):
                 note_name, note_change = changes[i]
-                current_degree = reverse_degree_match[
+                current_degree = database.reverse_degree_match[
                     bnotes[bnames.index(note_name)] - b_first_note]
                 if current_degree == 'not found':
                     current_degree = note_name
@@ -860,13 +860,13 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
         current_parts = [int(i) if i.isdigit() else i for i in current_parts]
         result = trans(current_parts[0], pitch, duration, interval)
         for each in current_parts[1:]:
-            if each in standard:
-                each = standard_dict.get(each, each)
+            if each in database.standard:
+                each = database.standard_dict.get(each, each)
             elif not isinstance(each, int):
                 each = trans(each, pitch, duration, interval)
             result /= each
         return result
-    if obj in standard:
+    if obj in database.standard:
         return chd(obj,
                    'M',
                    pitch=pitch,
@@ -882,7 +882,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
         if N == 2:
             first = obj[0]
             types = obj[1]
-            if first in standard and types in chordTypes:
+            if first in database.standard and types in chordTypes:
                 return chd(first,
                            types,
                            pitch=pitch,
@@ -891,7 +891,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
         elif N > 2:
             first_two = obj[:2]
             type1 = obj[2:]
-            if first_two in standard and type1 in chordTypes:
+            if first_two in database.standard and type1 in chordTypes:
                 return chd(first_two,
                            type1,
                            pitch=pitch,
@@ -899,7 +899,7 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
                            intervals=interval)
             first_one = obj[0]
             type2 = obj[1:]
-            if first_one in standard and type2 in chordTypes:
+            if first_one in database.standard and type2 in chordTypes:
                 return chd(first_one,
                            type2,
                            pitch=pitch,
@@ -914,9 +914,9 @@ def trans(obj, pitch=4, duration=0.25, interval=None):
                 return (first_chord / int(part2)) % (duration, interval)
             elif part2[-1] == '!' and part2[:-1].isdigit():
                 return (first_chord @ int(part2[:-1])) % (duration, interval)
-            elif part2 in standard:
-                if part2 not in standard2:
-                    part2 = standard_dict[part2]
+            elif part2 in database.standard:
+                if part2 not in database.standard2:
+                    part2 = database.standard_dict[part2]
                 first_chord_notenames = first_chord.names()
                 if part2 in first_chord_notenames and part2 != first_chord_notenames[
                         0]:
@@ -942,8 +942,11 @@ C = trans
 
 
 def info(self, alter_notes_show_degree=True, get_dict=False, **detect_args):
-    chord_type = self.detect(alter_notes_show_degree=alter_notes_show_degree,
-                             **detect_args)
+    chord_type = detect(self,
+                        alter_notes_show_degree=alter_notes_show_degree,
+                        **detect_args)
+    if chord_type is None:
+        return
     standard_notes = self.standardize()
     if len(standard_notes) == 1:
         if get_dict:
@@ -1029,7 +1032,7 @@ def info(self, alter_notes_show_degree=True, get_dict=False, **detect_args):
         if each_standard in chord_types_root:
             root_note = each
             break
-        elif each_standard in standard_dict and standard_dict[
+        elif each_standard in database.standard_dict and database.standard_dict[
                 each_standard] in chord_types_root:
             root_note = each
             break
@@ -1081,7 +1084,7 @@ def info(self, alter_notes_show_degree=True, get_dict=False, **detect_args):
     if other_msg['变化音']:
         chord_types_root = chord_types_root.split(',')[0]
         chord_type = original_chord_type
-    root_note = standard_dict.get(root_note, root_note)
+    root_note = database.standard_dict.get(root_note, root_note)
     if chord_speciality == '复合和弦' or (chord_speciality == '转位和弦'
                                       and inversion_msg is None):
         chord_type_name = chord_type

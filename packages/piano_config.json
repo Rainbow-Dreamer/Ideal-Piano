@@ -177,7 +177,7 @@
     "change_from_first": true,
     "original_first": true,
     "same_note_special": false,
-    "whole_detect": true,
+    "whole_detect": false,
     "return_fromchord": false,
     "poly_chord_first": false,
     "root_position_return_first": true,

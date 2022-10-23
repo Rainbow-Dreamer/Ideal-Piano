@@ -12,13 +12,11 @@ app = QtWidgets.QApplication(sys.argv)
 del app
 
 original_info_func = copy(mp.chord.info)
-original_detect_func = copy(mp.alg.detect)
 
 if piano_config.language == 'English':
     from languages.en import language_patch
 elif piano_config.language == 'Chinese':
     from languages.cn import language_patch
-    mp.alg.detect = language_patch.detect
     mp.chord.info = language_patch.info
 
 key = pyglet.window.key
@@ -520,11 +518,9 @@ class piano_window(pyglet.window.Window):
         if piano_config.language == 'English':
             from languages.en import language_patch
             importlib.reload(mp)
-            mp.alg.detect = original_detect_func
             mp.chord.info = original_info_func
         elif piano_config.language == 'Chinese':
             from languages.cn import language_patch
-            mp.alg.detect = language_patch.detect
             mp.chord.info = language_patch.info
 
     def use_soundfont_msg_box(self):
