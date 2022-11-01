@@ -129,6 +129,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.browse_dict = browse_dict
         self.dpi = dpi
         self.current_reading = False
+        self.current_find_first_tempo = False
         self.setWindowTitle(self.browse_dict['choose'])
         self.setMinimumSize(600, 420)
 
@@ -184,6 +185,7 @@ class browse_window(QtWidgets.QMainWindow):
         self.make_button()
         self.msg_label.setText('')
         self.current_reading = False
+        self.current_find_first_tempo = False
 
     def go_back(self):
         self.parent.action = 1
@@ -204,7 +206,8 @@ class browse_window(QtWidgets.QMainWindow):
         state = []
         result = []
         current_read_midi_file_thread = Thread(target=read_midi_file,
-                                               args=(self, state, result))
+                                               args=(self, state, result),
+                                               daemon=True)
         current_read_midi_file_thread.start()
         self.current_reading = True
         self.wait_read_midi_file(state, result)
@@ -313,15 +316,21 @@ class browse_window(QtWidgets.QMainWindow):
             current_tempo = []
             current_find_first_tempo_thread = Thread(target=find_first_tempo,
                                                      args=(self.filename,
-                                                           current_tempo))
+                                                           current_tempo),
+                                                     daemon=True)
             current_find_first_tempo_thread.start()
+            self.current_find_first_tempo = True
             self.wait_find_first_tempo(current_tempo)
 
     def wait_find_first_tempo(self, current_tempo):
+        if not self.current_find_first_tempo:
+            return
         if not current_tempo:
             QtCore.QTimer.singleShot(
                 200, lambda: self.wait_find_first_tempo(current_tempo))
         else:
+            if not self.current_find_first_tempo:
+                return
             self.current_file_tempo = current_tempo[0]
             if isinstance(self.current_file_tempo,
                           float) and self.current_file_tempo.is_integer():
