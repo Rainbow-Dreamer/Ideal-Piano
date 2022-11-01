@@ -192,7 +192,7 @@
     "get_off_overlap_notes": false,
     "average_degree_length": 8,
     "melody_degree_tol": "B4",
-    "note_mode": "bars",
+    "note_mode": "bars drop",
     "bar_width": 14,
     "bar_height": 20,
     "bar_color": [
@@ -390,7 +390,7 @@
     ],
     "piano_background_image": "resources/piano_background.png",
     "piano_background_opacity": 255,
-    "use_soundfont": true,
+    "use_soundfont": false,
     "play_use_soundfont": false,
     "sf2_path": "G:/music project files/sound modules/sf2 files/GM SoundFonts/chorium.sf2",
     "bank": 0,
