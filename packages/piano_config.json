@@ -173,7 +173,6 @@
     "show_notes_delay": 0,
     "get_off_drums": true,
     "sort_invisible": false,
-    "play_as_midi": true,
     "pitch_range": [
         "A0",
         "C8"
@@ -193,7 +192,7 @@
     "get_off_overlap_notes": false,
     "average_degree_length": 8,
     "melody_degree_tol": "B4",
-    "note_mode": "bars drop",
+    "note_mode": "bars",
     "bar_width": 14,
     "bar_height": 20,
     "bar_color": [
@@ -391,16 +390,15 @@
     ],
     "piano_background_image": "resources/piano_background.png",
     "piano_background_opacity": 255,
-    "use_soundfont": false,
+    "use_soundfont": true,
     "play_use_soundfont": false,
-    "sf2_path": "resources/gm.sf2",
+    "sf2_path": "G:/music project files/sound modules/sf2 files/GM SoundFonts/chorium.sf2",
     "bank": 0,
     "preset": 0,
     "sf2_duration": 6,
     "sf2_decay": 1,
     "sf2_volume": 100,
     "sf2_mode": 0,
-    "render_as_audio": false,
     "show_music_analysis": false,
     "music_analysis_file": null,
     "music_analysis_place": [
