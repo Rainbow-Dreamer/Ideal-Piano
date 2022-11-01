@@ -193,7 +193,7 @@
     "get_off_overlap_notes": false,
     "average_degree_length": 8,
     "melody_degree_tol": "B4",
-    "note_mode": "bars",
+    "note_mode": "bars drop",
     "bar_width": 14,
     "bar_height": 20,
     "bar_color": [

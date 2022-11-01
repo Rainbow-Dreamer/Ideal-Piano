@@ -22,6 +22,7 @@ elif piano_config.language == 'Chinese':
 
 key = pyglet.window.key
 has_soundfont_plugins = True
+note_display_mode = ['bars', 'bars drop']
 
 
 def get_off_sort(a):
@@ -704,10 +705,9 @@ class piano_window(pyglet.window.Window):
                         pass
         self.is_click = True
         self.click_mode = None
-        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+        if piano_config.note_mode in note_display_mode:
             current_piano_engine.still_hold.clear()
-            if piano_config.note_mode == 'bars drop':
-                current_piano_engine.bars_drop_time.clear()
+            current_piano_engine.bars_drop_time.clear()
         for k in range(len(self.piano_keys)):
             self.piano_keys[k].color = self.initial_colors[k]
         self.label3.text = ''
@@ -1463,7 +1463,7 @@ class piano_engine:
         self.sheetlen = len(self.musicsheet)
         self.stop_time = unit_time * (self.start + sum(
             musicsheet.interval[:-1]) + musicsheet.notes[-1].duration)
-        if piano_config.note_mode in ['bars drop', 'bars']:
+        if piano_config.note_mode in note_display_mode:
             current_start_time = self.start
             for i in range(self.sheetlen):
                 currentnote = musicsheet.notes[i]
@@ -1484,7 +1484,7 @@ class piano_engine:
         self._pc_read_pc_keyboard_special_key()
         self._pc_read_pc_keyboard_key()
         self._pc_read_stillplay_notes()
-        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+        if piano_config.note_mode in note_display_mode:
             self._pc_move_note_bar()
         if self.changed:
             self._pc_update_notes()
@@ -1523,7 +1523,7 @@ class piano_engine:
                     self.wavdic[each].play()
                     self.stillplay.append([each, time.time(), True])
                     self.stillplay_obj.append(each)
-                    if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                    if piano_config.note_mode in note_display_mode:
                         current_bar = self._pc_draw_note_bar(each)
                     else:
                         current_bar = None
@@ -1532,7 +1532,7 @@ class piano_engine:
                 if each not in self.last:
                     self.changed = True
                     self.wavdic[each].play()
-                    if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                    if piano_config.note_mode in note_display_mode:
                         current_bar = self._pc_draw_note_bar(each)
                     else:
                         current_bar = None
@@ -1564,7 +1564,7 @@ class piano_engine:
         if piano_config.color_mode == 'normal':
             current_piano_key.color = piano_config.bar_color
         else:
-            if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+            if piano_config.note_mode in note_display_mode:
                 current_piano_key.color = current_bar.color
             else:
                 current_piano_key.color = (random.randint(0, 255),
@@ -1770,7 +1770,7 @@ class piano_engine:
                 current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
                 # 144 is the status code of note on in midi
-                if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                if piano_config.note_mode in note_display_mode:
                     if 0 <= current_note.degree - 21 < current_piano_window.note_num:
                         places = current_piano_window.note_place[
                             current_note.degree - 21]
@@ -1797,7 +1797,7 @@ class piano_engine:
                     if piano_config.color_mode == 'normal':
                         current_piano_key.color = piano_config.bar_color
                     else:
-                        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+                        if piano_config.note_mode in note_display_mode:
                             current_piano_key.color = current_bar.color
                         else:
                             current_piano_key.color = (random.randint(0, 255),
@@ -1855,7 +1855,7 @@ class piano_engine:
                         self.soft_pedal_volume_ratio = 1
 
     def _midi_keyboard_draw_notes(self):
-        if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+        if piano_config.note_mode in note_display_mode:
             i = 0
             while i < len(self.plays):
                 each = self.plays[i]
@@ -2041,7 +2041,7 @@ class piano_engine:
             self.current_position = self.current_past_time - piano_config.move_progress_left_unit
             if self.current_position < 0:
                 self.current_position = 0
-            if piano_config.note_mode == 'bars drop':
+            if piano_config.note_mode in note_display_mode:
                 for each in self.bars_drop_time:
                     if each[2] == 1 and each[0] > self.current_position:
                         each[2] = 0
@@ -2056,7 +2056,7 @@ class piano_engine:
             self.current_position = self.current_past_time + piano_config.move_progress_right_unit
             if self.current_position >= self.stop_time:
                 self.current_position = self.stop_time
-            if piano_config.note_mode == 'bars drop':
+            if piano_config.note_mode in note_display_mode:
                 for each in self.bars_drop_time:
                     if each[2] == 0 and each[0] <= self.current_position:
                         each[2] = 1
@@ -2159,12 +2159,10 @@ class piano_engine:
             'repeat'].format(repeat_key=piano_config.repeat_key)
         if current_piano_window.keyboard_handler[
                 current_piano_window.repeat_key]:
-            if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
+            if piano_config.note_mode in note_display_mode:
                 self.plays.clear()
-                if piano_config.note_mode == 'bars drop':
-                    self.bars_drop_time.clear()
-                    pyglet.clock.unschedule(self._midi_show_update_notes_text)
-                    pyglet.clock.unschedule(self._midi_show_finished)
+                pyglet.clock.unschedule(self._midi_show_update_notes_text)
+                pyglet.clock.unschedule(self._midi_show_finished)
             for k in range(len(current_piano_window.piano_keys)):
                 current_piano_window.piano_keys[
                     k].color = current_piano_window.initial_colors[k]
