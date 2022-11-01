@@ -206,6 +206,12 @@
         200,
         0
     ],
+    "progress_bar_color": [
+        124,
+        252,
+        0
+    ],
+    "progress_bar_opacity": 100,
     "bar_y": 178,
     "bar_offset_x": 0,
     "bar_opacity": 160,

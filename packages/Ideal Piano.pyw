@@ -86,10 +86,24 @@ def start_send_midi_event(event_list, current_event_counter,
             if current_msg == 'pause':
                 pause_start = time.time()
                 while True:
-                    if not current_send_midi_queue.empty(
-                    ) and current_send_midi_queue.get() == 'unpause':
-                        current_start_time += (time.time() - pause_start)
-                        break
+                    if not current_send_midi_queue.empty():
+                        current_pause_msg = current_send_midi_queue.get()
+                        if current_pause_msg == 'unpause':
+                            current_start_time += (time.time() - pause_start)
+                            break
+                        elif isinstance(current_pause_msg, list):
+                            if current_pause_msg[0] == 'set_position':
+                                current_position_time = current_pause_msg[1]
+                                for k, each in enumerate(event_list):
+                                    if each.time == current_position_time:
+                                        current_event_counter = k
+                                        break
+                                    elif each.time > current_position_time:
+                                        current_event_counter = k - 1
+                                        if current_event_counter < 0:
+                                            current_event_counter = 0
+                                        break
+                                current_start_time = time.time()
             elif isinstance(current_msg, list):
                 if current_msg[0] == 'set_position':
                     current_position_time = current_msg[1]
@@ -190,6 +204,7 @@ class piano_window(pyglet.window.Window):
         self.init_note_mode()
         self.init_screen_labels()
         self.init_music_analysis()
+        self.init_progress_bar()
 
     def init_window(self):
         super(piano_window, self).__init__(
@@ -596,6 +611,18 @@ class piano_window(pyglet.window.Window):
             from languages.cn import language_patch
             mp.chord.info = language_patch.info
 
+    def init_progress_bar(self):
+        self.current_progress_bar = pyglet.shapes.BorderedRectangle(
+            x=-2,
+            y=0,
+            width=2,
+            height=piano_config.white_key_y,
+            color=piano_config.progress_bar_color,
+            batch=self.batch,
+            group=self.piano_key)
+        self.current_progress_bar.opacity = piano_config.progress_bar_opacity
+        self.progress_bar_length = piano_config.screen_size[0]
+
     def use_soundfont_msg_box(self):
         app = QtWidgets.QApplication(sys.argv)
         msg_box = QtWidgets.QMessageBox()
@@ -654,6 +681,17 @@ class piano_window(pyglet.window.Window):
         if self.settings_button.mouse_press(
                 self, button, mouse=self.mouse_left) and self.first_time:
             self.open_settings()
+        if self.mode_num == 2 and button == self.mouse_left and self.current_progress_bar.x <= x <= self.current_progress_bar.x + self.progress_bar_length and self.current_progress_bar.y <= y <= self.current_progress_bar.y + self.current_progress_bar.height:
+            self.set_position(x, y)
+
+    def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
+        if self.mode_num == 2 and button == self.mouse_left and self.current_progress_bar.x <= x <= self.current_progress_bar.x + self.progress_bar_length and self.current_progress_bar.y <= y <= self.current_progress_bar.y + self.current_progress_bar.height:
+            self.set_position(x + dx, y)
+
+    def set_position(self, x, y):
+        current_percentage = x / self.progress_bar_length
+        current_position = current_piano_engine.stop_time * current_percentage
+        current_piano_engine._midi_show_set_position(current_position)
 
     def on_draw(self):
         self.clear()
@@ -697,6 +735,7 @@ class piano_window(pyglet.window.Window):
                     if self.current_sf2_player.playing:
                         self.current_sf2_player.stop()
                 current_piano_engine.current_hit_key_notes.clear()
+                current_piano_window.current_progress_bar.width = 2
                 if not piano_config.use_soundfont:
                     try:
                         current_piano_engine.current_send_midi_event_process.terminate(
@@ -1893,6 +1932,9 @@ class piano_engine:
     def _midi_show_playing(self):
         self.current_past_time = time.time(
         ) - self.startplay + self.current_position
+        self.current_progress_percentage = self.current_past_time / self.stop_time
+        current_progress_bar_length = current_piano_window.progress_bar_length * self.current_progress_percentage
+        current_piano_window.current_progress_bar.width = current_progress_bar_length + 2
         if piano_config.note_mode == 'bars drop':
             self._midi_show_draw_notes_bars_drop_mode()
             self._midi_show_draw_notes_hit_key_bars_drop_mode()
@@ -2035,36 +2077,35 @@ class piano_engine:
                     'pause'].format(unpause_key=piano_config.unpause_key)
 
     def _midi_show_playing_read_pc_move_progress_key(self, dt):
+        if self.finished:
+            return
         if current_piano_window.keyboard_handler[
                 current_piano_window.map_key_dict[
                     piano_config.move_progress_left_key]]:
-            self.current_position = self.current_past_time - piano_config.move_progress_left_unit
-            if self.current_position < 0:
-                self.current_position = 0
-            if piano_config.note_mode in note_display_mode:
-                for each in self.bars_drop_time:
-                    if each[2] == 1 and each[0] > self.current_position:
-                        each[2] = 0
-            self.startplay = time.time(
-            ) - piano_config.move_progress_adjust_time
-            self.current_send_midi_queue.put(
-                ['set_position', self.current_position])
-            self._midi_show_clear_all_bars_drop()
+            self._midi_show_set_position(self.current_past_time -
+                                         piano_config.move_progress_left_unit)
         elif current_piano_window.keyboard_handler[
                 current_piano_window.map_key_dict[
                     piano_config.move_progress_right_key]]:
-            self.current_position = self.current_past_time + piano_config.move_progress_right_unit
-            if self.current_position >= self.stop_time:
-                self.current_position = self.stop_time
-            if piano_config.note_mode in note_display_mode:
-                for each in self.bars_drop_time:
-                    if each[2] == 0 and each[0] <= self.current_position:
-                        each[2] = 1
-            self.startplay = time.time(
-            ) - piano_config.move_progress_adjust_time
-            self.current_send_midi_queue.put(
-                ['set_position', self.current_position])
-            self._midi_show_clear_all_bars_drop()
+            self._midi_show_set_position(self.current_past_time +
+                                         piano_config.move_progress_right_unit)
+
+    def _midi_show_set_position(self, position):
+        self.current_position = position
+        if self.current_position < 0:
+            self.current_position = 0
+        if self.current_position >= self.stop_time:
+            self.current_position = self.stop_time
+        if piano_config.note_mode in note_display_mode:
+            for each in self.bars_drop_time:
+                if each[2] == 1 and each[0] > self.current_position:
+                    each[2] = 0
+                elif each[2] == 0 and each[0] <= self.current_position:
+                    each[2] = 1
+        self.startplay = time.time() - piano_config.move_progress_adjust_time
+        self.current_send_midi_queue.put(
+            ['set_position', self.current_position])
+        self._midi_show_clear_all_bars_drop()
 
     def _midi_show_clear_all_bars_drop(self):
         for each in self.plays:
@@ -2073,7 +2114,7 @@ class piano_engine:
                 each.num].color = current_piano_window.initial_colors[each.num]
         self.plays.clear()
         if piano_config.show_notes:
-            current_piano_window.label.text = '[]'
+            current_piano_window.label.text = ''
         if piano_config.show_chord:
             current_piano_window.label2.text = ''
         self.current_hit_key_notes.clear()
@@ -2174,6 +2215,7 @@ class piano_engine:
                                  window_mode=1)
             self.startplay = time.time()
             self.current_hit_key_notes.clear()
+            current_piano_window.current_progress_bar.width = 2
             self.finished = False
             if piano_config.show_current_detect_key:
                 self.current_play_chords = mp.chord([])
