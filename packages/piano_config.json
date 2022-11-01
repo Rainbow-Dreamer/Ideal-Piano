@@ -133,6 +133,7 @@
         "f12": "B6"
     },
     "midi_device_id": 1,
+    "play_midi_port": null,
     "language": "English",
     "frequency": 44100,
     "size": -16,
