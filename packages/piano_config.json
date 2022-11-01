@@ -392,7 +392,7 @@
     "piano_background_opacity": 255,
     "use_soundfont": false,
     "play_use_soundfont": false,
-    "sf2_path": "G:/music project files/sound modules/sf2 files/GM SoundFonts/chorium.sf2",
+    "sf2_path": "resources/gm.sf2",
     "bank": 0,
     "preset": 0,
     "sf2_duration": 6,
