@@ -1,5 +1,6 @@
 import random
 from threading import Thread
+import multiprocessing
 import browse
 import musicpy as mp
 import musicpy.control as control
@@ -1038,7 +1039,6 @@ class piano_engine:
             pyglet.clock.schedule_once(self.start_play_sf2,
                                        current_piano_window.bars_drop_interval)
         else:
-            import multiprocessing
             self.current_send_midi_queue = multiprocessing.Queue()
             self.current_send_midi_event_process = multiprocessing.Process(
                 target=start_send_midi_event,
@@ -1429,8 +1429,6 @@ class piano_engine:
                 if not is_riff_midi:
                     if piano_config.use_soundfont:
                         current_piano_window.current_sf2_player.current_midi_file = self.path
-                    else:
-                        self._load_file(self.path)
                 else:
                     current_path = mp.riff_to_midi(self.path)
                     current_buffer = current_path.getbuffer()
@@ -1445,7 +1443,16 @@ class piano_engine:
             current_start_time -= piano_config.play_midi_start_process_time
             if current_start_time < 0:
                 current_start_time = 0
-            self._init_send_midi(current_start_time)
+            try:
+                self._init_send_midi(current_start_time)
+            except Exception as e:
+                current_piano_window.label.text = str(e)
+                current_piano_window.label.draw()
+                current_piano_window.flip()
+                pyglet.clock.schedule_once(
+                    lambda dt: current_piano_window._go_back_func(), 1)
+                time.sleep(1)
+                return
         else:
             self.current_position = 0
         self._midi_show_init_note_list(musicsheet, unit_time)
@@ -1453,15 +1460,22 @@ class piano_engine:
 
     def _init_send_midi(self, current_start_time):
         if self.current_output_port_num is None:
+            midi_info = []
             counter = 0
             while True:
-                try:
-                    current_output_port = pygame.midi.Output(counter)
+                current = counter, pygame.midi.get_device_info(counter)
+                counter += 1
+                if current[1] is None:
                     break
-                except:
-                    counter += 1
-            self.current_output_port_num = counter
-            current_output_port.close()
+                midi_info.append(current)
+            if midi_info:
+                midi_output_port = [i[0] for i in midi_info if i[1][2] == 0]
+                if not midi_output_port:
+                    raise Exception('Error: cannot find any MIDI output port')
+                else:
+                    self.current_output_port_num = midi_output_port[0]
+            else:
+                raise Exception('Error: cannot find any MIDI output port')
         self.event_list = control.piece_to_event_list(self.current_piece,
                                                       set_instrument=True)
         for each in self.event_list:
@@ -1475,7 +1489,16 @@ class piano_engine:
         current_start_time -= piano_config.play_midi_start_process_time
         if current_start_time < 0:
             current_start_time = 0
-        self._init_send_midi(current_start_time)
+        try:
+            self._init_send_midi(current_start_time)
+        except Exception as e:
+            current_piano_window.label.text = str(e)
+            current_piano_window.label.draw()
+            current_piano_window.flip()
+            pyglet.clock.schedule_once(
+                lambda dt: current_piano_window._go_back_func(), 1)
+            time.sleep(1)
+            return
 
     def _midi_show_init_note_list(self, musicsheet, unit_time):
         musicsheet.clear_pitch_bend('all')
