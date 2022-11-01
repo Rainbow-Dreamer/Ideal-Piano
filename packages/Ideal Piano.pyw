@@ -72,7 +72,9 @@ def update(dt):
     pass
 
 
-def start_send_midi_event(event_list, current_event_counter, current_output_port_num, midi_event_length, current_send_midi_queue):
+def start_send_midi_event(event_list, current_event_counter,
+                          current_output_port_num, midi_event_length,
+                          current_send_midi_queue):
     pygame.midi.init()
     current_player = pygame.midi.Output(current_output_port_num)
     current_start_time = time.time()
@@ -83,9 +85,10 @@ def start_send_midi_event(event_list, current_event_counter, current_output_port
             if current_msg == 'pause':
                 pause_start = time.time()
                 while True:
-                    if not current_send_midi_queue.empty() and current_send_midi_queue.get() == 'unpause':
+                    if not current_send_midi_queue.empty(
+                    ) and current_send_midi_queue.get() == 'unpause':
                         current_start_time += (time.time() - pause_start)
-                        break                
+                        break
             elif isinstance(current_msg, list):
                 if current_msg[0] == 'set_position':
                     current_position_time = current_msg[1]
@@ -128,7 +131,8 @@ def start_send_midi_event(event_list, current_event_counter, current_output_port
                 current_player.pitch_bend(value=current_event.value.value,
                                           channel=current_channel)
             elif mode == 4:
-                current_player.write_short(0xFF, 0x51, int(current_event.value))
+                current_player.write_short(0xFF, 0x51,
+                                           int(current_event.value))
             elif mode == 5:
                 current_player.write_short(0xb0 | current_event.value.channel,
                                            current_event.value.control,
@@ -236,8 +240,7 @@ class piano_window(pyglet.window.Window):
     def init_sf2(self, mode=0):
         if mode == 0:
             self.current_sf2_player = None
-        if piano_config.play_use_soundfont or (piano_config.play_as_midi
-                                               and piano_config.use_soundfont):
+        if piano_config.play_use_soundfont or piano_config.use_soundfont:
             if 'rs' not in sys.modules:
                 global rs
                 global has_soundfont_plugins
@@ -252,13 +255,12 @@ class piano_window(pyglet.window.Window):
                 else:
                     piano_config.use_soundfont = False
                     piano_config.play_use_soundfont = False
-        if piano_config.play_use_soundfont or (
-                piano_config.play_as_midi and piano_config.use_soundfont
-                and piano_config.render_as_audio):
+        if piano_config.play_use_soundfont or (piano_config.use_soundfont and
+                                               piano_config.render_as_audio):
             self.current_sf2 = rs.sf2_loader(piano_config.sf2_path)
             self.current_sf2.change(bank=piano_config.bank,
                                     preset=piano_config.preset)
-        if piano_config.play_as_midi and piano_config.use_soundfont:
+        if piano_config.use_soundfont:
             if mode == 0:
                 self.current_sf2_player = rs.sf2_player(piano_config.sf2_path)
             else:
@@ -677,8 +679,12 @@ class piano_window(pyglet.window.Window):
                 piano_config.delay_only_read_current = True
             elif self.mode_num == 2:
                 pyglet.clock.unschedule(current_piano_engine.midi_file_play)
-                pyglet.clock.unschedule(current_piano_engine._midi_show_playing_read_pc_keyboard_key)
-                pyglet.clock.unschedule(current_piano_engine._midi_show_playing_read_pc_move_progress_key)
+                pyglet.clock.unschedule(
+                    current_piano_engine.
+                    _midi_show_playing_read_pc_keyboard_key)
+                pyglet.clock.unschedule(
+                    current_piano_engine.
+                    _midi_show_playing_read_pc_move_progress_key)
                 pyglet.clock.unschedule(
                     current_piano_engine._midi_show_update_notes_text)
                 pyglet.clock.unschedule(
@@ -686,21 +692,19 @@ class piano_window(pyglet.window.Window):
                 current_piano_engine.counter = 0
                 if piano_config.show_music_analysis:
                     self.music_analysis_label.text = ''
-                if piano_config.play_as_midi:
-                    if piano_config.use_soundfont and not piano_config.render_as_audio:
-                        if self.current_sf2_player.playing:
-                            self.current_sf2_player.stop()
-                    elif not piano_config.use_soundfont and sys.platform == 'linux':
-                        try:
-                            os.remove(
-                                current_piano_engine.current_convert_name)
-                        except:
-                            pass
-                if current_piano_engine.playls:
-                    current_piano_engine.playls.clear()
-                if piano_config.play_as_midi and not piano_config.use_soundfont:
+                if piano_config.use_soundfont and not piano_config.render_as_audio:
+                    if self.current_sf2_player.playing:
+                        self.current_sf2_player.stop()
+                elif not piano_config.use_soundfont and sys.platform == 'linux':
                     try:
-                        current_piano_engine.current_send_midi_event_process.terminate()
+                        os.remove(current_piano_engine.current_convert_name)
+                    except:
+                        pass
+                current_piano_engine.current_hit_key_notes.clear()
+                if not piano_config.use_soundfont:
+                    try:
+                        current_piano_engine.current_send_midi_event_process.terminate(
+                        )
                     except:
                         pass
         self.is_click = True
@@ -765,8 +769,12 @@ class piano_window(pyglet.window.Window):
                     self.not_first()
                     pyglet.clock.schedule_interval(self.func,
                                                    1 / piano_config.fps)
-                    pyglet.clock.schedule_interval(current_piano_engine._midi_show_playing_read_pc_keyboard_key, 0.1)
-                    pyglet.clock.schedule_interval(current_piano_engine._midi_show_playing_read_pc_move_progress_key, 0.2)
+                    pyglet.clock.schedule_interval(
+                        current_piano_engine.
+                        _midi_show_playing_read_pc_keyboard_key, 0.1)
+                    pyglet.clock.schedule_interval(
+                        current_piano_engine.
+                        _midi_show_playing_read_pc_move_progress_key, 0.1)
         elif self.mode_num == 3:
             time.sleep(2)
             self.label.text = ''
@@ -872,12 +880,10 @@ class piano_engine:
         self.currentchord = mp.chord([])
         self.last_time_currentchord = None
         self.last_time_chordtype = None
-        self.playnotes = []
         self.still_hold_pc = []
         self.still_hold = []
         self.paused = False
         self.pause_start = 0
-        self.playls = []
         self.bars_drop_time = []
         self.plays = []
         self.midi_device_load = False
@@ -888,6 +894,7 @@ class piano_engine:
         self.detect_key_info = []
         self.detect_key_info_ind = 0
         self.current_output_port_num = None
+        self.current_hit_key_notes = []
 
     def has_load(self, change):
         self.midi_device_load = change
@@ -997,9 +1004,13 @@ class piano_engine:
             pass
             import multiprocessing
             self.current_send_midi_queue = multiprocessing.Queue()
-            self.current_send_midi_event_process = multiprocessing.Process(target=start_send_midi_event, args=(self.event_list, 0, self.current_output_port_num, self.midi_event_length, self.current_send_midi_queue))
+            self.current_send_midi_event_process = multiprocessing.Process(
+                target=start_send_midi_event,
+                args=(self.event_list, 0, self.current_output_port_num,
+                      self.midi_event_length, self.current_send_midi_queue))
             self.current_send_midi_event_process.daemon = True
-            current_send_midi_event_thread = Thread(target=self.current_send_midi_event_process.start)
+            current_send_midi_event_thread = Thread(
+                target=self.current_send_midi_event_process.start)
             current_send_midi_event_thread.start()
 
     def piano_key_reset(self, dt, each):
@@ -1083,7 +1094,8 @@ class piano_engine:
                         current_range, current_keys = self.detect_key_info[
                             self.detect_key_info_ind]
                         if current_range[
-                                0] <= self.current_past_time <= current_range[1]:
+                                0] <= self.current_past_time <= current_range[
+                                    1]:
                             current_detect_key_text = f'most likely scales: {current_keys}'
                         elif self.current_past_time > current_range[1]:
                             self.detect_key_info_ind += 1
@@ -1298,10 +1310,6 @@ class piano_engine:
         pygame.mixer.set_num_channels(self.sheetlen)
         self.wholenotes = self.musicsheet.notes
         self.unit_time = 4 * 60 / self.bpm
-
-        # every object in playls has a situation flag at the index of 3,
-        # 0 means has not been played yet, 1 means it has started playing,
-        # 2 means it has stopped playing
         self.musicsheet.start_time = start_time
         self.musicsheet.actual_start_time = actual_start_time
 
@@ -1327,9 +1335,6 @@ class piano_engine:
                     each[0] = [current_start, current_stop]
                 self.detect_key_info_ind = 0
 
-        self.playls = self._midi_show_init(self.musicsheet, self.unit_time,
-                                           start_time)
-
         if piano_config.show_music_analysis:
             self.show_music_analysis_list = [[
                 mp.alg.add_to_last_index(self.musicsheet.interval, each[0]),
@@ -1337,8 +1342,11 @@ class piano_engine:
             ] for each in current_piano_window.music_analysis_list]
             self.default_show_music_analysis_list = copy(
                 self.show_music_analysis_list)
+        self._midi_show_init(self.musicsheet,
+                             self.unit_time,
+                             self.musicsheet.start_time,
+                             window_mode=1)
         self.startplay = time.time()
-        self.lastshow = None
         self.finished = False
         self.paused = False
         if piano_config.show_current_detect_key:
@@ -1353,18 +1361,12 @@ class piano_engine:
                         start_time,
                         window_mode=0):
         self.play_midi_file = False
-        playls = []
         self.start = start_time * unit_time + current_piano_window.bars_drop_interval
-        if piano_config.play_as_midi:
-            self._midi_show_init_as_midi(musicsheet, unit_time, start_time,
-                                         playls, window_mode)
-        else:
-            self._midi_show_init_as_audio(musicsheet, unit_time, start_time,
-                                          playls, window_mode)
-        return playls
+        self._midi_show_init_as_midi(musicsheet, unit_time, start_time,
+                                     window_mode)
 
     def _midi_show_init_as_midi(self, musicsheet, unit_time, start_time,
-                                playls, window_mode):
+                                window_mode):
         self.play_midi_file = True
         if window_mode == 0:
             if piano_config.use_soundfont and piano_config.render_as_audio:
@@ -1432,7 +1434,7 @@ class piano_engine:
                 current_start_time = 0
             self._init_send_midi(current_start_time)
         self.midi_file_play()
-        self._midi_show_init_note_list(musicsheet, unit_time, playls)
+        self._midi_show_init_note_list(musicsheet, unit_time)
 
     def _init_send_midi(self, current_start_time):
         if self.current_output_port_num is None:
@@ -1444,15 +1446,14 @@ class piano_engine:
                 except:
                     counter += 1
             self.current_output_port_num = counter
-            current_output_port.close()                 
+            current_output_port.close()
         self.event_list = control.piece_to_event_list(self.current_piece,
-                                         set_instrument=True)
+                                                      set_instrument=True)
         for each in self.event_list:
             each.time += current_start_time
         self.current_position = 0
         self.midi_event_length = len(self.event_list)
-        
-    
+
     def _load_file(self, path):
         if sys.platform == 'linux':
             import subprocess
@@ -1464,56 +1465,25 @@ class piano_engine:
         else:
             pygame.mixer.music.load(path)
 
-    def _midi_show_init_as_audio(self, musicsheet, unit_time, start_time,
-                                 playls, window_mode):
-        current_piano_window.label.text = language_patch.ideal_piano_language_dict[
-            'sample']
-        current_piano_window.label.draw()
-        current_piano_window.flip()
-        try:
-            self._midi_show_init_note_list(musicsheet, unit_time, playls, 1)
-        except:
-            pygame.mixer.music.load(self.path)
-            self.play_midi_file = True
-            playls.clear()
-            if piano_config.note_mode == 'bars drop':
-                self.bars_drop_time.clear()
-            self.start = start_time * unit_time + current_piano_window.bars_drop_interval
-            self._midi_show_init_note_list(musicsheet, unit_time, playls)
-            pyglet.clock.schedule_once(self.midi_file_play,
-                                       current_piano_window.bars_drop_interval)
-        current_piano_window.label.text = ''
-        current_piano_window.label.draw()
-        if window_mode == 0:
-            current_piano_window.flip()
-
-    def _midi_show_init_note_list(self, musicsheet, unit_time, playls, mode=0):
+    def _midi_show_init_note_list(self, musicsheet, unit_time):
         musicsheet.clear_pitch_bend('all')
         self.musicsheet = musicsheet
         self.wholenotes = self.musicsheet.notes
         self.sheetlen = len(self.musicsheet)
-        for i in range(self.sheetlen):
-            currentnote = musicsheet.notes[i]
-            duration = unit_time * currentnote.duration
-            interval = unit_time * musicsheet.interval[i]
-            currentstart = self.start
-            currentstop = self.start + duration
-            if mode == 0:
-                currentwav = 0
-            else:
-                currentwav = pygame.mixer.Sound(
-                    f'{piano_config.sound_path}/{currentnote}.{piano_config.sound_format}'
-                )
-                note_volume = currentnote.volume / 127
-                note_volume *= piano_config.global_volume
-                currentwav.set_volume(note_volume)
-            playls.append(
-                [currentwav, currentstart, currentstop, 0, i, currentnote])
-            if piano_config.note_mode == 'bars drop':
-                self.bars_drop_time.append(
-                    [currentstart - current_piano_window.bars_drop_interval,
-                     currentnote, 0])
-            self.start += interval
+        self.stop_time = unit_time * (self.start + sum(
+            musicsheet.interval[:-1]) + musicsheet.notes[-1].duration)
+        if piano_config.note_mode == 'bars drop':
+            current_start_time = self.start
+            for i in range(self.sheetlen):
+                currentnote = musicsheet.notes[i]
+                duration = unit_time * currentnote.duration
+                interval = unit_time * musicsheet.interval[i]
+                currentstart = current_start_time
+                self.bars_drop_time.append([
+                    currentstart - current_piano_window.bars_drop_interval,
+                    currentnote, 0
+                ])
+                current_start_time += interval
 
     def mode_self_pc(self, dt):
         self._pc_read_pc_keyboard_special_key()
@@ -1926,23 +1896,15 @@ class piano_engine:
                 self._midi_show_finished()
 
     def _midi_show_playing(self):
-        self.current_past_time = time.time() - self.startplay + self.current_position
+        self.current_past_time = time.time(
+        ) - self.startplay + self.current_position
         if piano_config.note_mode == 'bars drop':
             self._midi_show_draw_notes_bars_drop_mode()
-        for k in range(self.sheetlen):
-            nownote = self.playls[k]
-            self._midi_show_play_current_note(nownote, k)
-
-        self.playnotes = [
-            self.wholenotes[x[4]] for x in self.playls if x[3] == 1
-        ]
-        if self.playnotes:
-            self._midi_show_update_notes()
-
+            self._midi_show_draw_notes_hit_key_bars_drop_mode()
         if piano_config.note_mode == 'bars':
             self._midi_show_draw_notes_hit_key_bars_mode()
-        elif piano_config.note_mode == 'bars drop':
-            self._midi_show_draw_notes_hit_key_bars_drop_mode()
+        if self.current_past_time >= self.stop_time:
+            self.finished = True
 
     def _midi_show_play_current_note(self, nownote, k):
         current_sound, start_time, stop_time, situation, number, current_note = nownote
@@ -2001,6 +1963,7 @@ class piano_engine:
                     ) if piano_config.opacity_change_by_velocity else piano_config.bar_opacity
                     current_bar.num = current_note.degree - 21
                     current_bar.hit_key = False
+                    current_bar.current_note = current_note
                     self.plays.append(current_bar)
                     next_bar_drop[2] = 1
 
@@ -2023,28 +1986,22 @@ class piano_engine:
         current_bar.opacity = 255 * (
             current_note.volume / 127
         ) if piano_config.opacity_change_by_velocity else piano_config.bar_opacity
+        current_bar.current_note = current_note
         self.plays.append(current_bar)
         current_piano_window.piano_keys[current_note.degree -
                                         21].color = current_bar.color
 
     def _midi_show_update_notes(self):
-        self.playnotes.sort(key=lambda x: x.degree)
-        if self.playnotes != self.lastshow:
-            if piano_config.note_mode != 'bars drop':
-                if self.lastshow:
-                    for each in self.lastshow:
-                        if each not in self.playnotes:
-                            current_piano_window.piano_keys[
-                                each.degree -
-                                21].color = current_piano_window.initial_colors[
-                                    each.degree - 21]
-            self.lastshow = self.playnotes
+        if self.current_hit_key_notes:
+            self.current_hit_key_notes.sort(key=lambda x: x.degree)
             if not piano_config.show_notes_delay:
-                self._midi_show_update_notes_text(playnotes=self.playnotes)
+                self._midi_show_update_notes_text(
+                    playnotes=self.current_hit_key_notes)
             else:
-                pyglet.clock.schedule_once(self._midi_show_update_notes_text,
-                                           piano_config.show_notes_delay,
-                                           playnotes=self.playnotes)
+                pyglet.clock.schedule_once(
+                    self._midi_show_update_notes_text,
+                    piano_config.show_notes_delay,
+                    playnotes=self.current_hit_key_notes)
 
     def _midi_show_update_notes_text(self, dt=None, playnotes=None):
         if piano_config.show_notes:
@@ -2093,34 +2050,34 @@ class piano_engine:
                 current_piano_window.message_label = True
                 current_piano_window.label3.text = language_patch.ideal_piano_language_dict[
                     'pause'].format(unpause_key=piano_config.unpause_key)
-    
+
     def _midi_show_playing_read_pc_move_progress_key(self, dt):
         if current_piano_window.keyboard_handler[
                 current_piano_window.map_key_dict['left']]:
             self.current_position = self.current_past_time - 1.5
             if self.current_position < 0:
-                self.current_position = 0          
-            print(111, self.current_position, self.current_past_time, flush=True)
+                self.current_position = 0
             if piano_config.note_mode == 'bars drop':
                 for each in self.bars_drop_time:
                     if each[2] == 1 and each[0] > self.current_position:
                         each[2] = 0
             self.startplay = time.time() - 0.5
-            self.current_send_midi_queue.put(['set_position', self.current_position])        
+            self.current_send_midi_queue.put(
+                ['set_position', self.current_position])
             self._midi_show_clear_all_bars_drop()
 
     def _midi_show_clear_all_bars_drop(self):
         for each in self.plays:
             each.batch = None
             current_piano_window.piano_keys[
-                each.num].color = current_piano_window.initial_colors[
-                    each.num]            
-        self.plays.clear()        
+                each.num].color = current_piano_window.initial_colors[each.num]
+        self.plays.clear()
         if piano_config.show_notes:
             current_piano_window.label.text = '[]'
         if piano_config.show_chord:
             current_piano_window.label2.text = ''
-    
+        self.current_hit_key_notes.clear()
+
     def _midi_show_draw_notes_hit_key_bars_mode(self):
         i = 0
         while i < len(self.plays):
@@ -2133,21 +2090,28 @@ class piano_engine:
             i += 1
 
     def _midi_show_draw_notes_hit_key_bars_drop_mode(self):
+        changed = False
         i = 0
         while i < len(self.plays):
             each = self.plays[i]
             each.y -= current_piano_window.bar_steps
             if not each.hit_key and each.y <= piano_config.bars_drop_place:
                 each.hit_key = True
+                self.current_hit_key_notes.append(each.current_note)
                 current_piano_window.piano_keys[each.num].color = each.color
+                changed = True
             if each.height + each.y <= current_piano_window.piano_height:
                 each.batch = None
                 current_piano_window.piano_keys[
                     each.num].color = current_piano_window.initial_colors[
                         each.num]
                 del self.plays[i]
+                self.current_hit_key_notes.remove(each.current_note)
+                changed = True
                 continue
             i += 1
+        if changed:
+            self._midi_show_update_notes()
 
     def _midi_show_pause(self):
         if current_piano_window.keyboard_handler[
@@ -2168,8 +2132,8 @@ class piano_engine:
 
     def _midi_show_finished(self, dt=None):
         if piano_config.note_mode != 'bars drop':
-            if self.lastshow:
-                for t in self.lastshow:
+            if self.current_hit_key_notes:
+                for t in self.current_hit_key_notes:
                     current_piano_window.piano_keys[
                         t.degree -
                         21].color = current_piano_window.initial_colors[
@@ -2194,16 +2158,10 @@ class piano_engine:
             for k in range(len(current_piano_window.piano_keys)):
                 current_piano_window.piano_keys[
                     k].color = current_piano_window.initial_colors[k]
-            self.playls.clear()
             current_piano_window.label.text = ''
             current_piano_window.redraw()
-            self.playls = self._midi_show_init(self.musicsheet,
-                                               self.unit_time,
-                                               self.musicsheet.start_time,
-                                               window_mode=1)
             self.startplay = time.time()
-            self.lastshow = None
-            self.playnotes.clear()
+            self.current_hit_key_notes.clear()
             self.finished = False
             if piano_config.show_current_detect_key:
                 self.current_play_chords = mp.chord([])
