@@ -25,6 +25,7 @@ def find_first_tempo(filename, current_tempo):
 def read_midi_file(self, state, result):
     try:
         all_tracks = mp.read(self.parent.file_path, get_off_drums=False)
+        current_piece = mp.copy(all_tracks)
         all_tracks.normalize_tempo()
         all_tracks.get_off_not_notes()
         current_bpm = all_tracks.bpm
@@ -104,7 +105,7 @@ def read_midi_file(self, state, result):
         first_track_start_time += all_track_notes.start_time
         result.append([
             all_track_notes, tempo, first_track_start_time, actual_start_time,
-            drum_tracks
+            drum_tracks, current_piece
         ])
         state.append(True)
     except:

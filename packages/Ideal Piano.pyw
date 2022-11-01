@@ -2,6 +2,7 @@ import random
 from threading import Thread
 import browse
 import musicpy as mp
+import musicpy.control as control
 import json_module
 from change_settings import config_window, change_parameter
 
@@ -69,6 +70,75 @@ def get_image(img):
 
 def update(dt):
     pass
+
+
+def start_send_midi_event(event_list, current_event_counter, current_output_port_num, midi_event_length, current_send_midi_queue):
+    pygame.midi.init()
+    current_player = pygame.midi.Output(current_output_port_num)
+    current_start_time = time.time()
+    current_position_time = 0
+    while True:
+        if not current_send_midi_queue.empty():
+            current_msg = current_send_midi_queue.get()
+            if current_msg == 'pause':
+                pause_start = time.time()
+                while True:
+                    if not current_send_midi_queue.empty() and current_send_midi_queue.get() == 'unpause':
+                        current_start_time += (time.time() - pause_start)
+                        break                
+            elif isinstance(current_msg, list):
+                if current_msg[0] == 'set_position':
+                    current_position_time = current_msg[1]
+                    for k, each in enumerate(event_list):
+                        if each.time == current_position_time:
+                            current_event_counter = k
+                            break
+                        elif each.time > current_position_time:
+                            current_event_counter = k - 1
+                            if current_event_counter < 0:
+                                current_event_counter = 0
+                            break
+                    current_start_time = time.time()
+        current_time = time.time()
+        past_time = current_time - current_start_time + current_position_time
+        current_event = event_list[current_event_counter]
+        if past_time >= current_event.time:
+            mode = current_event.mode
+            current_track = current_event.track
+            if mode == 0:
+                current_note = current_event.value
+                current_channel = current_note.channel if current_note.channel is not None else channels[
+                    current_event.track]
+                current_player.note_on(note=current_note.degree,
+                                       velocity=current_note.volume,
+                                       channel=current_channel)
+            elif mode == 1:
+                current_note = current_event.value
+                current_channel = current_note.channel if current_note.channel is not None else channels[
+                    current_event.track]
+                current_player.note_off(note=current_note.degree,
+                                        channel=current_channel)
+            elif mode == 2:
+                current_player.set_instrument(
+                    instrument_id=current_event.value,
+                    channel=current_event.channel)
+            elif mode == 3:
+                current_channel = current_event.value.channel if current_event.value.channel is not None else channels[
+                    current_event.track]
+                current_player.pitch_bend(value=current_event.value.value,
+                                          channel=current_channel)
+            elif mode == 4:
+                current_player.write_short(0xFF, 0x51, int(current_event.value))
+            elif mode == 5:
+                current_player.write_short(0xb0 | current_event.value.channel,
+                                           current_event.value.control,
+                                           current_event.value.value)
+            elif mode == 6:
+                current_player.write_short(0xc0 | current_event.value.channel,
+                                           current_event.value.program)
+            current_event_counter += 1
+            if current_event_counter == midi_event_length:
+                break
 
 
 class ideal_piano_button:
@@ -607,6 +677,8 @@ class piano_window(pyglet.window.Window):
                 piano_config.delay_only_read_current = True
             elif self.mode_num == 2:
                 pyglet.clock.unschedule(current_piano_engine.midi_file_play)
+                pyglet.clock.unschedule(current_piano_engine._midi_show_playing_read_pc_keyboard_key)
+                pyglet.clock.unschedule(current_piano_engine._midi_show_playing_read_pc_move_progress_key)
                 pyglet.clock.unschedule(
                     current_piano_engine._midi_show_update_notes_text)
                 pyglet.clock.unschedule(
@@ -626,6 +698,11 @@ class piano_window(pyglet.window.Window):
                             pass
                 if current_piano_engine.playls:
                     current_piano_engine.playls.clear()
+                if piano_config.play_as_midi and not piano_config.use_soundfont:
+                    try:
+                        current_piano_engine.current_send_midi_event_process.terminate()
+                    except:
+                        pass
         self.is_click = True
         self.click_mode = None
         if piano_config.note_mode == 'bars' or piano_config.note_mode == 'bars drop':
@@ -688,6 +765,8 @@ class piano_window(pyglet.window.Window):
                     self.not_first()
                     pyglet.clock.schedule_interval(self.func,
                                                    1 / piano_config.fps)
+                    pyglet.clock.schedule_interval(current_piano_engine._midi_show_playing_read_pc_keyboard_key, 0.1)
+                    pyglet.clock.schedule_interval(current_piano_engine._midi_show_playing_read_pc_move_progress_key, 0.2)
         elif self.mode_num == 3:
             time.sleep(2)
             self.label.text = ''
@@ -808,6 +887,7 @@ class piano_engine:
         self.soft_pedal_volume_ratio = 1
         self.detect_key_info = []
         self.detect_key_info_ind = 0
+        self.current_output_port_num = None
 
     def has_load(self, change):
         self.midi_device_load = change
@@ -899,7 +979,7 @@ class piano_engine:
             current_piano_window.label.draw()
             current_piano_window.flip()
 
-    def midi_file_play(self, dt):
+    def midi_file_play(self):
         if piano_config.use_soundfont:
             if piano_config.render_as_audio:
                 self.current_midi_audio.play()
@@ -914,8 +994,13 @@ class piano_engine:
                     current_piano_window.current_sf2_player.current_midi_file)
 
         else:
-            current_thread = Thread(target=pygame.mixer.music.play)
-            current_thread.start()
+            pass
+            import multiprocessing
+            self.current_send_midi_queue = multiprocessing.Queue()
+            self.current_send_midi_event_process = multiprocessing.Process(target=start_send_midi_event, args=(self.event_list, 0, self.current_output_port_num, self.midi_event_length, self.current_send_midi_queue))
+            self.current_send_midi_event_process.daemon = True
+            current_send_midi_event_thread = Thread(target=self.current_send_midi_event_process.start)
+            current_send_midi_event_thread.start()
 
     def piano_key_reset(self, dt, each):
         current_piano_window.piano_keys[
@@ -998,9 +1083,9 @@ class piano_engine:
                         current_range, current_keys = self.detect_key_info[
                             self.detect_key_info_ind]
                         if current_range[
-                                0] <= self.currentime <= current_range[1]:
+                                0] <= self.current_past_time <= current_range[1]:
                             current_detect_key_text = f'most likely scales: {current_keys}'
-                        elif self.currentime > current_range[1]:
+                        elif self.current_past_time > current_range[1]:
                             self.detect_key_info_ind += 1
                             if self.detect_key_info_ind < len(
                                     self.detect_key_info):
@@ -1149,7 +1234,7 @@ class piano_engine:
             return 'back'
         if self.path and read_result:
             if read_result != 'error':
-                self.musicsheet, self.bpm, start_time, actual_start_time, drum_tracks = read_result
+                self.musicsheet, self.bpm, start_time, actual_start_time, drum_tracks, self.current_piece = read_result
                 self.musicsheet, new_start_time = self.musicsheet.pitch_filter(
                     *piano_config.pitch_range)
                 start_time += new_start_time
@@ -1341,9 +1426,33 @@ class piano_engine:
         current_start_time = current_piano_window.bars_drop_interval
         if sys.platform == 'linux' and not piano_config.use_soundfont:
             current_start_time += self.musicsheet.actual_start_time * self.unit_time
-        pyglet.clock.schedule_once(self.midi_file_play, current_start_time)
+        if not piano_config.use_soundfont:
+            current_start_time -= piano_config.play_midi_start_process_time
+            if current_start_time < 0:
+                current_start_time = 0
+            self._init_send_midi(current_start_time)
+        self.midi_file_play()
         self._midi_show_init_note_list(musicsheet, unit_time, playls)
 
+    def _init_send_midi(self, current_start_time):
+        if self.current_output_port_num is None:
+            counter = 0
+            while True:
+                try:
+                    current_output_port = pygame.midi.Output(counter)
+                    break
+                except:
+                    counter += 1
+            self.current_output_port_num = counter
+            current_output_port.close()                 
+        self.event_list = control.piece_to_event_list(self.current_piece,
+                                         set_instrument=True)
+        for each in self.event_list:
+            each.time += current_start_time
+        self.current_position = 0
+        self.midi_event_length = len(self.event_list)
+        
+    
     def _load_file(self, path):
         if sys.platform == 'linux':
             import subprocess
@@ -1402,8 +1511,8 @@ class piano_engine:
                 [currentwav, currentstart, currentstop, 0, i, currentnote])
             if piano_config.note_mode == 'bars drop':
                 self.bars_drop_time.append(
-                    (currentstart - current_piano_window.bars_drop_interval,
-                     currentnote))
+                    [currentstart - current_piano_window.bars_drop_interval,
+                     currentnote, 0])
             self.start += interval
 
     def mode_self_pc(self, dt):
@@ -1817,7 +1926,7 @@ class piano_engine:
                 self._midi_show_finished()
 
     def _midi_show_playing(self):
-        self.currentime = time.time() - self.startplay
+        self.current_past_time = time.time() - self.startplay + self.current_position
         if piano_config.note_mode == 'bars drop':
             self._midi_show_draw_notes_bars_drop_mode()
         for k in range(self.sheetlen):
@@ -1829,7 +1938,6 @@ class piano_engine:
         ]
         if self.playnotes:
             self._midi_show_update_notes()
-        self._midi_show_playing_read_pc_keyboard_key()
 
         if piano_config.note_mode == 'bars':
             self._midi_show_draw_notes_hit_key_bars_mode()
@@ -1840,7 +1948,7 @@ class piano_engine:
         current_sound, start_time, stop_time, situation, number, current_note = nownote
         if situation != 2:
             if situation == 0:
-                if self.currentime >= start_time:
+                if self.current_past_time >= start_time:
                     if not self.play_midi_file:
                         current_sound.play()
                     nownote[3] = 1
@@ -1857,7 +1965,7 @@ class piano_engine:
                     elif piano_config.note_mode != 'bars drop':
                         self._midi_show_set_piano_key_color(current_note)
             elif situation == 1:
-                if self.currentime >= stop_time:
+                if self.current_past_time >= stop_time:
                     if not self.play_midi_file:
                         current_sound.fadeout(
                             current_piano_window.show_delay_time)
@@ -1867,11 +1975,9 @@ class piano_engine:
 
     def _midi_show_draw_notes_bars_drop_mode(self):
         if self.bars_drop_time:
-            j = 0
-            while j < len(self.bars_drop_time):
-                next_bar_drop = self.bars_drop_time[j]
-                if self.currentime >= next_bar_drop[0]:
-                    current_note = next_bar_drop[1]
+            for next_bar_drop in self.bars_drop_time:
+                current_bars_drop_start_time, current_note, status = next_bar_drop
+                if status == 0 and self.current_past_time >= current_bars_drop_start_time:
                     places = current_piano_window.note_place[
                         current_note.degree - 21]
                     current_bar = pyglet.shapes.BorderedRectangle(
@@ -1896,9 +2002,7 @@ class piano_engine:
                     current_bar.num = current_note.degree - 21
                     current_bar.hit_key = False
                     self.plays.append(current_bar)
-                    del self.bars_drop_time[j]
-                    continue
-                j += 1
+                    next_bar_drop[2] = 1
 
     def _midi_show_draw_notes_bars_mode(self, current_note):
         places = current_piano_window.note_place[current_note.degree - 21]
@@ -1966,7 +2070,7 @@ class piano_engine:
                                            random.randint(0, 255),
                                            random.randint(0, 255))
 
-    def _midi_show_playing_read_pc_keyboard_key(self):
+    def _midi_show_playing_read_pc_keyboard_key(self, dt):
         if current_piano_window.keyboard_handler[
                 current_piano_window.pause_key]:
             if self.play_midi_file:
@@ -1980,9 +2084,8 @@ class piano_engine:
                             current_piano_window.current_sf2_player.pause()
                             self.paused = True
                 else:
-                    if pygame.mixer.music.get_busy():
-                        pygame.mixer.music.pause()
-                        self.paused = True
+                    self.current_send_midi_queue.put('pause')
+                    self.paused = True
             else:
                 self.paused = True
             if self.paused:
@@ -1990,7 +2093,34 @@ class piano_engine:
                 current_piano_window.message_label = True
                 current_piano_window.label3.text = language_patch.ideal_piano_language_dict[
                     'pause'].format(unpause_key=piano_config.unpause_key)
+    
+    def _midi_show_playing_read_pc_move_progress_key(self, dt):
+        if current_piano_window.keyboard_handler[
+                current_piano_window.map_key_dict['left']]:
+            self.current_position = self.current_past_time - 1.5
+            if self.current_position < 0:
+                self.current_position = 0          
+            print(111, self.current_position, self.current_past_time, flush=True)
+            if piano_config.note_mode == 'bars drop':
+                for each in self.bars_drop_time:
+                    if each[2] == 1 and each[0] > self.current_position:
+                        each[2] = 0
+            self.startplay = time.time() - 0.5
+            self.current_send_midi_queue.put(['set_position', self.current_position])        
+            self._midi_show_clear_all_bars_drop()
 
+    def _midi_show_clear_all_bars_drop(self):
+        for each in self.plays:
+            each.batch = None
+            current_piano_window.piano_keys[
+                each.num].color = current_piano_window.initial_colors[
+                    each.num]            
+        self.plays.clear()        
+        if piano_config.show_notes:
+            current_piano_window.label.text = '[]'
+        if piano_config.show_chord:
+            current_piano_window.label2.text = ''
+    
     def _midi_show_draw_notes_hit_key_bars_mode(self):
         i = 0
         while i < len(self.plays):
@@ -2029,7 +2159,7 @@ class piano_engine:
                     else:
                         current_piano_window.current_sf2_player.unpause()
                 else:
-                    pygame.mixer.music.unpause()
+                    self.current_send_midi_queue.put('unpause')
             self.paused = False
             current_piano_window.message_label = False
             pause_stop = time.time()

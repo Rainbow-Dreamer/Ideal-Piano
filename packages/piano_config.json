@@ -152,6 +152,7 @@
     "sound_format": "mp3",
     "sound_path": "resources/sounds",
     "show_delay_time": 1,
+    "play_midi_start_process_time": 0.5,
     "config_enable": true,
     "config_key": "lctrl",
     "volume_up": "=",
@@ -210,7 +211,7 @@
     "bar_hold_increase": 5,
     "bars_drop_interval": 2,
     "bars_drop_place": 173,
-    "adjust_ratio": 62,
+    "adjust_ratio": 49.3,
     "bar_border": 5,
     "bar_border_color": [
         100,
