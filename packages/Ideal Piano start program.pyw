@@ -17,6 +17,7 @@ from pydub import AudioSegment
 from ast import literal_eval
 from copy import deepcopy as copy
 import importlib
+import multiprocessing
 
 with open('packages/Ideal Piano.pyw', encoding='utf-8') as f:
     exec(f.read())
