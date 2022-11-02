@@ -1,5 +1,11 @@
 # Changelog
 
+2022-11-01
+
+* Rewrote the mechanism for playing MIDI files to include progress bar control.
+
+
+
 2022-07-08
 
 * Added functionality to adjust the opacity of background image, buttons, piano keys.
