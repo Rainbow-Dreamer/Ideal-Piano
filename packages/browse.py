@@ -376,12 +376,16 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.setWindowTitle('Choose MIDI Device')
         self.setMinimumSize(800, 400)
 
+        global piano_config
+        piano_config = json_module.json_module(piano_config_path)
+
         if sys.platform == 'win32':
             self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
         elif sys.platform == 'linux':
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
         elif sys.platform == 'darwin':
             self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
+
         import pygame.midi
         pygame.midi.quit()
         pygame.midi.init()
@@ -406,23 +410,32 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.midi_input_box = QtWidgets.QComboBox(self)
         self.midi_input_box.setFixedWidth(400)
         midi_inputs_id = [i[0] for i in self.midi_inputs]
-        current_ind = 0
+        current_input_ind = 0
         if piano_config.midi_device_id in midi_inputs_id:
-            current_ind = midi_inputs_id.index(piano_config.midi_device_id)
+            current_input_ind = midi_inputs_id.index(
+                piano_config.midi_device_id)
         self.midi_input_box.addItems([i[1] for i in self.midi_inputs])
         self.midi_input_box.move(200, 70)
         self.midi_input_box.activated.connect(self.change_midi_device_id)
-        self.midi_input_box.setCurrentIndex(current_ind)
+        self.midi_input_box.setCurrentIndex(current_input_ind)
         self.midi_input_label = QtWidgets.QLabel(self,
                                                  text='MIDI Input Driver')
         self.midi_input_label.setFont(
             set_font(QtGui.QFont('Consolas', 10), self.dpi))
         self.midi_input_label.setFixedWidth(150)
         self.midi_input_label.move(50, 70)
+
         self.midi_output_box = QtWidgets.QComboBox(self)
         self.midi_output_box.setFixedWidth(400)
+        midi_outputs_id = [i[0] for i in self.midi_outputs]
+        current_output_ind = 0
+        if piano_config.play_midi_port in midi_outputs_id:
+            current_output_ind = midi_outputs_id.index(
+                piano_config.play_midi_port)
         self.midi_output_box.addItems([i[1] for i in self.midi_outputs])
         self.midi_output_box.move(200, 170)
+        self.midi_output_box.activated.connect(self.change_play_midi_port)
+        self.midi_output_box.setCurrentIndex(current_output_ind)
         self.midi_output_label = QtWidgets.QLabel(self,
                                                   text='MIDI Output Driver')
         self.midi_output_label.setFont(
@@ -446,6 +459,18 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         ].index(current_midi_input)][0]
         try:
             change_parameter('midi_device_id', current_midi_device_id,
+                             piano_config_path)
+        except:
+            import traceback
+            print(traceback.format_exc())
+
+    def change_play_midi_port(self):
+        current_midi_output = self.midi_output_box.currentText()
+        current_play_midi_port = self.midi_outputs[[
+            i[1] for i in self.midi_outputs
+        ].index(current_midi_output)][0]
+        try:
+            change_parameter('play_midi_port', current_play_midi_port,
                              piano_config_path)
         except:
             import traceback

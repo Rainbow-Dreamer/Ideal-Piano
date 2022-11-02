@@ -79,6 +79,7 @@ def update(dt):
 def start_send_midi_event(event_list, current_event_counter,
                           current_output_port_num, midi_event_length,
                           current_send_midi_queue):
+    pygame.midi.quit()
     pygame.midi.init()
     current_player = pygame.midi.Output(current_output_port_num)
     current_start_time = time.time()
@@ -1198,6 +1199,7 @@ class piano_engine:
             if not self.midi_device_load:
                 self.device = None
                 self.has_load(True)
+                pygame.midi.quit()
                 pygame.midi.init()
                 self.device = pygame.midi.Input(piano_config.midi_device_id)
             else:
@@ -1459,31 +1461,27 @@ class piano_engine:
         self.midi_file_play()
 
     def _init_send_midi(self, current_start_time):
-        if self.current_output_port_num is None:
-            if piano_config.play_midi_port is not None:
-                self.current_output_port_num = piano_config.play_midi_port
-            else:
-                pygame.midi.quit()
-                pygame.midi.init()
-                midi_info = []
-                counter = 0
-                while True:
-                    current = counter, pygame.midi.get_device_info(counter)
-                    counter += 1
-                    if current[1] is None:
-                        break
-                    midi_info.append(current)
-                if midi_info:
-                    midi_output_port = [
-                        i[0] for i in midi_info if i[1][2] == 0
-                    ]
-                    if not midi_output_port:
-                        raise Exception(
-                            'Error: cannot find any MIDI output port')
-                    else:
-                        self.current_output_port_num = midi_output_port[0]
-                else:
+        if piano_config.play_midi_port is not None:
+            self.current_output_port_num = piano_config.play_midi_port
+        else:
+            pygame.midi.quit()
+            pygame.midi.init()
+            midi_info = []
+            counter = 0
+            while True:
+                current = counter, pygame.midi.get_device_info(counter)
+                counter += 1
+                if current[1] is None:
+                    break
+                midi_info.append(current)
+            if midi_info:
+                midi_output_port = [i[0] for i in midi_info if i[1][2] == 0]
+                if not midi_output_port:
                     raise Exception('Error: cannot find any MIDI output port')
+                else:
+                    self.current_output_port_num = midi_output_port[0]
+            else:
+                raise Exception('Error: cannot find any MIDI output port')
         self.event_list = control.piece_to_event_list(self.current_piece,
                                                       set_instrument=True)
         for each in self.event_list:

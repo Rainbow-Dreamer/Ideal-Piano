@@ -48,6 +48,12 @@ class config_window(QtWidgets.QMainWindow):
 
     def __init__(self, dpi=None, config_path=''):
         super().__init__()
+        if sys.platform == 'win32':
+            self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
+        elif sys.platform == 'linux':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.png'))
+        elif sys.platform == 'darwin':
+            self.setWindowIcon(QtGui.QIcon('resources/piano_icon.icns'))
         self.config_path = config_path
         self.whole_config = None
         self.current_config = self.whole_config
