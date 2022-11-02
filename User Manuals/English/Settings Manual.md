@@ -81,13 +81,15 @@ button_resize_num: the resize ratio of button size
 
 button_opacity: the opacity of button
 
+fps: frames per second of the screen
+
 key_settings: The dictionary of the 88 keys of the computer keyboard, please note that all the files in the sound path must contain the keys you have set to
 
-midi_device_id: This parameter is the id of the midi device after it is connected to the midi device (e.g. midi keyboard)
+midi_device_id: This parameter is the input port id of the MIDI device after it is connected to the MIDI device (e.g. MIDI keyboard)
+
+play_midi_port: the MIDI output port id when playing MIDI files
 
 language: the display language of the software, including main window buttons, chord names, messages and the window to choose MIDI files, currently only 'English' and 'Chinese' are supported
-
-fps: frames per second of the screen
 
 
 
@@ -107,6 +109,14 @@ repeat_key: key to repeat playback
 
 unpause_key: key to continue (while paused)
 
+move_progress_left_key: button to move the progress bar backward
+
+move_progress_right_key: button to move the progress bar forward
+
+move_progress_left_unit: seconds for each move progress bar backward
+
+move_progress_right_unit: seconds for each move progress bar forward
+
 pause_key_clear_notes: whether to clear the display of all currently played notes when pausing
 
 delay: whether to give a certain delay to the tone after it is released
@@ -124,6 +134,10 @@ sound_format: the file format of the sound source (file extension)
 sound_path: the file path of the sound source
 
 show_delay_time: the delay time of the notes when playing the MIDI file
+
+play_midi_start_process_time: time in seconds to open the process that sends MIDI events when playing MIDI files
+
+move_progress_adjust_time: the delay time in seconds when changing the progress bar
 
 config_enable: whether to enable function keys when playing on computer keyboard
 
@@ -202,6 +216,10 @@ bar_height: the length of the note bar
 bar_color: the color of the bar, RGB tuple
 
 sustain_bar_color: the color of the bar when the key is released while the piano pedal is pressed in MIDI keyboard play mode, RGB tuple
+
+progress_bar_color: the color of progress bar
+
+progress_bar_opacity: the opacity of progress bar
 
 bar_y: the vertical coordinate of the bar's appearance
 
