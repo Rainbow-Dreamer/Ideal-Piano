@@ -21,13 +21,24 @@ You can adjust the transparency of background image by setting the config parame
 
 ## What do the buttons on the main screen do?
 
-Click the `PLAY` button to enter the computer keyboard playing mode, click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode, right click `MIDI KEYBOARD` button to open the choose MIDI device window, and click `PLAY MIDI` button to enter the MIDI file playing mode. When entering one of these modes, click `GO BACK` button to go back to the initial page. Click `SETTINGS` button to open the change settings window.
+* click the `PLAY` button to enter the computer keyboard playing mode
+* click the `MIDI KEYBOARD` button to enter the MIDI keyboard playing mode
+* right click `MIDI KEYBOARD` button to open the choose MIDI device window
+* click `PLAY MIDI` button to enter the MIDI file playing mode
+* when entering one of these modes, click `GO BACK` button to go back to the initial page
+* click `SETTINGS` button to open the change settings window
 
 
 
 ## When playing MIDI files, how do I pause, unpause and play again?
 
 When you are playing a MIDI file in Ideal Piano, by default you can press `space` on the computer keyboard to pause playing, press `enter` to continue playing. After current playing is finished, by default you can press `ctrl` to play again. All of these key settings can be customized in the config file, please look at the settings manual.
+
+
+
+## Why can't I hear any sound when playing MIDI files?
+
+This problem occurs usually when the current MIDI output port cannot produce sound, you can right click the `MIDI KEYBOARD` button to open the window of selecting MIDI device, select the MIDI output port that can be used in the MIDI output driver box, then close the window and try to play the MIDI file again.
 
 
 
