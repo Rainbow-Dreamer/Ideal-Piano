@@ -67,7 +67,7 @@
     ],
     "button_resize_num": 2.3,
     "button_opacity": 255,
-    "fps": 60,
+    "fps": 70,
     "key_settings": {
         "z": "A#1",
         "x": "B1",
@@ -222,7 +222,7 @@
     "bar_hold_increase": 5,
     "bars_drop_interval": 2,
     "bars_drop_place": 173,
-    "adjust_ratio": 62,
+    "adjust_ratio": 72,
     "bar_border": 5,
     "bar_border_color": [
         100,

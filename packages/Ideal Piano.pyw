@@ -24,7 +24,6 @@ elif piano_config.language == 'Chinese':
 key = pyglet.window.key
 has_soundfont_plugins = True
 note_display_mode = ['bars', 'bars drop', '']
-test_start_midi_process = False
 
 
 def get_off_sort(a):
@@ -75,12 +74,6 @@ def get_image(img):
 
 def update(dt):
     pass
-
-
-def test_start_send_midi_event(current_send_midi_queue):
-    current_time = time.time()
-    current_send_midi_queue.put(current_time)
-    return
 
 
 def start_send_midi_event(event_list, current_event_counter,
@@ -1282,30 +1275,7 @@ class piano_engine:
                 pyglet.clock.schedule_interval(current_piano_window.func,
                                                1 / piano_config.fps)
 
-    def test_start_midi_process_func(self):
-        global test_start_midi_process
-        try:
-            current_time = time.time()
-            current_test_queue = multiprocessing.Queue()
-            current_test_process = multiprocessing.Process(
-                target=test_start_send_midi_event, args=(current_test_queue, ))
-            current_test_process.daemon = True
-            current_test_thread = Thread(target=current_test_process.start,
-                                         daemon=True)
-            current_test_thread.start()
-            while True:
-                if not current_test_queue.empty():
-                    break
-            current_start_midi_time = current_test_queue.get()
-            current_start_midi_process_time = current_start_midi_time - current_time
-            piano_config.play_midi_start_process_time = current_start_midi_process_time
-            test_start_midi_process = True
-        except:
-            pass
-
     def init_midi_show(self, file_name=None):
-        if not test_start_midi_process:
-            self.test_start_midi_process_func()
         current_piano_window.open_browse_window = True
         current_setup = browse.setup(language_patch.browse_language_dict,
                                      file_name=file_name)
