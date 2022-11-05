@@ -139,6 +139,8 @@ play_midi_start_process_time: time in seconds to open the process that sends MID
 
 move_progress_adjust_time: the delay time in seconds when changing the progress bar
 
+use_soundfont_delay_time: the delay time in seconds when use SoundFont files to play MIDI files under note mode `bars drop`
+
 config_enable: whether to enable function keys when playing on computer keyboard
 
 config_key: the key position of the function keys, the function keys can be used with other keys to do different functions
