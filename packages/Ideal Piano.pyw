@@ -76,6 +76,12 @@ def update(dt):
     pass
 
 
+def send_midi_mute_all_sounds(current_player):
+    for i in range(piano_config.midi_channels_number):
+        current_player.write_short(0xb0 | i,
+                                   piano_config.mute_all_sounds_cc_number, 0)
+
+
 def start_send_midi_event(event_list, current_event_counter,
                           current_output_port_num, midi_event_length,
                           current_send_midi_queue):
@@ -88,6 +94,8 @@ def start_send_midi_event(event_list, current_event_counter,
         if not current_send_midi_queue.empty():
             current_msg = current_send_midi_queue.get()
             if current_msg == 'pause':
+                if piano_config.play_midi_reset_sounds:
+                    send_midi_mute_all_sounds(current_player)
                 pause_start = time.time()
                 while True:
                     if not current_send_midi_queue.empty():
@@ -110,6 +118,8 @@ def start_send_midi_event(event_list, current_event_counter,
                                 current_start_time = time.time()
             elif isinstance(current_msg, list):
                 if current_msg[0] == 'set_position':
+                    if piano_config.play_midi_reset_sounds:
+                        send_midi_mute_all_sounds(current_player)
                     current_position_time = current_msg[1]
                     for k, each in enumerate(event_list):
                         if each.time == current_position_time:
