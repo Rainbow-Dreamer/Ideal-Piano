@@ -141,6 +141,12 @@ move_progress_adjust_time: the delay time in seconds when changing the progress 
 
 use_soundfont_delay_time: the delay time in seconds when use SoundFont files to play MIDI files under note mode `bars drop`
 
+play_midi_reset_sounds: Whether to mute all sounds when pausing or changing progress while playing MIDI files
+
+mute_all_sounds_cc_number: the MIDI CC number to use when muting all sounds
+
+midi_channels_number: the total number of channels in the MIDI file
+
 config_enable: whether to enable function keys when playing on computer keyboard
 
 config_key: the key position of the function keys, the function keys can be used with other keys to do different functions
