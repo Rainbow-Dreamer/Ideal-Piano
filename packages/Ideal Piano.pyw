@@ -694,12 +694,19 @@ class piano_window(pyglet.window.Window):
         if self.settings_button.mouse_press(
                 self, button, mouse=self.mouse_left) and self.first_time:
             self.open_settings()
-        if self.mode_num == 2 and button == self.mouse_left and self.current_progress_bar.x <= x <= self.current_progress_bar.x + self.progress_bar_length and self.current_progress_bar.y <= y <= self.current_progress_bar.y + self.current_progress_bar.height:
-            self.set_position(x, y)
+        if self.mode_num == 2 and button == self.mouse_left and self.inside_progression_bar(
+                x, y):
+            if not current_piano_engine.finished:
+                self.set_position(x, y)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
-        if self.mode_num == 2 and button == self.mouse_left and self.current_progress_bar.x <= x <= self.current_progress_bar.x + self.progress_bar_length and self.current_progress_bar.y <= y <= self.current_progress_bar.y + self.current_progress_bar.height:
-            self.set_position(x + dx, y)
+        if self.mode_num == 2 and button == self.mouse_left and self.inside_progression_bar(
+                x, y):
+            if not current_piano_engine.finished:
+                self.set_position(x + dx, y)
+
+    def inside_progression_bar(self, x, y):
+        return self.current_progress_bar.x <= x <= self.current_progress_bar.x + self.progress_bar_length and self.current_progress_bar.y <= y <= self.current_progress_bar.y + self.current_progress_bar.height
 
     def set_position(self, x, y):
         current_percentage = x / self.progress_bar_length
@@ -1144,17 +1151,13 @@ class piano_engine:
             elif piano_config.current_detect_key_algorithm == 2:
                 if current_piano_window.mode_num == 2:
                     if self.detect_key_info:
-                        current_range, current_keys = self.detect_key_info[
-                            self.detect_key_info_ind]
-                        if current_range[
-                                0] <= self.current_past_time <= current_range[
-                                    1]:
-                            current_detect_key_text = f'most likely scales: {current_keys}'
-                        elif self.current_past_time > current_range[1]:
-                            self.detect_key_info_ind += 1
-                            if self.detect_key_info_ind < len(
-                                    self.detect_key_info):
-                                current_detect_key_text = f'most likely scales: {self.detect_key_info[self.detect_key_info_ind][1]}'
+                        for each in self.detect_key_info:
+                            current_range, current_keys = each
+                            if current_range[
+                                    0] <= self.current_past_time <= current_range[
+                                        1]:
+                                current_detect_key_text = f'most likely scales: {current_keys}'
+                                break
             if piano_config.current_detect_key_show_note_count:
                 current_detect_key_text = f'note count: {note_count} / {len(self.current_play_chords)}\n\n{current_detect_key_text}'
             current_piano_window.current_detect_key_label.text = current_detect_key_text
