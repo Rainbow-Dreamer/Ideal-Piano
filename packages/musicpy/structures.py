@@ -164,7 +164,6 @@ class chord:
                  rootpitch=4,
                  other_messages=[],
                  start_time=None):
-        self.other_messages = other_messages
         standardize_msg = False
         if isinstance(notes, str):
             notes = notes.replace(' ', '').split(',')
@@ -179,10 +178,6 @@ class chord:
             standardize_msg = True
         notes_msg = _read_notes(notes, rootpitch)
         notes, current_intervals, current_start_time = notes_msg
-        if start_time is None:
-            self.start_time = current_start_time
-        else:
-            self.start_time = start_time
         if current_intervals and not interval:
             interval = current_intervals
         if standardize_msg and notes:
@@ -218,6 +213,11 @@ class chord:
             else:
                 for k in range(len(duration)):
                     self.notes[k].duration = duration[k]
+        if start_time is None:
+            self.start_time = current_start_time
+        else:
+            self.start_time = start_time
+        self.other_messages = other_messages
 
     def get_duration(self):
         return [i.duration for i in self.notes]
@@ -552,11 +552,6 @@ class chord:
     def __mod__(self, alist):
         if isinstance(alist, (list, tuple)):
             return self.set(*alist)
-        elif isinstance(alist, int):
-            temp = copy(self)
-            for i in range(alist - 1):
-                temp //= self
-            return temp
         elif isinstance(alist, (str, note)):
             return self.on(alist)
 
@@ -648,9 +643,9 @@ class chord:
     def __add__(self, obj):
         if isinstance(obj, (int, list)):
             return self.up(obj)
-        if isinstance(obj, tuple):
+        elif isinstance(obj, tuple):
             return self.up(*obj)
-        if isinstance(obj, rest):
+        elif isinstance(obj, rest):
             return self.rest(obj.duration)
         temp = copy(self)
         if isinstance(obj, note):
@@ -659,10 +654,7 @@ class chord:
         elif isinstance(obj, str):
             return temp + mp.to_note(obj)
         elif isinstance(obj, chord):
-            obj = copy(obj)
-            temp.notes += obj.notes
-            temp.interval += obj.interval
-            temp.other_messages += obj.other_messages
+            temp |= obj
         return temp
 
     def __radd__(self, obj):
@@ -681,9 +673,6 @@ class chord:
                                 obj.get_duration())
             return temp
 
-    def __rfloordiv__(self, obj):
-        return obj | self
-
     def __pos__(self):
         return self.up()
 
@@ -693,7 +682,7 @@ class chord:
     def __invert__(self):
         return self.reverse()
 
-    def __floordiv__(self, obj):
+    def __or__(self, obj):
         if isinstance(obj, (int, float)):
             return self.rest(obj)
         elif isinstance(obj, str):
@@ -716,9 +705,6 @@ class chord:
         elif isinstance(obj, rest):
             return self.rest(obj.get_duration())
         return self.add(obj, mode='after')
-
-    def __or__(self, other):
-        return self // other
 
     def __xor__(self, obj):
         if isinstance(obj, int):
@@ -903,9 +889,8 @@ class chord:
 
     def __mul__(self, num):
         temp = copy(self)
-        unit = copy(temp)
         for i in range(num - 1):
-            temp += unit
+            temp |= self
         return temp
 
     def __rmul__(self, num):
@@ -987,7 +972,7 @@ class chord:
             return result
         return [database.INTERVAL[x % database.octave] for x in result]
 
-    def add(self, note1=None, mode='tail', start=0, duration=0.25):
+    def add(self, note1=None, mode='after', start=0, duration=0.25):
         if len(self) == 0:
             result = copy(note1)
             if start != 0:
@@ -1000,7 +985,11 @@ class chord:
         if len(note1) == 0:
             return temp
         if mode == 'tail':
-            return temp + note1
+            note1 = copy(note1)
+            temp.notes += note1.notes
+            temp.interval += note1.interval
+            temp.other_messages += note1.other_messages
+            return temp
         elif mode == 'head':
             note1 = copy(note1)
             if isinstance(note1, chord):
@@ -1058,9 +1047,11 @@ class chord:
                          note1.other_messages) + not_notes
         elif mode == 'after':
             if self.interval[-1] == 0:
-                return (self.rest(0) | (start + note1.start_time)) + note1
+                return (self.rest(0) | (start + note1.start_time)).add(
+                    note1, mode='tail')
             else:
-                return (self | (start + note1.start_time)) + note1
+                return (self | (start + note1.start_time)).add(note1,
+                                                               mode='tail')
 
     def inversion(self, num=1):
         if not 1 <= num < len(self.notes):
@@ -1073,7 +1064,7 @@ class chord:
                 temp.notes.append(temp.notes.pop(0) + database.octave)
             return temp
 
-    def inv(self, num=1):
+    def inv(self, num=1, interval=None):
         temp = self.copy()
         if isinstance(num, str):
             return self @ num
@@ -1083,7 +1074,9 @@ class chord:
             )
         while temp[num].degree >= temp[num - 1].degree:
             temp[num] = temp[num].down(database.octave)
+        current_interval = copy(temp.interval)
         temp.insert(0, temp.pop(num))
+        temp.interval = current_interval
         return temp
 
     def sort(self, indlist, rootpitch=None):
@@ -3046,12 +3039,6 @@ class piece:
             temp.tracks[i] *= n
         return temp
 
-    def __mod__(self, n):
-        temp = copy(self)
-        for i in range(temp.track_number):
-            temp.tracks[i] %= n
-        return temp
-
     def __or__(self, n):
         temp = copy(self)
         whole_length = temp.bars()
@@ -4207,11 +4194,6 @@ class track:
         temp.content *= n
         return temp
 
-    def __mod__(self, n):
-        temp = copy(self)
-        temp.content %= n
-        return temp
-
     def __pos__(self):
         return self.up()
 
@@ -4724,19 +4706,19 @@ class drum:
         current_append_volumes = [default_volume for i in current_append_notes]
         if translate_mode == 0:
             current_append_notes = [
-                self._convert_to_note(each_note, mapping) if each_note not in [
-                    current_rest_symbol, current_continue_symbol
-                ] else self._convert_to_symbol(each_note, current_rest_symbol,
-                                               current_continue_symbol)
+                self._convert_to_note(each_note, mapping) if all(
+                    not each_note.startswith(j)
+                    for j in [current_rest_symbol, current_continue_symbol])
+                else self._convert_to_symbol(each_note, current_rest_symbol,
+                                             current_continue_symbol)
                 for each_note in current_append_notes
             ]
         else:
             new_current_append_notes = []
             for each_note in current_append_notes:
                 if ':' not in each_note:
-                    if each_note not in [
-                            current_rest_symbol, current_continue_symbol
-                    ]:
+                    if all(not each_note.startswith(j) for j in
+                           [current_rest_symbol, current_continue_symbol]):
                         current_each_note = self._convert_to_note(each_note,
                                                                   mode=1)
                         new_current_append_notes.append(current_each_note)
@@ -4931,19 +4913,19 @@ class drum:
         current_append_notes = [i for i in current_append_notes if i]
         if translate_mode == 0:
             current_append_notes = [
-                self._convert_to_note(each_note, mapping) if each_note not in [
-                    current_rest_symbol, current_continue_symbol
-                ] else self._convert_to_symbol(each_note, current_rest_symbol,
-                                               current_continue_symbol)
+                self._convert_to_note(each_note, mapping) if all(
+                    not each_note.startswith(j)
+                    for j in [current_rest_symbol, current_continue_symbol])
+                else self._convert_to_symbol(each_note, current_rest_symbol,
+                                             current_continue_symbol)
                 for each_note in current_append_notes
             ]
         else:
             new_current_append_notes = []
             for each_note in current_append_notes:
                 if ':' not in each_note:
-                    if each_note not in [
-                            current_rest_symbol, current_continue_symbol
-                    ]:
+                    if all(not each_note.startswith(j) for j in
+                           [current_rest_symbol, current_continue_symbol]):
                         current_each_note = self._convert_to_note(each_note,
                                                                   mode=1)
                         new_current_append_notes.append(current_each_note)
@@ -5071,11 +5053,17 @@ class drum:
 
     def _convert_to_symbol(self, text, current_rest_symbol,
                            current_continue_symbol):
+        dotted_num = 0
+        if '.' in text:
+            text, dotted = text.split('.', 1)
+            dotted_num = len(dotted) + 1
         if text == current_rest_symbol:
-            text = rest_symbol()
+            result = rest_symbol()
         elif text == current_continue_symbol:
-            text = continue_symbol()
-        return text
+            result = continue_symbol()
+        result.dotted_num = dotted_num
+        result.mode = None
+        return result
 
     def _convert_to_note(self, text, mapping=None, mode=0):
         dotted_num = 0
@@ -5097,14 +5085,15 @@ class drum:
                 ind2 = len(text)
                 if '[' in text:
                     ind2 = text.index('[')
-                if all(i == '.' for i in text[ind:ind2]):
-                    text, dotted = text[:ind2].split('.', 1)
-                    dotted += '.'
-                    result = len(dotted)
-                else:
-                    raise Exception(
-                        'for drum notes group, dotted notes syntax should be placed after the last note'
-                    )
+                if ind2 > ind:
+                    if all(i == '.' for i in text[ind:ind2]):
+                        text, dotted = text[:ind2].split('.', 1)
+                        dotted += '.'
+                        result = len(dotted)
+                    else:
+                        raise Exception(
+                            'for drum notes group, dotted notes syntax should be placed after the last note'
+                        )
         else:
             result = text.dotted_num
         return result
@@ -5117,7 +5106,7 @@ class drum:
 
     def __mul__(self, n):
         temp = copy(self)
-        temp.notes %= n
+        temp.notes *= n
         return temp
 
     def __add__(self, other):
@@ -5141,11 +5130,6 @@ class drum:
         temp.notes |= (other.notes if isinstance(other, drum) else other)
         return temp
 
-    def __mod__(self, n):
-        temp = copy(self)
-        temp.notes %= n
-        return temp
-
     def set(self, durations=None, intervals=None, volumes=None):
         return self % (durations, intervals, volumes)
 
@@ -5157,10 +5141,11 @@ class drum:
 
 class event:
 
-    def __init__(self, type, track=0, start_time=0, **kwargs):
+    def __init__(self, type, track=0, start_time=0, is_meta=False, **kwargs):
         self.type = type
         self.track = track
         self.start_time = start_time
+        self.is_meta = is_meta
         self.__dict__.update(kwargs)
 
     def __repr__(self):
