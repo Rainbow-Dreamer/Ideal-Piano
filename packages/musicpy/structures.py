@@ -3018,6 +3018,34 @@ class piece:
                 self.sampler_channels.append(0)
         self.track_number += 1
 
+    def insert(self, i, new_track):
+        if not isinstance(new_track, track):
+            raise ValueError('must be a track type to be inserted')
+        self.tracks.insert(i, new_track.content)
+        self.instruments.insert(i, new_track.instrument)
+        self.instruments_numbers.insert(i, new_track.instruments_number)
+        self.start_times.insert(i, new_track.start_time)
+        if self.channels:
+            if new_track.channel:
+                self.channels.insert(i, new_track.channel)
+            else:
+                self.channels.insert(i, max(self.channels) + 1)
+        if self.track_names:
+            if new_track.track_name:
+                self.track_names.insert(i, new_track.track_name)
+            else:
+                self.track_names.insert(
+                    i, new_track.name if new_track.name is not None else
+                    f'track {self.track_number+1}')
+        self.pan.insert(i, new_track.pan if new_track.pan else [])
+        self.volume.insert(i, new_track.volume if new_track.volume else [])
+        if self.sampler_channels:
+            if new_track.sampler_channel:
+                self.sampler_channels.insert(i, new_track.sampler_channel)
+            else:
+                self.sampler_channels.insert(i, 0)
+        self.track_number += 1
+
     def up(self, n=1, mode=0):
         temp = copy(self)
         for i in range(temp.track_number):
@@ -3035,12 +3063,6 @@ class piece:
         return temp
 
     def __mul__(self, n):
-        temp = copy(self)
-        for i in range(temp.track_number):
-            temp.tracks[i] *= n
-        return temp
-
-    def __or__(self, n):
         temp = copy(self)
         whole_length = temp.bars()
         for i in range(temp.track_number):
@@ -3072,6 +3094,10 @@ class piece:
             temp.tracks[i] = current
         return temp
 
+    def __or__(self, n):
+        if isinstance(n, piece):
+            return self + n
+
     def __and__(self, n):
         if isinstance(n, tuple):
             n, start_time = n
@@ -3102,17 +3128,16 @@ class piece:
     def __call__(self, ind):
         return self.tracks[ind]
 
-    def merge_track(self, n, mode='after', start_time=0, keep_tempo=True):
+    def merge_track(self, n, mode='after', start_time=0):
         temp = copy(self)
         temp2 = copy(n)
-        temp_length = temp.bars()
         if temp.channels is not None:
             free_channel_numbers = [
                 i for i in range(16) if i not in temp.channels
             ]
             counter = 0
         if mode == 'after':
-            start_time = temp_length
+            start_time = temp.bars()
         for i in range(len(temp2)):
             current_instrument_number = temp2.instruments_numbers[i]
             if current_instrument_number in temp.instruments_numbers:
@@ -3159,8 +3184,6 @@ class piece:
                     temp.channels.append(current_channel_number)
                 if temp.track_names is not None:
                     temp.track_names.append(temp2.track_names[i])
-        if mode == 'after' and keep_tempo:
-            temp.add_tempo_change(temp2.bpm, temp_length)
         temp.track_number = len(temp.tracks)
         return temp
 
