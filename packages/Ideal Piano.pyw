@@ -646,7 +646,7 @@ class piano_window(pyglet.window.Window):
             batch=self.batch,
             group=self.piano_key)
         self.current_progress_bar.opacity = piano_config.progress_bar_opacity
-        self.progress_bar_length = piano_config.screen_size[0]
+        self.progress_bar_length = self.width
 
     def use_soundfont_msg_box(self):
         app = QtWidgets.QApplication(sys.argv)
@@ -854,6 +854,8 @@ class piano_window(pyglet.window.Window):
                     current_place = self.initial_note_names_place[i]
                     each.x = current_place[0] * scale_x
                     each.y = current_place[1] * scale_y
+            self.current_progress_bar.height = piano_config.white_key_y * scale_y
+            self.progress_bar_length = self.width
 
     def _go_back_func(self):
         pygame.mixer.stop()
@@ -1658,6 +1660,7 @@ class piano_engine:
             return
 
     def _midi_show_init_note_list(self, musicsheet, unit_time):
+        self.bars_drop_time.clear()
         musicsheet.clear_pitch_bend('all')
         self.musicsheet = musicsheet
         self.wholenotes = self.musicsheet.notes
