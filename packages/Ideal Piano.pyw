@@ -457,6 +457,7 @@ class piano_window(pyglet.window.Window):
             width=piano_config.current_detect_key_label_width)
 
     def init_music_analysis(self):
+        self.music_analysis_list = []
         if piano_config.show_music_analysis:
             self.music_analysis_label = pyglet.text.Label(
                 '',
@@ -471,12 +472,12 @@ class piano_window(pyglet.window.Window):
                 multiline=True,
                 width=piano_config.music_analysis_width)
             if piano_config.music_analysis_file:
-                with open(piano_config.music_analysis_file,
-                          encoding='utf-8') as f:
-                    data = f.read()
+                try:
+                    with open(piano_config.music_analysis_file,
+                              encoding='utf-8') as f:
+                        data = f.read()
                     lines = [i for i in data.split('\n\n') if i]
-                    self.music_analysis_list = []
-                    self.current_key = None
+                    current_key = None
                     bar_counter = 0
                     for each in lines:
                         if each:
@@ -488,12 +489,14 @@ class piano_window(pyglet.window.Window):
                                 else:
                                     bar_counter = eval(current_bar) - 1
                                 current_chords = '\n'.join(current[1:])
-                                if self.current_key:
-                                    current_chords = f'{piano_config.key_header}{self.current_key}\n' + current_chords
+                                if current_key:
+                                    current_chords = f'{piano_config.key_header}{current_key}\n' + current_chords
                                 self.music_analysis_list.append(
                                     [bar_counter, current_chords])
                             else:
-                                self.current_key = each.split('key: ')[1]
+                                current_key = each.split('key: ')[1]
+                except:
+                    self.music_analysis_list = []
 
     def init_piano_keys(self):
         self.piano_height = piano_config.white_key_y + piano_config.white_key_height
@@ -1680,7 +1683,10 @@ class piano_engine:
                         currentnote, 0
                     ]
                 else:
-                    current_drop_time = [currentstart, currentnote, 0]
+                    current_drop_time = [
+                        currentstart + piano_config.bars_mode_delay_time,
+                        currentnote, 0
+                    ]
                 self.bars_drop_time.append(current_drop_time)
                 current_start_time += interval
 
@@ -2132,7 +2138,7 @@ class piano_engine:
 
     def _midi_show_draw_notes_bars_drop_mode(self):
         if self.bars_drop_time:
-            for next_bar_drop in self.bars_drop_time:
+            for i, next_bar_drop in enumerate(self.bars_drop_time):
                 current_bars_drop_start_time, current_note, status = next_bar_drop
                 if status == 0 and self.current_past_time >= current_bars_drop_start_time:
                     places = current_piano_window.note_place[
@@ -2159,13 +2165,14 @@ class piano_engine:
                     current_bar.num = current_note.degree - 21
                     current_bar.hit_key = False
                     current_bar.current_note = current_note
+                    current_bar.ind = i
                     self.plays.append(current_bar)
                     next_bar_drop[2] = 1
 
     def _midi_show_draw_notes_bars_mode(self, mode=0):
         if self.bars_drop_time:
             changed = False
-            for next_bar_drop in self.bars_drop_time:
+            for i, next_bar_drop in enumerate(self.bars_drop_time):
                 current_bars_drop_start_time, current_note, status = next_bar_drop
                 if status == 0 and self.current_past_time >= current_bars_drop_start_time:
                     places = current_piano_window.note_place[
@@ -2196,12 +2203,21 @@ class piano_engine:
                     current_bar.num = current_note.degree - 21
                     current_bar.hit_key = False
                     current_bar.current_note = current_note
+                    current_bar.ind = i
                     self.plays.append(current_bar)
                     current_piano_window.piano_keys[
                         current_note.degree - 21].color = current_bar.color
                     next_bar_drop[2] = 1
                     self.current_hit_key_notes.append(current_note)
                     changed = True
+
+                    if piano_config.show_music_analysis:
+                        if self.show_music_analysis_list:
+                            for current_music_analysis in self.show_music_analysis_list:
+                                if i == current_music_analysis[0]:
+                                    current_piano_window.music_analysis_label.text = current_music_analysis[
+                                        1]
+                                    break
             if changed:
                 self._midi_show_update_notes()
 
@@ -2341,6 +2357,15 @@ class piano_engine:
                 self.current_hit_key_notes.append(each.current_note)
                 current_piano_window.piano_keys[each.num].color = each.color
                 changed = True
+
+                if piano_config.show_music_analysis:
+                    if self.show_music_analysis_list:
+                        for current_music_analysis in self.show_music_analysis_list:
+                            if each.ind == current_music_analysis[0]:
+                                current_piano_window.music_analysis_label.text = current_music_analysis[
+                                    1]
+                                break
+
             if each.height + each.y <= current_piano_window.piano_height:
                 each.batch = None
                 current_piano_window.piano_keys[
