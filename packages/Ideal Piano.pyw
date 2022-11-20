@@ -180,19 +180,17 @@ class ideal_piano_button:
         self.img = get_image(img).get_transform()
         self.img.width /= piano_config.button_resize_num
         self.img.height /= piano_config.button_resize_num
-        self.x = x
-        self.y = y
-        self.button = pyglet.sprite.Sprite(self.img, x=self.x, y=self.y)
+        self.button = pyglet.sprite.Sprite(self.img, x=x, y=y)
         self.button.opacity = piano_config.button_opacity
-        self.ranges = [self.x, self.x + self.img.width
-                       ], [self.y, self.y + self.img.height]
+        self.ranges = [x, x + self.button.width], [y, y + self.button.height]
 
     def get_range(self):
-        height, width = self.img.height, self.img.width
-        return [self.x, self.x + width], [self.y, self.y + height]
+        height, width = self.button.height, self.button.width
+        x, y = self.button.x, self.button.y
+        return [x, x + width], [y, y + height]
 
     def inside(self, mouse_pos):
-        range_x, range_y = self.ranges
+        range_x, range_y = self.get_range()
         return range_x[0] <= mouse_pos[0] <= range_x[1] and range_y[
             0] <= mouse_pos[1] <= range_y[1]
 
@@ -219,6 +217,7 @@ class piano_window(pyglet.window.Window):
         self.init_screen_labels()
         self.init_music_analysis()
         self.init_progress_bar()
+        self.push_handlers(on_resize=self.local_on_resize)
 
     def init_window(self):
         super(piano_window, self).__init__(
@@ -358,14 +357,20 @@ class piano_window(pyglet.window.Window):
                                         (self.bars_drop_interval / 2)) * 1.97
             else:
                 current_adjust_ratio = piano_config.adjust_ratio
-            self.bar_steps = (distances /
-                              self.bars_drop_interval) / current_adjust_ratio
+            self.drop_bar_steps = (
+                distances / self.bars_drop_interval) / current_adjust_ratio
             self.bar_unit = piano_config.bar_unit / (self.bars_drop_interval /
                                                      2)
+            self.init_drop_bar_steps = copy(self.drop_bar_steps)
+            self.bar_steps = piano_config.bar_steps
         else:
             self.bar_steps = piano_config.bar_steps
             self.bars_drop_interval = piano_config.bars_drop_interval
             self.bar_unit = piano_config.bar_unit
+            self.drop_bar_steps = None
+        self.bar_hold_increase = piano_config.bar_hold_increase
+        self.init_bar_unit = copy(self.bar_unit)
+        self.bars_drop_place = piano_config.bars_drop_place
 
     def init_screen_buttons(self):
         if piano_config.language == 'Chinese':
@@ -598,6 +603,9 @@ class piano_window(pyglet.window.Window):
                     batch=self.batch,
                     group=self.piano_keys_note_name)
                 self.piano_keys_note_names_label.append(current_label)
+        self.bar_width = piano_config.bar_width
+        self.bar_height = piano_config.bar_height
+        self.bar_y = piano_config.bar_y
 
     def init_parameters(self):
         self.mouse_left = 1
@@ -723,6 +731,116 @@ class piano_window(pyglet.window.Window):
             self._draw_window_first_time()
         else:
             self._draw_window()
+
+    def local_on_resize(self, width, height):
+        if piano_config.resize_screen:
+            scale_x = width / piano_config.background_size[0]
+            scale_y = height / piano_config.background_size[1]
+            self.background.scale_x = scale_x
+            self.background.scale_y = scale_y
+            self.piano_background_show.scale_x = scale_x
+            self.piano_background_show.scale_y = scale_y
+            current_white_key_interval = piano_config.white_key_interval * scale_x
+            white_key_counter = 0
+            black_key_counter = 0
+            black_keys_set_num = len(piano_config.black_keys_set)
+            black_keys_set_length = sum(piano_config.black_keys_set)
+            current_piano_engine.reset_all_piano_keys()
+            if self.mode_num == 2:
+                current_piano_engine._midi_show_clear_all_bars_drop()
+            for each in self.piano_keys:
+                if each.color == piano_config.white_key_color:
+                    each.width = piano_config.white_key_width * scale_x
+                    each.height = piano_config.white_key_height * scale_y
+                    each.x = piano_config.white_key_start_x + current_white_key_interval * white_key_counter
+                    each.y = piano_config.white_key_y * scale_y
+                    white_key_counter += 1
+                elif each.color == piano_config.black_key_color:
+                    each.width = piano_config.black_key_width * scale_x
+                    each.height = piano_config.black_key_height * scale_y
+                    if black_key_counter == 0:
+                        each.x = piano_config.black_key_first_x * scale_x
+                        each.y = piano_config.black_key_y * scale_y
+                    else:
+                        current_black_key_set_num, current_black_key_ind = divmod(
+                            black_key_counter - 1, black_keys_set_num)
+                        each.x = (piano_config.black_key_start_x +
+                                  (black_keys_set_length +
+                                   piano_config.black_keys_set_interval) *
+                                  current_black_key_set_num +
+                                  sum(piano_config.
+                                      black_keys_set[:current_black_key_ind +
+                                                     1])) * scale_x
+                        each.y = piano_config.black_key_y * scale_y
+                    black_key_counter += 1
+            self.note_place = [(each.x, each.y) for each in self.piano_keys]
+            self.piano_height = (piano_config.white_key_y +
+                                 piano_config.white_key_height) * scale_y
+            self.bars_drop_place = piano_config.bars_drop_place * scale_y
+            self.bar_width = piano_config.bar_width * scale_x
+            self.bar_height = piano_config.bar_height * scale_y
+            self.bar_y = piano_config.bar_y * scale_y
+            self.bar_offset_x = piano_config.bar_offset_x * scale_x
+            self.bar_steps = piano_config.bar_steps * scale_y
+            if self.drop_bar_steps is not None:
+                self.drop_bar_steps = self.init_drop_bar_steps * scale_y
+            self.bar_hold_increase = piano_config.bar_hold_increase * scale_y
+            self.bar_unit = self.init_bar_unit * scale_y
+
+            self.go_back_button.button.x = piano_config.go_back_place[
+                0] * scale_x
+            self.go_back_button.button.y = piano_config.go_back_place[
+                1] * scale_y
+            self.go_back_button.button.scale_x = scale_x
+            self.go_back_button.button.scale_y = scale_y
+
+            self.self_play_button.button.x = piano_config.self_play_place[
+                0] * scale_x
+            self.self_play_button.button.y = piano_config.self_play_place[
+                1] * scale_y
+            self.self_play_button.button.scale_x = scale_x
+            self.self_play_button.button.scale_y = scale_y
+
+            self.self_midi_button.button.x = piano_config.self_midi_place[
+                0] * scale_x
+            self.self_midi_button.button.y = piano_config.self_midi_place[
+                1] * scale_y
+            self.self_midi_button.button.scale_x = scale_x
+            self.self_midi_button.button.scale_y = scale_y
+
+            self.play_midi_button.button.x = piano_config.play_midi_place[
+                0] * scale_x
+            self.play_midi_button.button.y = piano_config.play_midi_place[
+                1] * scale_y
+            self.play_midi_button.button.scale_x = scale_x
+            self.play_midi_button.button.scale_y = scale_y
+
+            self.settings_button.button.x = piano_config.settings_place[
+                0] * scale_x
+            self.settings_button.button.y = piano_config.settings_place[
+                1] * scale_y
+            self.settings_button.button.scale_x = scale_x
+            self.settings_button.button.scale_y = scale_y
+
+            if piano_config.show_notes:
+                self.label.x = piano_config.label1_place[0] * scale_x
+                self.label.y = piano_config.label1_place[1] * scale_y
+            if piano_config.show_chord:
+                self.label2.x = piano_config.label2_place[0] * scale_x
+                self.label2.y = piano_config.label2_place[1] * scale_y
+            if self.message_label:
+                self.label3.x = piano_config.label3_place[0] * scale_x
+                self.label3.y = piano_config.label3_place[1] * scale_y
+            if piano_config.show_chord_details:
+                self.chord_details_label.x = piano_config.chord_details_label_place[
+                    0] * scale_x
+                self.chord_details_label.y = piano_config.chord_details_label_place[
+                    1] * scale_y
+            if piano_config.show_current_detect_key:
+                self.current_detect_key_label.x = piano_config.current_detect_key_label_place[
+                    0] * scale_x
+                self.current_detect_key_label.y = piano_config.current_detect_key_label_place[
+                    1] * scale_y
 
     def _go_back_func(self):
         pygame.mixer.stop()
@@ -926,6 +1044,7 @@ class piano_window(pyglet.window.Window):
         self.init_screen_labels()
         self.init_music_analysis()
         self.init_progress_bar()
+        self.local_on_resize(self.width, self.height)
 
 
 class piano_engine:
@@ -1077,6 +1196,10 @@ class piano_engine:
         current_piano_window.piano_keys[
             each.degree -
             21].color = current_piano_window.initial_colors[each.degree - 21]
+
+    def reset_all_piano_keys(self):
+        for i, each in enumerate(current_piano_window.piano_keys):
+            each.color = current_piano_window.initial_colors[i]
 
     def _detect_chord(self, current_chord):
         if not isinstance(current_chord, mp.chord):
@@ -1608,9 +1731,9 @@ class piano_engine:
         places = current_piano_window.note_place[current_note.degree - 21]
         current_bar = pyglet.shapes.BorderedRectangle(
             x=places[0] + current_piano_window.bar_offset_x,
-            y=piano_config.bar_y,
-            width=piano_config.bar_width,
-            height=piano_config.bar_height,
+            y=current_piano_window.bar_y,
+            width=current_piano_window.bar_width,
+            height=current_piano_window.bar_height,
             color=piano_config.bar_color if piano_config.color_mode == 'normal'
             else (random.randint(0, 255), random.randint(0, 255),
                   random.randint(0, 255)),
@@ -1664,8 +1787,8 @@ class piano_engine:
         i = 0
         while i < len(self.plays):
             each = self.plays[i]
-            each.y += piano_config.bar_steps
-            if each.y >= current_piano_window.screen_height:
+            each.y += current_piano_window.bar_steps
+            if each.y >= current_piano_window.height:
                 each.batch = None
                 del self.plays[i]
                 continue
@@ -1673,7 +1796,7 @@ class piano_engine:
         for k in self.still_hold_pc:
             current_hold_note, current_bar = k
             if current_hold_note in self.truecurrent:
-                current_bar.height += piano_config.bar_hold_increase
+                current_bar.height += current_piano_window.bar_hold_increase
             else:
                 self.plays.append(current_bar)
                 self.still_hold_pc.remove(k)
@@ -1841,9 +1964,9 @@ class piano_engine:
                             current_note.degree - 21]
                         current_bar = pyglet.shapes.BorderedRectangle(
                             x=places[0] + current_piano_window.bar_offset_x,
-                            y=piano_config.bar_y,
-                            width=piano_config.bar_width,
-                            height=piano_config.bar_height,
+                            y=current_piano_window.bar_y,
+                            width=current_piano_window.bar_width,
+                            height=current_piano_window.bar_height,
                             color=piano_config.bar_color
                             if piano_config.color_mode == 'normal' else
                             (random.randint(0, 255), random.randint(0, 255),
@@ -1924,8 +2047,8 @@ class piano_engine:
             i = 0
             while i < len(self.plays):
                 each = self.plays[i]
-                each.y += piano_config.bar_steps
-                if each.y >= current_piano_window.screen_height:
+                each.y += current_piano_window.bar_steps
+                if each.y >= current_piano_window.height:
                     each.batch = None
                     del self.plays[i]
                     continue
@@ -1933,7 +2056,7 @@ class piano_engine:
             for k in self.still_hold:
                 current_hold_note, current_bar = k
                 if current_hold_note in self.current_play:
-                    current_bar.height += piano_config.bar_hold_increase
+                    current_bar.height += current_piano_window.bar_hold_increase
                 else:
                     self.plays.append(current_bar)
                     self.still_hold.remove(k)
@@ -1984,8 +2107,8 @@ class piano_engine:
                         current_note.degree - 21]
                     current_bar = pyglet.shapes.BorderedRectangle(
                         x=places[0] + current_piano_window.bar_offset_x,
-                        y=current_piano_window.screen_height,
-                        width=piano_config.bar_width,
+                        y=current_piano_window.height,
+                        width=current_piano_window.bar_width,
                         height=current_piano_window.bar_unit *
                         current_note.duration / (self.bpm / 130),
                         color=current_note.own_color
@@ -2019,8 +2142,8 @@ class piano_engine:
                         self.bpm / 130)
                     current_bar = pyglet.shapes.BorderedRectangle(
                         x=places[0] + current_piano_window.bar_offset_x,
-                        y=piano_config.bar_y - current_height,
-                        width=piano_config.bar_width,
+                        y=current_piano_window.bar_y - current_height,
+                        width=current_piano_window.bar_width,
                         height=current_height,
                         color=current_note.own_color
                         if piano_config.use_track_colors else
@@ -2159,15 +2282,15 @@ class piano_engine:
         i = 0
         while i < len(self.plays):
             each = self.plays[i]
-            each.y += current_piano_window.bar_steps
-            if not each.hit_key and each.y >= piano_config.bar_y:
+            each.y += current_piano_window.drop_bar_steps
+            if not each.hit_key and each.y >= current_piano_window.bar_y:
                 each.hit_key = True
                 current_piano_window.piano_keys[
                     each.num].color = current_piano_window.initial_colors[
                         each.num]
                 self.current_hit_key_notes.remove(each.current_note)
                 changed = True
-            if each.y >= current_piano_window.screen_height:
+            if each.y >= current_piano_window.height:
                 each.batch = None
                 del self.plays[i]
                 continue
@@ -2180,8 +2303,8 @@ class piano_engine:
         i = 0
         while i < len(self.plays):
             each = self.plays[i]
-            each.y -= current_piano_window.bar_steps
-            if not each.hit_key and each.y <= piano_config.bars_drop_place:
+            each.y -= current_piano_window.drop_bar_steps
+            if not each.hit_key and each.y <= current_piano_window.bars_drop_place:
                 each.hit_key = True
                 self.current_hit_key_notes.append(each.current_note)
                 current_piano_window.piano_keys[each.num].color = each.color

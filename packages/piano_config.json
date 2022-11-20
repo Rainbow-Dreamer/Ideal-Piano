@@ -67,6 +67,7 @@
     ],
     "button_resize_num": 2.3,
     "button_opacity": 255,
+    "resize_screen": true,
     "fps": 70,
     "key_settings": {
         "z": "A#1",
