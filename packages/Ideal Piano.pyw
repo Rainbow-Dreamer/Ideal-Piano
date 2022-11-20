@@ -349,10 +349,6 @@ class piano_window(pyglet.window.Window):
     def init_note_mode(self):
         current_piano_engine.plays = []
         if piano_config.note_mode == 'bars drop':
-            self.bar_steps = piano_config.bar_steps
-            self.drop_bar_steps = (
-                distances / self.bars_drop_interval) / current_adjust_ratio
-            self.init_drop_bar_steps = copy(self.drop_bar_steps)
             current_piano_engine.bars_drop_time = []
             distances = self.screen_height - self.piano_height
             self.bars_drop_interval = piano_config.bars_drop_interval
@@ -363,6 +359,10 @@ class piano_window(pyglet.window.Window):
                 current_adjust_ratio = piano_config.adjust_ratio
             self.bar_unit = piano_config.bar_unit / (self.bars_drop_interval /
                                                      2)
+            self.bar_steps = piano_config.bar_steps
+            self.drop_bar_steps = (
+                distances / self.bars_drop_interval) / current_adjust_ratio
+            self.init_drop_bar_steps = copy(self.drop_bar_steps)
         else:
             self.bar_steps = piano_config.bar_steps
             self.drop_bar_steps = piano_config.bar_steps
