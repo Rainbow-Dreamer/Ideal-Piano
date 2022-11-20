@@ -349,6 +349,10 @@ class piano_window(pyglet.window.Window):
     def init_note_mode(self):
         current_piano_engine.plays = []
         if piano_config.note_mode == 'bars drop':
+            self.bar_steps = piano_config.bar_steps
+            self.drop_bar_steps = (
+                distances / self.bars_drop_interval) / current_adjust_ratio
+            self.init_drop_bar_steps = copy(self.drop_bar_steps)
             current_piano_engine.bars_drop_time = []
             distances = self.screen_height - self.piano_height
             self.bars_drop_interval = piano_config.bars_drop_interval
@@ -357,17 +361,14 @@ class piano_window(pyglet.window.Window):
                                         (self.bars_drop_interval / 2)) * 1.97
             else:
                 current_adjust_ratio = piano_config.adjust_ratio
-            self.drop_bar_steps = (
-                distances / self.bars_drop_interval) / current_adjust_ratio
             self.bar_unit = piano_config.bar_unit / (self.bars_drop_interval /
                                                      2)
-            self.init_drop_bar_steps = copy(self.drop_bar_steps)
-            self.bar_steps = piano_config.bar_steps
         else:
             self.bar_steps = piano_config.bar_steps
+            self.drop_bar_steps = piano_config.bar_steps
+            self.init_drop_bar_steps = copy(self.drop_bar_steps)
             self.bars_drop_interval = piano_config.bars_drop_interval
             self.bar_unit = piano_config.bar_unit
-            self.drop_bar_steps = None
         self.bar_hold_increase = piano_config.bar_hold_increase
         self.init_bar_unit = copy(self.bar_unit)
         self.bars_drop_place = piano_config.bars_drop_place
@@ -603,6 +604,9 @@ class piano_window(pyglet.window.Window):
                     batch=self.batch,
                     group=self.piano_keys_note_name)
                 self.piano_keys_note_names_label.append(current_label)
+            self.initial_note_names_place = [
+                [i.x, i.y] for i in self.piano_keys_note_names_label
+            ]
         self.bar_width = piano_config.bar_width
         self.bar_height = piano_config.bar_height
         self.bar_y = piano_config.bar_y
@@ -746,7 +750,11 @@ class piano_window(pyglet.window.Window):
             black_keys_set_num = len(piano_config.black_keys_set)
             black_keys_set_length = sum(piano_config.black_keys_set)
             current_piano_engine.reset_all_piano_keys()
-            if self.mode_num == 2:
+            if self.mode_num == 0:
+                current_piano_engine._pc_clear_all_bars()
+            elif self.mode_num == 1:
+                current_piano_engine._midi_keyboard_clear_all_bars()
+            elif self.mode_num == 2:
                 current_piano_engine._midi_show_clear_all_bars_drop()
             for each in self.piano_keys:
                 if each.color == piano_config.white_key_color:
@@ -782,8 +790,7 @@ class piano_window(pyglet.window.Window):
             self.bar_y = piano_config.bar_y * scale_y
             self.bar_offset_x = piano_config.bar_offset_x * scale_x
             self.bar_steps = piano_config.bar_steps * scale_y
-            if self.drop_bar_steps is not None:
-                self.drop_bar_steps = self.init_drop_bar_steps * scale_y
+            self.drop_bar_steps = self.init_drop_bar_steps * scale_y
             self.bar_hold_increase = piano_config.bar_hold_increase * scale_y
             self.bar_unit = self.init_bar_unit * scale_y
 
@@ -841,6 +848,12 @@ class piano_window(pyglet.window.Window):
                     0] * scale_x
                 self.current_detect_key_label.y = piano_config.current_detect_key_label_place[
                     1] * scale_y
+
+            if piano_config.show_note_name_on_piano_key:
+                for i, each in enumerate(self.piano_keys_note_names_label):
+                    current_place = self.initial_note_names_place[i]
+                    each.x = current_place[0] * scale_x
+                    each.y = current_place[1] * scale_y
 
     def _go_back_func(self):
         pygame.mixer.stop()
@@ -1801,6 +1814,14 @@ class piano_engine:
                 self.plays.append(current_bar)
                 self.still_hold_pc.remove(k)
 
+    def _pc_clear_all_bars(self):
+        for each in self.still_hold_pc:
+            each[1].batch = None
+        self.still_hold_pc.clear()
+        for each in self.plays:
+            each.batch = None
+        self.plays.clear()
+
     def _pc_update_notes(self):
         self.changed = False
         if piano_config.delay:
@@ -1906,6 +1927,14 @@ class piano_engine:
             else:
                 current_piano_window.label.text = '[]'
                 current_piano_window.label2.text = ''
+
+    def _midi_keyboard_clear_all_bars(self):
+        for each in self.still_hold:
+            each[1].batch = None
+        self.still_hold.clear()
+        for each in self.plays:
+            each.batch = None
+        self.plays.clear()
 
     def _midi_keyboard_update_notes(self):
         if (not self.sostenuto_pedal_on) and self.last != self.current_play:
