@@ -81,6 +81,8 @@ button_resize_num: the resize ratio of button size
 
 button_opacity: the opacity of button
 
+resize_screen: Whether to resize the components when changing the screen size while using the software
+
 fps: frames per second of the screen
 
 key_settings: The dictionary of the 88 keys of the computer keyboard, please note that all the files in the sound path must contain the keys you have set to
@@ -140,6 +142,8 @@ play_midi_start_process_time: time in seconds to open the process that sends MID
 move_progress_adjust_time: the delay time in seconds when changing the progress bar
 
 use_soundfont_delay_time: the delay time in seconds when use SoundFont files to play MIDI files under note mode `bars drop`
+
+bars_mode_delay_time: delay time when note mode is `bars`
 
 play_midi_reset_sounds: Whether to mute all sounds when pausing or changing progress while playing MIDI files
 
