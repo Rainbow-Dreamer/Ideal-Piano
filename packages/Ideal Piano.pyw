@@ -691,6 +691,7 @@ class piano_window(pyglet.window.Window):
                                      piano_config_path)
                     piano_config.background_image = current_path
                     self.init_screen()
+                    self.local_on_resize(self.width, self.height)
                 elif 'mid' in type_name:
                     if self.click_mode is None:
                         init_result = current_piano_engine.init_midi_show(
