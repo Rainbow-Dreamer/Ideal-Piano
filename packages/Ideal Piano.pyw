@@ -400,10 +400,16 @@ class piano_window(pyglet.window.Window):
                                                   *piano_config.settings_place)
 
     def init_screen_labels(self):
+        if piano_config.fonts_file:
+            pyglet.font.add_file(piano_config.fonts_file)
+        if piano_config.fonts_path:
+            pyglet.font.add_directory(piano_config.fonts_path)
         self.label = pyglet.text.Label('',
                                        font_name=piano_config.fonts,
                                        font_size=piano_config.fonts_size,
                                        bold=piano_config.bold,
+                                       italic=piano_config.italic,
+                                       dpi=piano_config.fonts_dpi,
                                        x=piano_config.label1_place[0],
                                        y=piano_config.label1_place[1],
                                        color=piano_config.message_color,
@@ -415,6 +421,8 @@ class piano_window(pyglet.window.Window):
                                         font_name=piano_config.fonts,
                                         font_size=piano_config.fonts_size,
                                         bold=piano_config.bold,
+                                        italic=piano_config.italic,
+                                        dpi=piano_config.fonts_dpi,
                                         x=piano_config.label2_place[0],
                                         y=piano_config.label2_place[1],
                                         color=piano_config.message_color,
@@ -424,6 +432,8 @@ class piano_window(pyglet.window.Window):
                                         font_name=piano_config.fonts,
                                         font_size=piano_config.fonts_size,
                                         bold=piano_config.bold,
+                                        italic=piano_config.italic,
+                                        dpi=piano_config.fonts_dpi,
                                         x=piano_config.label3_place[0],
                                         y=piano_config.label3_place[1],
                                         color=piano_config.message_color,
@@ -435,6 +445,8 @@ class piano_window(pyglet.window.Window):
             font_name=piano_config.fonts,
             font_size=piano_config.chord_details_font_size,
             bold=piano_config.bold,
+            italic=piano_config.italic,
+            dpi=piano_config.fonts_dpi,
             x=piano_config.chord_details_label_place[0],
             y=piano_config.chord_details_label_place[1],
             color=piano_config.message_color,
@@ -448,6 +460,8 @@ class piano_window(pyglet.window.Window):
             font_name=piano_config.fonts,
             font_size=piano_config.current_detect_key_font_size,
             bold=piano_config.bold,
+            italic=piano_config.italic,
+            dpi=piano_config.fonts_dpi,
             x=piano_config.current_detect_key_label_place[0],
             y=piano_config.current_detect_key_label_place[1],
             color=piano_config.message_color,
@@ -464,6 +478,8 @@ class piano_window(pyglet.window.Window):
                 font_name=piano_config.fonts,
                 font_size=piano_config.music_analysis_fonts_size,
                 bold=piano_config.bold,
+                italic=piano_config.italic,
+                dpi=piano_config.fonts_dpi,
                 x=piano_config.music_analysis_place[0],
                 y=piano_config.music_analysis_place[1],
                 color=piano_config.message_color,
@@ -599,6 +615,8 @@ class piano_window(pyglet.window.Window):
                     font_name=piano_config.fonts,
                     font_size=piano_config.piano_key_note_name_font_size,
                     bold=piano_config.piano_key_note_name_bold,
+                    italic=piano_config.piano_key_note_name_italic,
+                    dpi=piano_config.dpi,
                     x=self.note_place[each][0] +
                     piano_config.piano_key_note_name_pad_x,
                     y=self.note_place[each][1] +

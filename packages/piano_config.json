@@ -39,7 +39,11 @@
     "label_anchor_y": "center",
     "label_width": 1000,
     "fonts": "Consolas",
-    "bold": true,
+    "fonts_file": "",
+    "fonts_path": "",
+    "bold": false,
+    "italic": false,
+    "fonts_dpi": 96,
     "go_back_image": "resources/go_back.png",
     "go_back_place": [
         50,
@@ -381,6 +385,7 @@
     "show_only_start_note_name": false,
     "piano_key_note_name_font_size": 12,
     "piano_key_note_name_bold": false,
+    "piano_key_note_name_italic": false,
     "piano_key_note_name_color": [
         0,
         0,
