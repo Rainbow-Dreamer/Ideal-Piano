@@ -55,7 +55,15 @@ label_width: max with of the label
 
 fonts: font name
 
-bold: whether to bold the text
+fonts_file: the file path of the font file you want to specify
+
+fonts_path: the directory of the fonts you want to specify
+
+bold: whether to make the font bold
+
+italic:  whether to make the font italic
+
+fonts_dpi: the dpi of the font
 
 go_back_image: the image file path of go back button
 
@@ -352,6 +360,8 @@ show_only_start_note_name: show only note names with C or all white keys note na
 piano_key_note_name_font_size: font size of note names on piano keys
 
 piano_key_note_name_bold: bold or not of note names on piano keys
+
+piano_key_note_name_italic: italic or not of note names on piano keys
 
 piano_key_note_name_color: color of note names on piano keys
 
