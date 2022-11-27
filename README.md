@@ -83,7 +83,7 @@ Here is a preview of Ideal Piano:
 
 ![image](previews/5.jpg)
 
-<p align="center">You can easily change the background image</p>
+<p align="center">You can simply drag an image file to the screen to change the background</p>
 
 
 

@@ -85,7 +85,7 @@ brew install fluidsynth
 
 ![image](previews/5.jpg)
 
-<p align="center">你可以轻松地改变背景图片</p>
+<p align="center">你可以直接拖拽图片文件到屏幕上改变背景</p>
 
 
 
