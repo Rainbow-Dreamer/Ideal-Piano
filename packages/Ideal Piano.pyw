@@ -229,6 +229,7 @@ class piano_window(pyglet.window.Window):
         self.set_icon(self.icon)
         self.keyboard_handler = key.KeyStateHandler()
         self.push_handlers(self.keyboard_handler)
+        self.current_screen_size = copy(piano_config.screen_size)
 
     def init_key_map(self):
         self.map_key_dict = {
@@ -691,7 +692,7 @@ class piano_window(pyglet.window.Window):
                                      piano_config_path)
                     piano_config.background_image = current_path
                     self.init_screen()
-                    self.local_on_resize(self.width, self.height)
+                    self.local_on_resize(self.width, self.height, mode=1)
                 elif 'mid' in type_name:
                     if self.click_mode is None:
                         init_result = current_piano_engine.init_midi_show(
@@ -758,8 +759,13 @@ class piano_window(pyglet.window.Window):
         else:
             self._draw_window()
 
-    def local_on_resize(self, width, height):
+    def local_on_resize(self, width, height, mode=0):
         if piano_config.resize_screen:
+            if mode == 0 and width == self.current_screen_size[
+                    0] and height == self.current_screen_size[1]:
+                return
+            self.current_screen_size[0] = width
+            self.current_screen_size[1] = height
             scale_x = width / piano_config.background_size[0]
             scale_y = height / piano_config.background_size[1]
             self.background.scale_x = scale_x
@@ -1069,6 +1075,9 @@ class piano_window(pyglet.window.Window):
         global piano_config
         piano_config = json_module.json_module(piano_config_path)
         current_piano_engine.notedic = piano_config.key_settings
+        self.width = piano_config.screen_size[0]
+        self.height = piano_config.screen_size[1]
+        self.current_screen_size = copy(piano_config.screen_size)
         self.init_parameters()
         self.init_language()
         self.init_keys()
@@ -1081,7 +1090,7 @@ class piano_window(pyglet.window.Window):
         self.init_screen_labels()
         self.init_music_analysis()
         self.init_progress_bar()
-        self.local_on_resize(self.width, self.height)
+        self.local_on_resize(self.width, self.height, mode=1)
 
 
 class piano_engine:
