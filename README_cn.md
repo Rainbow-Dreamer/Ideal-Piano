@@ -81,7 +81,7 @@ brew install fluidsynth
 
 ![image](previews/4.jpg)
 
-<p align="center">音符条下落模式</p
+<p align="center">播放多轨的MIDI文件</p
 
 
 ![image](previews/5.jpg)

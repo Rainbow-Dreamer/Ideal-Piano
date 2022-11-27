@@ -80,7 +80,7 @@ Here is a preview of Ideal Piano:
 
 ![image](previews/4.jpg)
 
-<p align="center">Note bar drop mode</p
+<p align="center">Playing MIDI files with multiple tracks</p
 
 ![image](previews/5.jpg)
 
