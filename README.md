@@ -14,7 +14,8 @@ The best feature of Ideal Piano is that it uses algorithm based on music theory 
 
 * You can use your computer keyboard or MIDI keyboard to play, keyboard mappings with notes could be customized in the settings file
 * Analyze what chord types you are playing in details and display on the screen
-* Choose MIDI files to playback in waterfall form, show current chord types in real time
+* Choose MIDI files to playback in waterfall form, show current chord types in real time, you can also choose to display detailed music theory information for the current chord
+* Support playing MIDI files with multiple tracks, change playback position by clicking on the progression bar when playing
 * You can choose to split the melody and chord parts of MIDI files and play only one of them, using music analysis algorithm based on music theory
 * You can choose to analyze current key you are playing or MIDI files in real time using music analysis algorithm based on music theory, supporting major, minor and church modes like dorian, lydian (experimental)
 * Load audio files or SoundFont files as instruments
