@@ -1413,6 +1413,128 @@ def distribute(current_chord,
     return temp
 
 
+def get_chords_from_rhythm(chords, current_rhythm, set_duration=True):
+    if isinstance(chords, note):
+        chords = chord(
+            [copy(chords) for i in range(current_rhythm.get_beat_num())])
+        return chords.apply_rhythm(current_rhythm, set_duration=set_duration)
+    if isinstance(chords, chord):
+        chords = [copy(chords) for i in range(current_rhythm.get_beat_num())]
+    else:
+        chords = copy(chords)
+    length = len(chords)
+    counter = -1
+    has_beat = False
+    current_start_time = 0
+    chord_intervals = [0 for i in range(len(chords))]
+    for i, each in enumerate(current_rhythm):
+        current_duration = each.get_duration()
+        if type(each) is beat:
+            counter += 1
+            if counter >= length:
+                break
+            current_chord = chords[counter]
+            if set_duration:
+                if current_duration != 0:
+                    for k in current_chord:
+                        k.duration = current_duration
+            chord_intervals[counter] += current_duration
+            has_beat = True
+        elif type(each) is rest_symbol:
+            if not has_beat:
+                current_start_time += current_duration
+            else:
+                chord_intervals[counter] += current_duration
+        elif type(each) is continue_symbol:
+            if not has_beat:
+                current_start_time += current_duration
+            else:
+                current_chord = chords[counter]
+                for k in current_chord:
+                    k.duration += current_duration
+                chord_intervals[counter] += current_duration
+    result = chords[0]
+    current_interval = 0
+    for i, each in enumerate(chords[1:]):
+        current_interval += chord_intervals[i]
+        result = result & (each, current_interval)
+    result.start_time = current_start_time
+    return result
+
+
+@method_wrapper(chord)
+def analyze_rhythm(current_chord,
+                   include_continue=True,
+                   total_length=None,
+                   remove_empty_beats=False,
+                   unit=None,
+                   find_unit_ignore_duration=False):
+    if all(i <= 0 for i in current_chord.interval):
+        return rhythm([beat(0) for i in range(len(current_chord))])
+    if unit is None:
+        current_interval = copy(current_chord.interval)
+        if not find_unit_ignore_duration:
+            current_interval += [
+                current_chord.interval[i] - current_chord[i].duration
+                for i in range(len(current_chord))
+            ]
+        current_interval = [i for i in current_interval if i > 0]
+        unit = min(current_interval)
+    beat_list = []
+    if current_chord.start_time > 0:
+        beat_list.extend([
+            rest_symbol(unit)
+            for i in range(int(current_chord.start_time // unit))
+        ])
+    for i, each in enumerate(current_chord.interval):
+        if each == 0:
+            beat_list.append(beat(0))
+        else:
+            current_beat = beat(unit)
+            remain_interval = each - unit
+            rest_num, extra_beat = divmod(remain_interval, unit)
+            if extra_beat > 0:
+                current_dotted_num = int(
+                    math.log(1 / (1 -
+                                  (((extra_beat + unit) / unit) / 2)), 2)) - 1
+                current_beat.dotted = current_dotted_num
+            beat_list.append(current_beat)
+            if not include_continue:
+                beat_list.extend(
+                    [rest_symbol(unit) for k in range(int(rest_num))])
+            else:
+                current_duration = current_chord.notes[i].duration
+                if current_duration >= each:
+                    beat_list.extend(
+                        [continue_symbol(unit) for k in range(int(rest_num))])
+                else:
+                    current_rest_duration = each - current_duration
+                    rest_num = current_rest_duration // unit
+                    current_continue_duration = current_duration - unit
+                    continue_num = current_continue_duration // unit
+                    beat_list.extend([
+                        continue_symbol(unit) for k in range(int(continue_num))
+                    ])
+                    beat_list.extend(
+                        [rest_symbol(unit) for k in range(int(rest_num))])
+    result = rhythm(beat_list)
+    if total_length is not None:
+        current_time_signature = Fraction(result.get_total_duration() /
+                                          total_length).limit_denominator()
+        if current_time_signature == 1:
+            current_time_signature = [4, 4]
+        else:
+            current_time_signature = [
+                current_time_signature.numerator,
+                current_time_signature.denominator
+            ]
+        result.time_signature = current_time_signature
+    if remove_empty_beats:
+        result = rhythm([i for i in result if i.duration != 0],
+                        time_signature=result.time_signature)
+    return result
+
+
 def stopall():
     pygame.mixer.stop()
     pygame.mixer.music.stop()

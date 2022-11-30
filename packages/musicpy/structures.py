@@ -2262,22 +2262,35 @@ class chord:
     def to_piece(self, *args, **kwargs):
         return mp.chord_to_piece(self, *args, **kwargs)
 
-    def apply_rhythm(self, current_rhythm):
+    def apply_rhythm(self, current_rhythm, set_duration=True):
         temp = copy(self)
         length = len(temp)
         counter = -1
+        has_beat = False
+        current_start_time = 0
         for i, each in enumerate(current_rhythm):
+            current_duration = each.get_duration()
             if type(each) is beat:
+                has_beat = True
                 counter += 1
                 if counter >= length:
                     break
-                temp.interval[counter] = each.get_duration()
-                temp.notes[counter].duration = each.get_duration()
+                temp.interval[counter] = current_duration
+                if set_duration:
+                    if current_duration != 0:
+                        temp.notes[counter].duration = current_duration
             elif type(each) is rest_symbol:
-                temp.interval[counter] += each.get_duration()
+                if not has_beat:
+                    current_start_time += current_duration
+                else:
+                    temp.interval[counter] += current_duration
             elif type(each) is continue_symbol:
-                temp.interval[counter] += each.get_duration()
-                temp.notes[counter].duration += each.get_duration()
+                if not has_beat:
+                    current_start_time += current_duration
+                else:
+                    temp.interval[counter] += current_duration
+                    temp.notes[counter].duration += current_duration
+        temp.start_time = current_start_time
         return temp
 
 
@@ -5237,17 +5250,16 @@ class rhythm(list):
             is_str = True
             beat_list, settings_list = self._convert_to_rhythm(
                 beat_list, separator)
-        self.total_bar_length = total_bar_length
         if time_signature is None:
             self.time_signature = [4, 4]
         else:
             self.time_signature = time_signature
         current_duration = None
-        if self.total_bar_length is not None:
+        if total_bar_length is not None:
             if beat_list:
                 current_time_signature_ratio = self.time_signature[
                     0] / self.time_signature[1]
-                current_duration = self.total_bar_length * current_time_signature_ratio / (
+                current_duration = total_bar_length * current_time_signature_ratio / (
                     self.get_length(beat_list) if beats is None else beats)
         elif unit is not None:
             current_duration = unit
@@ -5277,12 +5289,13 @@ class rhythm(list):
 
         super().__init__(beat_list)
 
+    @property
+    def total_bar_length(self):
+        return self.get_total_duration(apply_time_signature=True)
+
     def __repr__(self):
-        if self.total_bar_length is not None:
-            current_total_bar_length = Fraction(
-                self.total_bar_length).limit_denominator()
-        else:
-            current_total_bar_length = self.total_bar_length
+        current_total_bar_length = Fraction(
+            self.total_bar_length).limit_denominator()
         current_rhythm = ', '.join([str(i) for i in self])
         return f'[rhythm]\nrhythm: {current_rhythm}\ntotal bar length: {current_total_bar_length}\ntime signature: {self.time_signature[0]} / {self.time_signature[1]}'
 
@@ -5359,16 +5372,29 @@ class rhythm(list):
             if type(i) is beat
         ])
 
-    def get_total_duration(self, beat_list=None):
-        return sum([
+    def get_total_duration(self, beat_list=None, apply_time_signature=False):
+        result = sum([
             i.get_duration()
             for i in (beat_list if beat_list is not None else self)
         ])
+        if apply_time_signature:
+            result /= (self.time_signature[0] / self.time_signature[1])
+        return result
 
     def play(self, *args, notes='C4', **kwargs):
         result = chord([copy(notes) for i in range(self.get_beat_num())
                         ]).apply_rhythm(self)
         result.play(*args, **kwargs)
+
+    def convert_time_signature(self, time_signature, mode=0):
+        temp = copy(self)
+        ratio = (time_signature[0] / time_signature[1]) / (
+            self.time_signature[0] / self.time_signature[1])
+        temp.time_signature = time_signature
+        if mode == 1:
+            for each in temp:
+                each.duration *= ratio
+        return temp
 
 
 def _read_notes(note_ls, rootpitch=4):
