@@ -1104,18 +1104,22 @@ class chord:
         duration, interval = [i.duration for i in self.notes], self.interval
         notenames = self.names()
         return [
-            chord(x, rootpitch=rootpitch).set(duration, interval)
-            for x in mp.alg.perm(notenames)
+            chord(i,
+                  rootpitch=rootpitch).standardize().set(duration, interval)
+            for i in mp.alg.perm(notenames)
         ]
 
     def inversion_highest(self, ind):
-        if 1 <= ind < len(self):
-            temp = self.copy()
-            ind -= 1
-            while temp[ind].degree < temp[-1].degree:
-                temp[ind] = temp[ind].up(database.octave)
-            temp.notes.append(temp.notes.pop(ind))
-            return temp
+        if not 1 <= ind < len(self):
+            raise ValueError(
+                'the number of inversion is out of range of the notes in this chord'
+            )
+        temp = self.copy()
+        ind -= 1
+        while temp[ind].degree < temp[-1].degree:
+            temp[ind] = temp[ind].up(database.octave)
+        temp.notes.append(temp.notes.pop(ind))
+        return temp
 
     def inoctave(self):
         temp = self.copy()
@@ -2377,7 +2381,7 @@ class scale:
 
     def __call__(self, n, duration=0.25, interval=0, num=3, step=2):
         if isinstance(n, int):
-            return self.pickchord_by_degree(n, duration, interval, num, step)
+            return self.pick_chord_by_degree(n, duration, interval, num, step)
         elif isinstance(n, str):
             altered_notes = n.replace(' ', '').split(',')
             notes = copy(self.notes)
@@ -2458,12 +2462,12 @@ class scale:
                 result.append(i)
         return result
 
-    def pickchord_by_degree(self,
-                            degree1,
-                            duration=0.25,
-                            interval=0,
-                            num=3,
-                            step=2):
+    def pick_chord_by_degree(self,
+                             degree1,
+                             duration=0.25,
+                             interval=0,
+                             num=3,
+                             step=2):
         result = []
         high = False
         if degree1 == 7:
@@ -2480,9 +2484,6 @@ class scale:
         if high:
             resultchord = resultchord.up(database.octave)
         return resultchord
-
-    def pickdegree(self, degree1):
-        return self[degree1]
 
     def pattern(self, indlist, duration=0.25, interval=0, num=3, step=2):
         if isinstance(indlist, str):
@@ -2567,43 +2568,48 @@ class scale:
     def dom7_chord(self):
         return self(4) + self[3].up(12)
 
+    def leading_chord(self):
+        return chord([self[6].down(database.octave), self[1], self[3]])
+
     def leading7_chord(self):
         return chord(
             [self[6].down(database.octave), self[1], self[3], self[5]])
 
-    def scalefrom(self, degree=5, mode=None, interval=None):
+    def scale_from(self, degree=4, mode=None, interval=None):
         # default is pick the dominant mode of the scale
         if mode is None and interval is None:
             mode, interval = self.mode, self.interval
         return scale(self[degree], mode, interval)
 
-    def secondary_dom(self, degree=5):
-        newscale = self.scalefrom(degree, self.mode, self.interval)
+    def secondary_dom(self, degree=4):
+        newscale = self.scale_from(degree, 'major')
         return newscale.dom_chord()
 
-    def secondary_dom7(self, degree=5):
-        return self.scalefrom(degree, self.mode, self.interval).dom7_chord()
+    def secondary_dom7(self, degree=4):
+        return self.scale_from(degree, 'major').dom7_chord()
 
-    def secondary_leading7(self, degree=5):
-        return self.scalefrom(degree, self.mode,
-                              self.interval).leading7_chord()
+    def secondary_leading(self, degree=4):
+        return self.scale_from(degree, 'major').leading_chord()
 
-    def pickchord_by_index(self, indlist):
+    def secondary_leading7(self, degree=4):
+        return self.scale_from(degree, 'major').leading7_chord()
+
+    def pick_chord_by_index(self, indlist):
         return chord([self[i] for i in indlist])
 
     def __matmul__(self, indlist):
-        return self.pickchord_by_index(indlist)
+        return self.pick_chord_by_index(indlist)
 
     def detect(self):
         return mp.alg.detect_scale_type(self)
 
-    def get_allchord(self, duration=None, interval=0, num=3, step=2):
+    def get_all_chord(self, duration=None, interval=0, num=3, step=2):
         return [
-            self.pickchord_by_degree(i,
-                                     duration=duration,
-                                     interval=interval,
-                                     num=num,
-                                     step=step)
+            self.pick_chord_by_degree(i,
+                                      duration=duration,
+                                      interval=interval,
+                                      num=num,
+                                      step=step)
             for i in range(len(self.get_interval()) + 1)
         ]
 
@@ -2625,7 +2631,10 @@ class scale:
             raise ValueError(
                 'this function only applies to major and minor scales')
 
-    def get(self, degree):
+    def get_degree(self, degree):
+        if degree < 1:
+            raise ValueError('scale degree starts from 1')
+        degree -= 1
         return self[degree]
 
     def get_chord(self, degree, chord_type=None, natural=False):
@@ -2644,7 +2653,7 @@ class scale:
                     break
             if not found:
                 return f'{degree} is not a valid roman numerals chord representation'
-        current_degree = database.roman_numerals_dict[degree]
+        current_degree = database.roman_numerals_dict[degree] - 1
         if current_degree == 'not found':
             return f'{degree} is not a valid roman numerals chord representation'
         current_note = self[current_degree].name
@@ -2653,7 +2662,7 @@ class scale:
             if not isinstance(temp, chord):
                 return f'{chord_type} is not a valid chord type'
             length = len(temp)
-            return self.pickchord_by_degree(current_degree, num=length)
+            return self.pick_chord_by_degree(current_degree, num=length)
         if degree.islower():
             current_note += 'm'
         current_chord_type = current_note + chord_type
@@ -2701,6 +2710,8 @@ class scale:
 
     def inversion(self, ind, parallel=False, start=None):
         # return the inversion of a scale with the beginning note of a given index
+        if ind < 1:
+            raise ValueError('inversion of scale starts from 1')
         ind -= 1
         interval1 = self.get_interval()
         new_interval = interval1[ind:] + interval1[:ind]
