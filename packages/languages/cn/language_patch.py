@@ -1,5 +1,4 @@
 from musicpy import *
-from difflib import SequenceMatcher
 
 # database
 
@@ -124,7 +123,7 @@ detectTypes = chordTypes.reverse()
 # musicpy
 
 
-def to_text(self, show_degree=True, show_voicing=True):
+def to_text(self, show_degree=True, show_voicing=True, custom_mapping=None):
     if self.type == 'note':
         return f'音符 {self.note_name}'
     elif self.type == 'interval':
@@ -132,11 +131,12 @@ def to_text(self, show_degree=True, show_voicing=True):
     elif self.type == 'chord':
         if self.chord_speciality == 'polychord':
             return '/'.join([
-                f'[{i.to_text(show_degree=show_degree, show_voicing=show_voicing)}]'
+                f'[{i.to_text(show_degree=show_degree, show_voicing=show_voicing, custom_mapping=custom_mapping)}]'
                 for i in self.polychords[::-1]
             ])
         else:
-            current_chord = mp.C(self.get_root_position())
+            current_chord = mp.C(self.get_root_position(),
+                                 custom_mapping=custom_mapping)
             if self.altered:
                 if show_degree:
                     altered_msg = ', '.join(self.altered)
@@ -153,7 +153,24 @@ def to_text(self, show_degree=True, show_voicing=True):
                     altered_msg = ', '.join(current_alter)
             else:
                 altered_msg = ''
-            omit_msg = f' 省略 {", ".join([str(i) for i in self.omit] if show_degree else [current_chord.interval_note(i).name for i in self.omit])}' if self.omit else ''
+            if self.omit:
+                if show_degree:
+                    omit_msg = f' 省略 {", ".join([str(i) for i in self.omit])}'
+                else:
+                    current_omit = []
+                    for i in self.omit:
+                        if '/' in i:
+                            i = i.split('/')[0]
+                        if i in database.precise_degree_match:
+                            current_degree = current_chord.interval_note(
+                                i, mode=1)
+                            if current_degree is not None:
+                                current_omit.append(current_degree.name)
+                        else:
+                            current_omit.append(i)
+                    omit_msg = f' 省略 {", ".join(current_omit)}'
+            else:
+                omit_msg = ''
             voicing_msg = f'排序 {self.voicing}' if self.voicing else ''
             non_chord_bass_note_msg = f'/{self.non_chord_bass_note}' if self.non_chord_bass_note else ''
             if self.chord_speciality == 'root position':

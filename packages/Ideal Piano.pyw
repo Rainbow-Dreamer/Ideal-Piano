@@ -20,10 +20,17 @@ original_chord_type_func = [
 
 if piano_config.language == 'English':
     from languages.en import language_patch
+    current_custom_mapping = None
+    current_custom_chord_types = None
 elif piano_config.language == 'Chinese':
     from languages.cn import language_patch
     mp.chord_type.to_text = language_patch.to_text
     mp.chord_type.show = language_patch.show
+    current_custom_mapping = [
+        language_patch.INTERVAL, language_patch.detectTypes,
+        language_patch.chordTypes
+    ]
+    current_custom_chord_types = current_custom_mapping[2]
 
 key = pyglet.window.key
 has_soundfont_plugins = True
@@ -276,8 +283,7 @@ class piano_window(pyglet.window.Window):
             self.current_sf2_player = None
         if piano_config.play_use_soundfont or piano_config.use_soundfont:
             if 'rs' not in sys.modules:
-                global rs
-                global has_soundfont_plugins
+                global rs, has_soundfont_plugins
                 if has_soundfont_plugins:
                     try:
                         import sf2_loader as rs
@@ -653,15 +659,22 @@ class piano_window(pyglet.window.Window):
         self.open_choose_midi_keyboard_window = False
 
     def init_language(self):
-        global language_patch
+        global language_patch, current_custom_mapping, current_custom_chord_types
         if piano_config.language == 'English':
             from languages.en import language_patch
             importlib.reload(mp)
             mp.chord_type.to_text, mp.chord_type.show = original_chord_type_func
+            current_custom_mapping = None
+            current_custom_chord_types = None
         elif piano_config.language == 'Chinese':
             from languages.cn import language_patch
             mp.chord_type.to_text = language_patch.to_text
             mp.chord_type.show = language_patch.show
+            current_custom_mapping = [
+                language_patch.INTERVAL, language_patch.detectTypes,
+                language_patch.chordTypes
+            ]
+            current_custom_chord_types = current_custom_mapping[2]
 
     def init_progress_bar(self):
         self.current_progress_bar = pyglet.shapes.BorderedRectangle(
@@ -1261,13 +1274,16 @@ class piano_engine:
             same_note_special=piano_config.same_note_special,
             whole_detect=piano_config.whole_detect,
             poly_chord_first=piano_config.poly_chord_first,
-            show_degree=piano_config.show_degree)
+            show_degree=piano_config.show_degree,
+            custom_mapping=current_custom_mapping)
         if current_chord_info is None:
             return
         current_dict = language_patch.ideal_piano_language_dict
         if current_chord_info.type == 'chord':
             current_info = current_chord_info.to_text(
-                show_degree=piano_config.show_degree)
+                show_degree=piano_config.show_degree,
+                custom_mapping=current_custom_mapping[2]
+                if current_custom_mapping else None)
             if piano_config.show_chord_accidentals == 'flat':
                 current_chord_root = current_chord_info.root
                 if '#' in current_chord_root:
@@ -1292,7 +1308,7 @@ class piano_engine:
                 current_info = f'{current_root} {current_dict["with"]} {current_chord_info.interval_name}'
         if piano_config.show_chord_details:
             current_piano_window.chord_details_label.text = current_chord_info.show(
-            )
+                custom_mapping=current_custom_chord_types)
         if piano_config.show_current_detect_key:
             if piano_config.current_detect_key_limit is not None and len(
                     self.current_play_chords
