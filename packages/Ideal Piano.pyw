@@ -13,13 +13,17 @@ piano_config = json_module.json_module(piano_config_path)
 app = QtWidgets.QApplication(sys.argv)
 del app
 
-original_info_func = copy(mp.chord.info)
+original_chord_type_func = [
+    copy(mp.chord_type.to_text),
+    copy(mp.chord_type.show)
+]
 
 if piano_config.language == 'English':
     from languages.en import language_patch
 elif piano_config.language == 'Chinese':
     from languages.cn import language_patch
-    mp.chord.info = language_patch.info
+    mp.chord_type.to_text = language_patch.to_text
+    mp.chord_type.show = language_patch.show
 
 key = pyglet.window.key
 has_soundfont_plugins = True
@@ -653,10 +657,11 @@ class piano_window(pyglet.window.Window):
         if piano_config.language == 'English':
             from languages.en import language_patch
             importlib.reload(mp)
-            mp.chord.info = original_info_func
+            mp.chord_type.to_text, mp.chord_type.show = original_chord_type_func
         elif piano_config.language == 'Chinese':
             from languages.cn import language_patch
-            mp.chord.info = language_patch.info
+            mp.chord_type.to_text = language_patch.to_text
+            mp.chord_type.show = language_patch.show
 
     def init_progress_bar(self):
         self.current_progress_bar = pyglet.shapes.BorderedRectangle(
@@ -1260,7 +1265,7 @@ class piano_engine:
         if current_chord_info is None:
             return
         current_dict = language_patch.ideal_piano_language_dict
-        if current_chord_info.type == current_dict['chord']:
+        if current_chord_info.type == 'chord':
             current_info = current_chord_info.to_text(
                 show_degree=piano_config.show_degree)
             if piano_config.show_chord_accidentals == 'flat':
@@ -1269,7 +1274,7 @@ class piano_engine:
                     new_current_chord_root = (~mp.N(current_chord_root)).name
                     current_info = current_info.replace(
                         current_chord_root, new_current_chord_root)
-        elif current_chord_info.type == current_dict['note']:
+        elif current_chord_info.type == 'note':
             current_note = current_chord_info.note_name
             if piano_config.show_chord_accidentals == 'flat':
                 if '#' in current_note:
@@ -1277,7 +1282,7 @@ class piano_engine:
                     current_info = f'{current_dict["note"]} {new_current_note}'
             else:
                 current_info = f'{current_dict["note"]} {current_note}'
-        elif current_chord_info.type == current_dict['interval']:
+        elif current_chord_info.type == 'interval':
             current_root = current_chord_info.root
             if piano_config.show_chord_accidentals == 'flat':
                 if '#' in current_root:
