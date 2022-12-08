@@ -1507,10 +1507,13 @@ class piano_engine:
 
         if self.show_mode != 0:
             current_melody, current_chord = mp.alg.split_all(
-                self.musicsheet, 'chord', piano_config.melody_tol,
-                piano_config.chord_tol, piano_config.get_off_overlap_notes,
-                piano_config.average_degree_length,
-                piano_config.melody_degree_tol)
+                current_chord=self.musicsheet,
+                mode='chord',
+                melody_tol=piano_config.melody_tol,
+                chord_tol=piano_config.chord_tol,
+                get_off_overlap_notes=piano_config.get_off_overlap_notes,
+                average_degree_length=piano_config.average_degree_length,
+                melody_degree_tol=piano_config.melody_degree_tol)
             shift = current_chord.start_time - current_melody.start_time
             if self.show_mode == 1:
                 self.musicsheet = current_melody
