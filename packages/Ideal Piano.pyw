@@ -1286,11 +1286,8 @@ class piano_engine:
             else:
                 current_info = f'{current_root} {current_dict["with"]} {current_chord_info.interval_name}'
         if piano_config.show_chord_details:
-            if current_dict['other'] in current_chord_info:
-                current_chord_info.update(
-                    current_chord_info.pop(current_dict['other']))
-            current_piano_window.chord_details_label.text = '\n'.join(
-                [f'{i}: {j}' for i, j in current_chord_info.items()])
+            current_piano_window.chord_details_label.text = current_chord_info.show(
+            )
         if piano_config.show_current_detect_key:
             if piano_config.current_detect_key_limit is not None and len(
                     self.current_play_chords
