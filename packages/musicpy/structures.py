@@ -1,5 +1,7 @@
 from copy import deepcopy as copy
 from fractions import Fraction
+from dataclasses import dataclass
+import functools
 if __name__ == 'musicpy.structures':
     from . import database
 else:
@@ -8,7 +10,7 @@ else:
 
 class note:
 
-    def __init__(self, name, num=4, duration=0.25, volume=100, channel=None):
+    def __init__(self, name, num=4, duration=1 / 4, volume=100, channel=None):
         if name not in database.standard:
             raise ValueError(
                 f"Invalid note name '{name}', accepted note names are {list(database.standard.keys())}"
@@ -17,8 +19,6 @@ class note:
         self.num = num
         self.duration = duration
         volume = int(volume)
-        if volume > 127:
-            volume = 127
         self.volume = volume
         self.channel = channel
 
@@ -35,17 +35,15 @@ class note:
         return f'{self.name}{self.num}'
 
     def __eq__(self, other):
-        return type(
-            other
-        ) is note and self.name == other.name and self.num == other.num
+        return type(other) is note and database.standard[
+            self.name] == database.standard[
+                other.name] and self.num == other.num
 
     def __matmul__(self, other):
-        return self.name == other.name
+        return database.standard[self.name] == database.standard[other.name]
 
     def setvolume(self, vol):
         vol = int(vol)
-        if vol > 127:
-            vol = 127
         self.volume = vol
 
     def set(self, duration=None, volume=None, channel=None):
@@ -116,7 +114,7 @@ class note:
 
     def getchord_by_interval(start,
                              interval1,
-                             duration=0.25,
+                             duration=1 / 4,
                              interval=0,
                              cummulative=True):
         return mp.getchord_by_interval(start, interval1, duration, interval,
@@ -978,7 +976,7 @@ class chord:
             return result
         return [database.INTERVAL[x % database.octave] for x in result]
 
-    def add(self, note1=None, mode='after', start=0, duration=0.25):
+    def add(self, note1=None, mode='after', start=0, duration=1 / 4):
         if len(self) == 0:
             result = copy(note1)
             if start != 0:
@@ -1130,11 +1128,11 @@ class chord:
         temp.notes.sort(key=lambda x: x.degree)
         return temp
 
-    def on(self, root, duration=0.25, interval=None, each=0):
+    def on(self, root, duration=1 / 4, interval=None, each=0):
         temp = copy(self)
         if each == 0:
             if isinstance(root, chord):
-                return root + self
+                return root & self
             if isinstance(root, str):
                 root = mp.to_note(root)
                 root.duration = duration
@@ -1659,191 +1657,11 @@ class chord:
         else:
             return temp
 
-    def info(self,
-             alter_notes_show_degree=True,
-             get_dict=False,
-             **detect_args):
-        chord_type = self.detect(
-            alter_notes_show_degree=alter_notes_show_degree, **detect_args)
-        if chord_type is None:
-            return
-        standard_notes = self.standardize()
-        if len(standard_notes) == 1:
-            if get_dict:
-                return {
-                    'type': 'note',
-                    'note name': str(standard_notes[0]),
-                    'whole name': chord_type
-                }
-            else:
-                return f'note name: {standard_notes[0]}'
-        elif len(standard_notes) == 2:
-            if get_dict:
-                return {
-                    'type': 'interval',
-                    'interval name': chord_type.split('with ')[1],
-                    'root': str(standard_notes[0]),
-                    'whole name': chord_type
-                }
-            else:
-                return f'interval name: {chord_type.split("with ")[1]}\nroot: {standard_notes[0]}'
-        original_chord_type = copy(chord_type)
-        other_msg = {
-            'omit': None,
-            'altered': None,
-            'non-chord bass note': None,
-            'voicing': None
-        }
-        has_split = False
-        if '/' in chord_type:
-            has_split = True
-            if ']/[' in chord_type:
-                chord_speciality = 'polychord'
-            else:
-                chord_speciality = 'inverted chord'
-        elif 'sort as' in chord_type:
-            chord_speciality = 'chord voicings'
-        else:
-            alter_notes = chord_type.split(' ')
-            if len(alter_notes) > 1 and alter_notes[1][0] in ['#', 'b']:
-                chord_speciality = 'altered chord'
-            else:
-                chord_speciality = 'root position'
-        if 'omit' in chord_type:
-            if chord_speciality != 'polychord':
-                other_msg['omit'] = [
-                    int(i) if i.isdigit() else i for i in chord_type.split(
-                        '/', 1)[0].split('sort as', 1)[0].strip('[]').split(
-                            'omit', 1)[1].replace(' ', '').split(',')
-                ]
-        if 'sort as' in chord_type:
-            if chord_speciality != 'polychord':
-                other_msg['voicing'] = [
-                    int(i) for i in chord_type.split(
-                        '/', 1)[0].strip('[]').split('sort as', 1)[1].replace(
-                            ' ', '').strip('[]').split(',')
-                ]
-        try:
-            alter_notes = chord_type.split('/', 1)[0].split(
-                'sort as',
-                1)[0].strip('[]').split(' ', 1)[1].replace(' ', '').split(',')
-        except:
-            alter_notes = None
-        if alter_notes:
-            other_msg['altered'] = []
-            for each in alter_notes:
-                if each and each[0] in ['#', 'b']:
-                    other_msg['altered'].append(each)
-            if not other_msg['altered']:
-                other_msg['altered'] = None
-        if has_split:
-            inversion_split = chord_type.split('/')
-            first_part = inversion_split[0].replace(',', '')
-            if first_part[0] == '[':
-                current_type = first_part[1:-1].split(' ')
-            else:
-                current_type = first_part.split(' ')
-            current_type = [i for i in current_type if i]
-            if len(current_type) > 1 and current_type[1][0] in ['#', 'b']:
-                chord_types_root = ','.join(current_type)
-                if len(inversion_split) > 1:
-                    chord_type = '/'.join(
-                        [chord_types_root, inversion_split[1]])
-            else:
-                chord_types_root = current_type[0]
-        else:
-            chord_types_root = chord_type.split(' ')[0]
-        note_names = self.names()
-        note_names.sort(key=lambda s: len(s), reverse=True)
-        for each in note_names:
-            each_standard = f"{each[0].upper()}{''.join(each[1:])}"
-            if each_standard in chord_types_root:
-                root_note = each
-                break
-            elif each_standard in database.standard_dict and database.standard_dict[
-                    each_standard] in chord_types_root:
-                root_note = each
-                break
-        if has_split:
-            try:
-                inversion_msg = mp.alg.inversion_from(mp.C(chord_type),
-                                                      mp.C(chord_types_root),
-                                                      num=True)
-                if 'could not get chord' in inversion_msg:
-                    if inversion_split[1][0] == '[':
-                        chord_type = original_chord_type
-                        chord_types_root = chord_type
-                    else:
-                        first_part, second_part = chord_type.split('/', 1)
-                        if first_part[0] == '[':
-                            first_part = first_part[1:-1]
-                        chord_speciality = self._get_chord_speciality_helper(
-                            first_part)
-                        other_msg['non-chord bass note'] = second_part
-            except:
-                if 'omit' in first_part and first_part[0] != '[':
-                    temp_ind = first_part.index(' ')
-                    current_chord_types_root = first_part[:
-                                                          temp_ind] + ',' + first_part[
-                                                              temp_ind:]
-                else:
-                    current_chord_types_root = chord_types_root
-                try:
-                    inversion_msg = mp.alg.inversion_from(
-                        self, mp.C(current_chord_types_root), num=True)
-                    if 'could not get chord' in inversion_msg:
-                        if inversion_split[1][0] == '[':
-                            chord_type = original_chord_type
-                            chord_types_root = chord_type
-                        else:
-                            first_part, second_part = chord_type.split('/', 1)
-                            if first_part[0] == '[':
-                                first_part = first_part[1:-1]
-                            chord_speciality = self._get_chord_speciality_helper(
-                                first_part)
-                            other_msg['non-chord bass note'] = second_part
-                except:
-                    chord_type = original_chord_type
-                    chord_types_root = chord_type
-                    if chord_speciality == 'inverted chord':
-                        inversion_msg = None
-        if other_msg['altered']:
-            chord_types_root = chord_types_root.split(',')[0]
-            chord_type = original_chord_type
-        root_note = database.standard_dict.get(root_note, root_note)
-        if chord_speciality == 'polychord' or (chord_speciality
-                                               == 'inverted chord'
-                                               and inversion_msg is None):
-            chord_type_name = chord_type
-        else:
-            chord_type_name = chord_types_root[len(root_note):]
-        if get_dict:
-            return {
-                'type':
-                'chord',
-                'chord name':
-                chord_type,
-                'root position':
-                chord_types_root,
-                'root':
-                root_note,
-                'chord type':
-                chord_type_name,
-                'chord speciality':
-                chord_speciality,
-                'inversion':
-                inversion_msg
-                if chord_speciality == 'inverted chord' else None,
-                'other':
-                other_msg
-            }
-        else:
-            other_msg_str = '\n'.join(
-                [f'{i}: {j}' for i, j in other_msg.items() if j])
-            return f"chord name: {chord_type}\nroot position: {chord_types_root}\nroot: {root_note}\nchord type: {chord_type_name}\nchord speciality: {chord_speciality}" + (
-                f"\ninversion: {inversion_msg}" if chord_speciality
-                == 'inverted chord' else '') + (f'\n{other_msg_str}'
-                                                if other_msg_str else '')
+    def info(self, show_degree=True, **detect_args):
+        chord_type = self.detect(show_degree=show_degree,
+                                 get_chord_type=True,
+                                 **detect_args)
+        return chord_type
 
     def get_chord_speciality(self, mode=0, **kwargs):
         info = self.info(get_dict=True, **kwargs)
@@ -1971,9 +1789,13 @@ class chord:
         if isinstance(current_note, str):
             if not any(i.isdigit() for i in current_note):
                 current_note = mp.to_note(current_note)
-                current_chord = chord([self[0].name, current_note.name])
-                current_interval = current_chord[1].degree - current_chord[
-                    0].degree
+                if database.standard[self[0].name] == database.standard[
+                        current_note.name]:
+                    current_interval = 0
+                else:
+                    current_chord = chord([self[0].name, current_note.name])
+                    current_interval = current_chord[1].degree - current_chord[
+                        0].degree
             else:
                 current_note = mp.to_note(current_note)
                 current_interval = current_note.degree - self[0].degree
@@ -2379,7 +2201,7 @@ class scale:
         for i in self.notes:
             yield i
 
-    def __call__(self, n, duration=0.25, interval=0, num=3, step=2):
+    def __call__(self, n, duration=1 / 4, interval=0, num=3, step=2):
         if isinstance(n, int):
             return self.pick_chord_by_degree(n, duration, interval, num, step)
         elif isinstance(n, str):
@@ -2427,7 +2249,7 @@ class scale:
                         for i in range(1, len(notes))
                     ]
 
-    def get_scale(self, intervals=0.25, durations=None):
+    def get_scale(self, intervals=1 / 4, durations=None):
         if self.mode == None:
             if self.interval == None:
                 raise ValueError(
@@ -2464,7 +2286,7 @@ class scale:
 
     def pick_chord_by_degree(self,
                              degree1,
-                             duration=0.25,
+                             duration=1 / 4,
                              interval=0,
                              num=3,
                              step=2):
@@ -2485,7 +2307,7 @@ class scale:
             resultchord = resultchord.up(database.octave)
         return resultchord
 
-    def pattern(self, indlist, duration=0.25, interval=0, num=3, step=2):
+    def pattern(self, indlist, duration=1 / 4, interval=0, num=3, step=2):
         if isinstance(indlist, str):
             indlist = [int(i) for i in indlist]
         elif isinstance(indlist, int):
@@ -2726,7 +2548,7 @@ class scale:
         result.mode = result.detect()
         return result
 
-    def play(self, intervals=0.25, durations=None, *args, **kwargs):
+    def play(self, intervals=1 / 4, durations=None, *args, **kwargs):
         mp.play(self.get_scale(intervals, durations), *args, **kwargs)
 
     def __add__(self, obj):
@@ -4044,8 +3866,6 @@ class tempo:
 
     def setvolume(self, vol):
         vol = int(vol)
-        if vol > 127:
-            vol = 127
         self.volume = vol
 
     def set_channel(self, channel):
@@ -4103,8 +3923,6 @@ class pitch_bend:
 
     def setvolume(self, vol):
         vol = int(vol)
-        if vol > 127:
-            vol = 127
         self.volume = vol
 
     def set_channel(self, channel):
@@ -5406,6 +5224,174 @@ class rhythm(list):
             for each in temp:
                 each.duration *= ratio
         return temp
+
+
+@dataclass
+class chord_type:
+    root: str = None
+    chord_type: str = None
+    chord_speciality: str = 'root position'
+    inversion: int = None
+    omit: list = None
+    altered: list = None
+    non_chord_bass_note: str = None
+    voicing: list = None
+    type: str = 'chord'
+    note_name: str = None
+    interval_name: str = None
+    polychords: list = None
+
+    def get_root_position(self):
+        return f'{self.root}{self.chord_type}'
+
+    def to_chord(self,
+                 root_position=False,
+                 apply_voicing=True,
+                 apply_omit=True,
+                 apply_altered=True,
+                 apply_non_chord_bass_note=True,
+                 apply_inversion=True):
+        if self.type == 'note':
+            return chord([self.note_name])
+        elif self.type == 'interval':
+            current_root = mp.N(self.root)
+            return chord([
+                current_root,
+                current_root.up(database.NAME_OF_INTERVAL[self.interval_name])
+            ])
+        elif self.type == 'chord':
+            if self.chord_speciality == 'polychord':
+                current_chords = [
+                    each.to_chord(
+                        root_position=root_position,
+                        apply_voicing=apply_voicing,
+                        apply_omit=apply_omit,
+                        apply_altered=apply_altered,
+                        apply_non_chord_bass_note=apply_non_chord_bass_note,
+                        apply_inversion=apply_inversion)
+                    for each in self.polychords[::-1]
+                ]
+                current = functools.reduce(chord.on, current_chords)
+            else:
+                current = mp.C(self.get_root_position())
+                if not root_position:
+                    if apply_omit and self.omit:
+                        current = current.omit([
+                            database.precise_degree_match[i] for i in self.omit
+                        ],
+                                               mode=1)
+                    if apply_inversion and self.inversion:
+                        current = current.inversion(self.inversion)
+                    if apply_altered and self.altered:
+                        current = current(','.join(self.altered))
+                    if apply_voicing and self.voicing:
+                        current = current @ self.voicing
+                    if apply_non_chord_bass_note and self.non_chord_bass_note:
+                        current = current.on(self.non_chord_bass_note)
+            return current
+
+    def to_text(self, show_degree=True, show_voicing=True):
+        if self.type == 'note':
+            return f'note {self.note_name}'
+        elif self.type == 'interval':
+            return f'{self.root} with {self.interval_name}'
+        elif self.type == 'chord':
+            if self.chord_speciality == 'polychord':
+                return '/'.join([
+                    f'[{i.to_text(show_degree=show_degree, show_voicing=show_voicing)}]'
+                    for i in self.polychords[::-1]
+                ])
+            else:
+                current_chord = mp.C(self.get_root_position())
+                if self.altered:
+                    if show_degree:
+                        altered_msg = ', '.join(self.altered)
+                    else:
+                        current_alter = []
+                        for i in self.altered:
+                            if i[1:].isdigit():
+                                current_degree = current_chord.interval_note(
+                                    i[1:])
+                                if current_degree is not None:
+                                    current_alter.append(i[0] +
+                                                         current_degree.name)
+                            else:
+                                current_alter.append(i)
+                        altered_msg = ', '.join(current_alter)
+                else:
+                    altered_msg = ''
+                omit_msg = f' omit {", ".join([str(i) for i in self.omit] if show_degree else [current_chord.interval_note(i).name for i in self.omit])}' if self.omit else ''
+                voicing_msg = f'sort as {self.voicing}' if self.voicing else ''
+                non_chord_bass_note_msg = f'/{self.non_chord_bass_note}' if self.non_chord_bass_note else ''
+                if self.chord_speciality == 'root position':
+                    result = f'{self.root}{self.chord_type}'
+                    if omit_msg:
+                        result += omit_msg
+                elif self.chord_speciality == 'inverted chord':
+                    result = f'{self.root}{self.chord_type}'
+                    if omit_msg:
+                        result += omit_msg
+                    if self.omit is not None:
+                        current_omit_chord = current_chord.omit([
+                            database.precise_degree_match[i] for i in self.omit
+                        ],
+                                                                mode=1)
+                    else:
+                        current_omit_chord = current_chord
+                    result += f'/{current_omit_chord[self.inversion].name}'
+                elif self.chord_speciality == 'chord voicings':
+                    result = f'{self.root}{self.chord_type}'
+                    if omit_msg:
+                        result += omit_msg
+                if non_chord_bass_note_msg:
+                    result += non_chord_bass_note_msg
+                if not show_voicing:
+                    other_msg = [altered_msg]
+                else:
+                    other_msg = [altered_msg, voicing_msg]
+                other_msg = [i for i in other_msg if i]
+                if other_msg:
+                    result += ' ' + ' '.join(other_msg)
+                return result
+
+    def clear(self):
+        self.root = None
+        self.chord_type = None
+        self.chord_speciality = 'root position'
+        self.inversion = None
+        self.omit = None
+        self.altered = None
+        self.non_chord_bass_note = None
+        self.voicing = None
+        self.type = 'chord'
+        self.note_name = None
+        self.interval_name = None
+
+    def apply_sort_msg(self, msg):
+        if isinstance(msg, int):
+            self.chord_speciality = 'inverted chord'
+            self.inversion = msg
+        else:
+            self.chord_speciality = 'chord voicings'
+            self.voicing = msg
+
+    def show(self):
+        if self.type == 'note':
+            current = '\n'.join([
+                f'{i}: {j}' for i, j in vars(self).items()
+                if i in ['type', 'note_name']
+            ])
+        elif self.type == 'interval':
+            current = '\n'.join([
+                f'{i}: {j}' for i, j in vars(self).items()
+                if i in ['type', 'root', 'interval_name']
+            ])
+        elif self.type == 'chord':
+            current = '\n'.join([
+                f'{i}: {j}' for i, j in vars(self).items()
+                if i not in ['note_name', 'interval_name', 'highest_ratio']
+            ])
+        return current
 
 
 def _read_notes(note_ls, rootpitch=4):

@@ -1251,42 +1251,40 @@ class piano_engine:
         if not isinstance(current_chord, mp.chord):
             current_chord = mp.chord(current_chord)
         current_chord_info = current_chord.info(
-            get_dict=True,
-            inv_num=piano_config.inv_num,
             change_from_first=piano_config.change_from_first,
             original_first=piano_config.original_first,
             same_note_special=piano_config.same_note_special,
             whole_detect=piano_config.whole_detect,
-            return_fromchord=piano_config.return_fromchord,
             poly_chord_first=piano_config.poly_chord_first,
-            root_position_return_first=piano_config.root_position_return_first,
-            alter_notes_show_degree=piano_config.alter_notes_show_degree)
+            show_degree=piano_config.show_degree)
         if current_chord_info is None:
             return
         current_dict = language_patch.ideal_piano_language_dict
-        if current_chord_info[current_dict['type']] == current_dict['chord']:
-            current_info = current_chord_info[current_dict['chord name']]
+        if current_chord_info.type == current_dict['chord']:
+            current_info = current_chord_info.to_text(
+                show_degree=piano_config.show_degree)
             if piano_config.show_chord_accidentals == 'flat':
-                current_chord_root = current_chord_info[current_dict['root']]
+                current_chord_root = current_chord_info.root
                 if '#' in current_chord_root:
                     new_current_chord_root = (~mp.N(current_chord_root)).name
                     current_info = current_info.replace(
                         current_chord_root, new_current_chord_root)
-        elif current_chord_info[current_dict['type']] == current_dict['note']:
-            current_info = current_chord_info[current_dict['whole name']]
+        elif current_chord_info.type == current_dict['note']:
+            current_note = current_chord_info.note_name
             if piano_config.show_chord_accidentals == 'flat':
-                current_note = current_chord_info[current_dict["note name"]]
                 if '#' in current_note:
                     new_current_note = ~mp.N(current_note)
                     current_info = f'{current_dict["note"]} {new_current_note}'
-        elif current_chord_info[
-                current_dict['type']] == current_dict['interval']:
-            current_info = current_chord_info[current_dict['whole name']]
+            else:
+                current_info = f'{current_dict["note"]} {current_note}'
+        elif current_chord_info.type == current_dict['interval']:
+            current_root = current_chord_info.root
             if piano_config.show_chord_accidentals == 'flat':
-                current_root = current_chord_info[current_dict['root']]
                 if '#' in current_root:
                     new_current_root = (~mp.N(current_root)).name
-                    current_info = f'{new_current_root} {current_dict["with"]} {current_chord_info[current_dict["interval name"]]}'
+                    current_info = f'{new_current_root} {current_dict["with"]} {current_chord_info.interval_name}'
+            else:
+                current_info = f'{current_root} {current_dict["with"]} {current_chord_info.interval_name}'
         if piano_config.show_chord_details:
             if current_dict['other'] in current_chord_info:
                 current_chord_info.update(

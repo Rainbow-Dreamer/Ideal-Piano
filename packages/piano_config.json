@@ -197,7 +197,7 @@
     "return_fromchord": false,
     "poly_chord_first": false,
     "root_position_return_first": true,
-    "alter_notes_show_degree": true,
+    "show_degree": true,
     "melody_tol": 10,
     "chord_tol": 9,
     "get_off_overlap_notes": false,
