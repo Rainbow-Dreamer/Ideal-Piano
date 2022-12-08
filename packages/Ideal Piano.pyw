@@ -1282,8 +1282,7 @@ class piano_engine:
         if current_chord_info.type == 'chord':
             current_info = current_chord_info.to_text(
                 show_degree=piano_config.show_degree,
-                custom_mapping=current_custom_mapping[2]
-                if current_custom_mapping else None)
+                custom_mapping=current_custom_chord_types)
             if piano_config.show_chord_accidentals == 'flat':
                 current_chord_root = current_chord_info.root
                 if '#' in current_chord_root:
