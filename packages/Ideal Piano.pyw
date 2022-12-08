@@ -37,19 +37,6 @@ has_soundfont_plugins = True
 note_display_mode = ['bars', 'bars drop', '']
 
 
-def get_off_sort(a):
-    identifier = language_patch.ideal_piano_language_dict['sort']
-    each_chord = a.split('/')
-    for i in range(len(each_chord)):
-        current = each_chord[i]
-        if identifier in current:
-            current = current[:current.index(identifier) - 1]
-            if current[0] == '[':
-                current += ']'
-            each_chord[i] = current
-    return '/'.join(each_chord)
-
-
 def load(dic, path, file_format, volume, current_wavdic=None):
     wavedict = {
         i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
@@ -1282,7 +1269,8 @@ class piano_engine:
         if current_chord_info.type == 'chord':
             current_info = current_chord_info.to_text(
                 show_degree=piano_config.show_degree,
-                custom_mapping=current_custom_chord_types)
+                custom_mapping=current_custom_chord_types,
+                show_voicing=not piano_config.sort_invisible)
             if piano_config.show_chord_accidentals == 'flat':
                 current_chord_root = current_chord_info.root
                 if '#' in current_chord_root:
@@ -1907,10 +1895,7 @@ class piano_engine:
                         type(t) == mp.note for t in self.currentchord):
                     chordtype = self._detect_chord(self.currentchord)
 
-                    current_piano_window.label2.text = str(
-                        chordtype
-                    ) if not piano_config.sort_invisible else get_off_sort(
-                        str(chordtype))
+                    current_piano_window.label2.text = str(chordtype)
         else:
             self.lastshow = notels
             current_piano_window.label.text = str(notels)
@@ -1975,10 +1960,7 @@ class piano_engine:
                         self.last_time_chordtype = chordtype
                     else:
                         chordtype = self.last_time_chordtype
-                    current_piano_window.label2.text = str(
-                        chordtype
-                    ) if not piano_config.sort_invisible else get_off_sort(
-                        str(chordtype))
+                    current_piano_window.label2.text = str(chordtype)
             else:
                 current_piano_window.label.text = '[]'
                 current_piano_window.label2.text = ''
@@ -2012,10 +1994,7 @@ class piano_engine:
                     else:
                         chordtype = self.last_time_chordtype
 
-                    current_piano_window.label2.text = str(
-                        chordtype
-                    ) if not piano_config.sort_invisible else get_off_sort(
-                        str(chordtype))
+                    current_piano_window.label2.text = str(chordtype)
             else:
                 if piano_config.delay_only_read_current:
                     current_piano_window.label.text = '[]'
@@ -2285,10 +2264,7 @@ class piano_engine:
         if piano_config.show_chord and any(
                 type(t) == mp.note for t in playnotes):
             chordtype = self._detect_chord(playnotes)
-            current_piano_window.label2.text = str(
-                chordtype
-            ) if not piano_config.sort_invisible else get_off_sort(
-                str(chordtype))
+            current_piano_window.label2.text = str(chordtype)
 
     def _midi_show_playing_read_pc_keyboard_key(self, dt):
         if current_piano_window.keyboard_handler[
