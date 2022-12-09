@@ -197,9 +197,7 @@ soft_pedal_volume: The ratio of the reduction of the volume of the notes when th
 
 ## Chord analysis parameters
 
-These are the parameters of the chord logic algorithm, the default settings are the most widely used, so if I want to explain what they mean, I may need to understand my algorithm first, so I will explain this part later when I introduce it
-
-inv_num = False
+These are the parameters of the chord logic algorithm, the default settings are the most widely used, so if I want to explain what they mean, I may need to understand my algorithm first, so I will explain this part later when I introduce it.
 
 change_from_first = True
 
@@ -209,13 +207,9 @@ same_note_special = False
 
 whole_detect = True (changing this parameter to `False` will improve the speed of real-time analysis, but very complex chords may not be analyzed)
 
-return_from_chord = False
-
 poly_chord_first = False
 
-root_position_return_first = True
-
-alter_notes_show_degree = True
+show_degree = True
 
 
 
