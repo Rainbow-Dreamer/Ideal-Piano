@@ -929,8 +929,11 @@ class piano_window(pyglet.window.Window):
                     try:
                         current_piano_engine.current_send_midi_queue.put(
                             'stop')
-                        current_piano_engine.current_send_midi_event_process.terminate(
-                        )
+                        current_thread = Thread(
+                            target=current_piano_engine.
+                            current_send_midi_event_process.join,
+                            daemon=True)
+                        current_thread.start()
                     except:
                         pass
                 else:
