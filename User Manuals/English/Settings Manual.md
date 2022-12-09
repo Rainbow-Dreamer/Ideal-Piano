@@ -143,8 +143,6 @@ sound_format: the file format of the sound source (file extension)
 
 sound_path: the file path of the sound source
 
-show_delay_time: the delay time of the notes when playing the MIDI file
-
 play_midi_start_process_time: time in seconds to open the process that sends MIDI events when playing MIDI files
 
 move_progress_adjust_time: the delay time in seconds when changing the progress bar
