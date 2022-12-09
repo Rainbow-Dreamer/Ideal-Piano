@@ -130,9 +130,6 @@ def start_send_midi_event(event_list, current_event_counter,
                                 current_event_counter = 0
                             break
                     current_start_time = time.time()
-            elif current_msg == 'stop':
-                send_midi_mute_all_sounds(current_player, mode=1)
-                return
         current_time = time.time()
         past_time = current_time - current_start_time + current_position_time
         current_event = event_list[current_event_counter]
@@ -926,7 +923,11 @@ class piano_window(pyglet.window.Window):
                 current_piano_engine.current_hit_key_notes.clear()
                 current_piano_window.current_progress_bar.width = 2
                 if not piano_config.use_soundfont:
-                    current_piano_engine.current_send_midi_queue.put('stop')
+                    try:
+                        current_piano_engine.current_send_midi_event_process.terminate(
+                        )
+                    except:
+                        pass
                 else:
                     pyglet.clock.unschedule(
                         current_piano_engine.start_play_sf2)
@@ -1229,12 +1230,14 @@ class piano_engine:
                 current_use_soundfont_delay_time)
         else:
             self.current_send_midi_queue = multiprocessing.Queue()
-            self.current_send_midi_event_process = Thread(
+            self.current_send_midi_event_process = multiprocessing.Process(
                 target=start_send_midi_event,
                 args=(self.event_list, 0, self.current_output_port_num,
-                      self.midi_event_length, self.current_send_midi_queue),
-                daemon=True)
-            self.current_send_midi_event_process.start()
+                      self.midi_event_length, self.current_send_midi_queue))
+            self.current_send_midi_event_process.daemon = True
+            current_send_midi_event_thread = Thread(
+                target=self.current_send_midi_event_process.start, daemon=True)
+            current_send_midi_event_thread.start()
 
     def start_play_sf2(self, dt):
         current_piano_window.current_sf2_player.play_midi_file(
