@@ -155,6 +155,8 @@ play_midi_reset_sounds: Whether to mute all sounds when pausing or changing prog
 
 mute_all_sounds_cc_number: the MIDI CC number to use when muting all sounds
 
+stop_all_sounds_cc_number: the MIDI CC number to use when stop playing MIDI files
+
 midi_channels_number: the total number of channels in the MIDI file
 
 config_enable: whether to enable function keys when playing on computer keyboard
