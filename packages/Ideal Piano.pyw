@@ -130,6 +130,9 @@ def start_send_midi_event(event_list, current_event_counter,
                                 current_event_counter = 0
                             break
                     current_start_time = time.time()
+            elif current_msg == 'stop':
+                send_midi_mute_all_sounds(current_player, mode=1)
+                return
         current_time = time.time()
         past_time = current_time - current_start_time + current_position_time
         current_event = event_list[current_event_counter]
@@ -924,6 +927,8 @@ class piano_window(pyglet.window.Window):
                 current_piano_window.current_progress_bar.width = 2
                 if not piano_config.use_soundfont:
                     try:
+                        current_piano_engine.current_send_midi_queue.put(
+                            'stop')
                         current_piano_engine.current_send_midi_event_process.terminate(
                         )
                     except:
