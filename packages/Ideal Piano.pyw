@@ -2467,6 +2467,11 @@ class piano_engine:
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
+    if sys.platform == 'darwin':
+        try:
+            multiprocessing.set_start_method('spawn')
+        except:
+            pass
     current_piano_engine = piano_engine()
     current_piano_window = piano_window()
     pyglet.clock.schedule_interval(update, 1 / piano_config.fps)

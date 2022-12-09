@@ -70,11 +70,13 @@ There are Linux and macOS compatible versions, you can download at the [release 
 
 You can download the Linux compatible version from the release page, which contains the Linux executable for Ideal Piano, double click to open the software to use.
 
-For Linux version,  playing MIDI files using default settings requires installing freepats, which is the default MIDI sound set that pygame's mixer music module uses to play MIDI files. On Ubuntu you can run
+For Linux version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window. Here is a recommendation to install freepats and timidity. On Ubuntu you can run
 
 ```
-sudo apt-get install freepats
+sudo apt-get install freepats timidity
 ```
+
+Then open terminal, run `timidity -iA` to open the MIDI port of timidity, and then select the MIDI output port of timidity in the Choose MIDI Device window.
 
 If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
 
@@ -86,7 +88,9 @@ sudo apt-get install fluidsynth
 
 You can download the macOS compatible version from the release page, which contains the macOS app for Ideal Piano, double click to open the software to use.
 
-Note: currently pygame's mixer has a bug that it cannot pause MIDI file playing on macOS, which is used by default to play MIDI files in Ideal Piano, this bug only appears on macOS, for Windows and Linux the pause function works fine. So by default the pause function in the playing MIDI files mode will not work, if you want to pause and unpause MIDI file playing in Ideal Piano macOS version before pygame's developers fix this bug, you can switch to use fluidsynth to play MIDI files in Ideal Piano by changing `use_soundfont` to True in the settings file. Then you need to install fluidsynth on macOS, which is pretty easy, you can use homebrew to install fluidsynth. You can run this line in the terminal to install fluidsynth using homebrew.
+For macOS version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window.
+
+If you want to use SoundFont files as instruments in the macOS version, you need to install fluidsynth, it is recommended to install fluidsynth with homebrew.
 
 ```
 brew install fluidsynth
