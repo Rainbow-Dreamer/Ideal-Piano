@@ -683,7 +683,7 @@ class piano_window(pyglet.window.Window):
         msg_box = QtWidgets.QMessageBox()
         msg_box.setWindowTitle('Error')
         msg_box.setText(
-            'It seems that FluidSynth is nozt installed on your computer, FluidSynth is required to play using SoundFont files as you set use_soundfont = True or play_use_soundfont = True, please install FluidSynth and then try to reopen again. You can use Ideal Piano as usual, as now the use soundfont config parameters will be set to False.'
+            'It seems that FluidSynth is not installed on your computer, FluidSynth is required to play using SoundFont files as you set use_soundfont = True or play_use_soundfont = True, please install FluidSynth and then try to reopen again. You can use Ideal Piano as usual, as now the use soundfont config parameters will be set to False.'
         )
         msg_box.exec()
 
