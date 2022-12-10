@@ -917,7 +917,6 @@ class piano_window(pyglet.window.Window):
                     current_piano_engine._midi_show_update_notes_text)
                 pyglet.clock.unschedule(
                     current_piano_engine._midi_show_finished)
-                current_piano_engine.counter = 0
                 if piano_config.show_music_analysis:
                     self.music_analysis_label.text = ''
                 if piano_config.use_soundfont:
