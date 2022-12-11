@@ -29,6 +29,17 @@ def change_parameter(var, new, config_path, whole_config=None):
             save_json(current_config, config_path, whole_config)
 
 
+class json_module:
+
+    def __init__(self, file, text=None):
+        if text is None:
+            with open(file, encoding='utf-8') as f:
+                text = json.load(f)
+        self.json = text
+        for i, j in self.json.items():
+            setattr(self, i, j)
+
+
 class Dialog(QtWidgets.QMainWindow):
 
     def __init__(self, caption, directory, filter, mode=0):

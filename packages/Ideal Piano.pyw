@@ -4,11 +4,10 @@ import multiprocessing
 import browse
 import musicpy as mp
 import musicpy.control as control
-import json_module
-from change_settings import config_window, change_parameter
+from change_settings import config_window, change_parameter, json_module
 
 piano_config_path = 'packages/piano_config.json'
-piano_config = json_module.json_module(piano_config_path)
+piano_config = json_module(piano_config_path)
 
 app = QtWidgets.QApplication(sys.argv)
 del app
@@ -1081,11 +1080,11 @@ class piano_window(pyglet.window.Window):
             del app
             self.open_choose_midi_keyboard_window = False
             global piano_config
-            piano_config = json_module.json_module(piano_config_path)
+            piano_config = json_module(piano_config_path)
 
     def reload_settings(self):
         global piano_config
-        piano_config = json_module.json_module(piano_config_path)
+        piano_config = json_module(piano_config_path)
         current_piano_engine.notedic = piano_config.key_settings
         self.width = piano_config.screen_size[0]
         self.height = piano_config.screen_size[1]

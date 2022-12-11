@@ -161,7 +161,7 @@
     "delay_only_read_current": true,
     "sound_format": "mp3",
     "sound_path": "resources/sounds",
-    "play_midi_start_process_time": 0.2,
+    "play_midi_start_process_time": 0.3,
     "move_progress_adjust_time": 0.5,
     "use_soundfont_delay_time": 0.5,
     "bars_mode_delay_time": 0.5,

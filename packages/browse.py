@@ -1,13 +1,12 @@
 import musicpy as mp
 import os
 import sys
-import json_module
 from PyQt5 import QtGui, QtWidgets, QtCore
-from change_settings import change_parameter
+from change_settings import change_parameter, json_module
 from threading import Thread
 
 piano_config_path = 'packages/piano_config.json'
-piano_config = json_module.json_module(piano_config_path)
+piano_config = json_module(piano_config_path)
 
 
 def set_font(font, dpi):
@@ -349,7 +348,7 @@ class setup:
 
     def __init__(self, browse_dict, file_name=None):
         global piano_config
-        piano_config = json_module.json_module(piano_config_path)
+        piano_config = json_module(piano_config_path)
         self.file_path = None
         self.action = 0
         self.track_ind_get = None
@@ -376,7 +375,7 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.setMinimumSize(800, 400)
 
         global piano_config
-        piano_config = json_module.json_module(piano_config_path)
+        piano_config = json_module(piano_config_path)
 
         if sys.platform == 'win32':
             self.setWindowIcon(QtGui.QIcon('resources/piano.ico'))
