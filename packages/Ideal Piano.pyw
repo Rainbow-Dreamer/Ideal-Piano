@@ -948,6 +948,8 @@ class piano_window(pyglet.window.Window):
         if current_piano_engine.detect_key_info:
             current_piano_engine.detect_key_info.clear()
             current_piano_engine.detect_key_info_ind = 0
+        if piano_config.show_current_detect_key:
+            self.current_detect_key_label.text = ''
 
     def _draw_window_first_time(self):
         self.self_play_button.draw()
@@ -1257,6 +1259,12 @@ class piano_engine:
     def reset_all_piano_keys(self):
         for i, each in enumerate(current_piano_window.piano_keys):
             each.color = current_piano_window.initial_colors[i]
+
+    def is_pressed(self, keys):
+        return all(i for i in [
+            current_piano_window.keyboard_handler[
+                current_piano_window.map_key_dict[k]] for k in keys
+        ])
 
     def _detect_chord(self, current_chord):
         if not isinstance(current_chord, mp.chord):
@@ -2174,12 +2182,13 @@ class piano_engine:
                 if status == 0 and self.current_past_time >= current_bars_drop_start_time:
                     places = current_piano_window.note_place[
                         current_note.degree - 21]
+                    current_height = current_piano_window.bar_unit * current_note.duration / (
+                        self.bpm / 130)
                     current_bar = pyglet.shapes.BorderedRectangle(
                         x=places[0] + current_piano_window.bar_offset_x,
                         y=current_piano_window.height,
                         width=current_piano_window.bar_width,
-                        height=current_piano_window.bar_unit *
-                        current_note.duration / (self.bpm / 130),
+                        height=current_height,
                         color=current_note.own_color
                         if piano_config.use_track_colors else
                         (piano_config.bar_color
@@ -2294,14 +2303,10 @@ class piano_engine:
     def _midi_show_playing_read_pc_move_progress_key(self, dt):
         if self.finished:
             return
-        if current_piano_window.keyboard_handler[
-                current_piano_window.map_key_dict[
-                    piano_config.move_progress_left_key]]:
+        if self.is_pressed([piano_config.move_progress_left_key]):
             self._midi_show_set_position(self.current_past_time -
                                          piano_config.move_progress_left_unit)
-        elif current_piano_window.keyboard_handler[
-                current_piano_window.map_key_dict[
-                    piano_config.move_progress_right_key]]:
+        elif self.is_pressed([piano_config.move_progress_right_key]):
             self._midi_show_set_position(self.current_past_time +
                                          piano_config.move_progress_right_unit)
 
