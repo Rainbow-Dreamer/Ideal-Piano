@@ -150,12 +150,12 @@ def secondary_dom7(root, mode='major'):
     return newscale.dom7_chord()
 
 
-def getchord_by_interval(start,
-                         interval1,
-                         duration=1 / 4,
-                         interval=0,
-                         cummulative=True,
-                         start_time=0):
+def get_chord_by_interval(start,
+                          interval1,
+                          duration=1 / 4,
+                          interval=0,
+                          cummulative=True,
+                          start_time=0):
 
     if isinstance(start, str):
         start = to_note(start)
@@ -180,25 +180,25 @@ def inversion(current_chord, num=1):
     return current_chord.inversion(num)
 
 
-def getchord(start,
-             mode=None,
-             duration=1 / 4,
-             intervals=None,
-             interval=None,
-             cummulative=True,
-             pitch=4,
-             ind=0,
-             start_time=0,
-             custom_mapping=None):
+def get_chord(start,
+              mode=None,
+              duration=1 / 4,
+              intervals=None,
+              interval=None,
+              cummulative=True,
+              pitch=4,
+              ind=0,
+              start_time=0,
+              custom_mapping=None):
     if not isinstance(start, note):
         start = to_note(start, pitch=pitch)
     if interval is not None:
-        return getchord_by_interval(start,
-                                    interval,
-                                    duration,
-                                    intervals,
-                                    cummulative,
-                                    start_time=start_time)
+        return get_chord_by_interval(start,
+                                     interval,
+                                     duration,
+                                     intervals,
+                                     cummulative,
+                                     start_time=start_time)
     premode = mode
     mode = mode.lower().replace(' ', '')
     initial = start.degree
@@ -216,9 +216,6 @@ def getchord(start,
     for i in range(len(interval)):
         chordlist.append(degree_to_note(initial + interval[i]))
     return chord(chordlist, duration, intervals, start_time=start_time)
-
-
-chd = getchord
 
 
 def concat(chordlist, mode='+', extra=None, start=None):
@@ -1143,12 +1140,12 @@ def trans(obj, pitch=4, duration=1 / 4, interval=None, custom_mapping=None):
             result /= each
         return result
     if obj in database.standard:
-        return chd(obj,
-                   'M',
-                   pitch=pitch,
-                   duration=duration,
-                   intervals=interval,
-                   custom_mapping=custom_mapping)
+        return get_chord(obj,
+                         'M',
+                         pitch=pitch,
+                         duration=duration,
+                         intervals=interval,
+                         custom_mapping=custom_mapping)
     if '/' not in obj:
         check_structure = obj.split(',')
         check_structure_len = len(check_structure)
@@ -1161,31 +1158,31 @@ def trans(obj, pitch=4, duration=1 / 4, interval=None, custom_mapping=None):
             first = obj[0]
             types = obj[1]
             if first in database.standard and types in current_chord_types:
-                return chd(first,
-                           types,
-                           pitch=pitch,
-                           duration=duration,
-                           intervals=interval,
-                           custom_mapping=custom_mapping)
+                return get_chord(first,
+                                 types,
+                                 pitch=pitch,
+                                 duration=duration,
+                                 intervals=interval,
+                                 custom_mapping=custom_mapping)
         elif N > 2:
             first_two = obj[:2]
             type1 = obj[2:]
             if first_two in database.standard and type1 in current_chord_types:
-                return chd(first_two,
-                           type1,
-                           pitch=pitch,
-                           duration=duration,
-                           intervals=interval,
-                           custom_mapping=custom_mapping)
+                return get_chord(first_two,
+                                 type1,
+                                 pitch=pitch,
+                                 duration=duration,
+                                 intervals=interval,
+                                 custom_mapping=custom_mapping)
             first_one = obj[0]
             type2 = obj[1:]
             if first_one in database.standard and type2 in current_chord_types:
-                return chd(first_one,
-                           type2,
-                           pitch=pitch,
-                           duration=duration,
-                           intervals=interval,
-                           custom_mapping=custom_mapping)
+                return get_chord(first_one,
+                                 type2,
+                                 pitch=pitch,
+                                 duration=duration,
+                                 intervals=interval,
+                                 custom_mapping=custom_mapping)
     else:
         parts = obj.split('/')
         part1, part2 = parts[0], '/'.join(parts[1:])
@@ -1230,7 +1227,7 @@ def to_scale(obj, pitch=None):
 
 def intervalof(current_chord, cummulative=True, translate=False):
     if isinstance(current_chord, scale):
-        current_chord = current_chord.getScale()
+        current_chord = current_chord.get_scale()
     if not isinstance(current_chord, chord):
         current_chord = chord(current_chord)
     return current_chord.intervalof(cummulative, translate)
@@ -1760,7 +1757,7 @@ def note_range(note1, note2):
 
 def adjust_to_scale(current_chord, current_scale):
     temp = copy(current_chord)
-    current_notes = current_scale.getScale()
+    current_notes = current_scale.get_scale()
     for i, each in enumerate(temp):
         current_note = closest_note_from_chord(each, current_notes)
         each.name = current_note.name

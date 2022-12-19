@@ -112,13 +112,13 @@ class note:
         result = chord([copy(self), self + interval])
         return result
 
-    def getchord_by_interval(start,
-                             interval1,
-                             duration=1 / 4,
-                             interval=0,
-                             cummulative=True):
-        return mp.getchord_by_interval(start, interval1, duration, interval,
-                                       cummulative)
+    def get_chord_by_interval(start,
+                              interval1,
+                              duration=1 / 4,
+                              interval=0,
+                              cummulative=True):
+        return mp.get_chord_by_interval(start, interval1, duration, interval,
+                                        cummulative)
 
     def dotted(self, num=1):
         temp = copy(self)
@@ -1503,10 +1503,10 @@ class chord:
             temp.normalize_tempo(tempo_changes[0].bpm)
         volumes = temp.get_volume()
         pitch_intervals = temp.intervalof(cummulative=False)
-        result = mp.getchord_by_interval(temp[0],
-                                         [-i for i in pitch_intervals],
-                                         temp.get_duration(), temp.interval,
-                                         False)
+        result = mp.get_chord_by_interval(temp[0],
+                                          [-i for i in pitch_intervals],
+                                          temp.get_duration(), temp.interval,
+                                          False)
         result.setvolume(volumes)
         result += pitch_bend_changes
         return result
@@ -5213,6 +5213,7 @@ class chord_type:
     note_name: str = None
     interval_name: str = None
     polychords: list = None
+    order: list = None
 
     def get_root_position(self):
         return f'{self.root}{self.chord_type}'
@@ -5224,7 +5225,8 @@ class chord_type:
                  apply_altered=True,
                  apply_non_chord_bass_note=True,
                  apply_inversion=True,
-                 custom_mapping=None):
+                 custom_mapping=None,
+                 custom_order=None):
         if self.type == 'note':
             return chord([self.note_name])
         elif self.type == 'interval':
@@ -5242,7 +5244,9 @@ class chord_type:
                         apply_omit=apply_omit,
                         apply_altered=apply_altered,
                         apply_non_chord_bass_note=apply_non_chord_bass_note,
-                        apply_inversion=apply_inversion)
+                        apply_inversion=apply_inversion,
+                        custom_mapping=custom_mapping,
+                        custom_order=custom_order)
                     for each in self.polychords[::-1]
                 ]
                 current = functools.reduce(chord.on, current_chords)
@@ -5250,21 +5254,49 @@ class chord_type:
                 current = mp.C(self.get_root_position(),
                                custom_mapping=custom_mapping)
                 if not root_position:
-                    if apply_omit and self.omit:
-                        current = current.omit([
-                            database.precise_degree_match.get(
-                                i.split('/')[0], i) for i in self.omit
-                        ],
-                                               mode=1)
-                    if apply_inversion and self.inversion:
-                        current = current.inversion(self.inversion)
-                    if apply_altered and self.altered:
-                        current = current(','.join(self.altered))
-                    if apply_voicing and self.voicing:
-                        current = current @ self.voicing
-                    if apply_non_chord_bass_note and self.non_chord_bass_note:
-                        current = current.on(self.non_chord_bass_note)
+                    if custom_order is not None:
+                        current_order = custom_order
+                    else:
+                        if self.order is not None:
+                            current_order = self.order
+                        else:
+                            current_order = [0, 1, 2, 3, 4]
+                    current_apply = [
+                        apply_omit, apply_altered, apply_inversion,
+                        apply_voicing, apply_non_chord_bass_note
+                    ]
+                    for each in current_order:
+                        if current_apply[each]:
+                            current = self._apply_order(current, each)
             return current
+
+    def _apply_order(self, current, order):
+        if order == 0:
+            if self.omit:
+                current = current.omit([
+                    database.precise_degree_match.get(i.split('/')[0], i)
+                    for i in self.omit
+                ],
+                                       mode=1)
+        elif order == 1:
+            if self.altered:
+                current = current(','.join(self.altered))
+        elif order == 2:
+            if self.inversion:
+                current = current.inversion(self.inversion)
+        elif order == 3:
+            if self.voicing:
+                current = current @ self.voicing
+        elif order == 4:
+            if self.non_chord_bass_note:
+                current = current.on(self.non_chord_bass_note)
+        return current
+
+    def _add_order(self, order):
+        if self.order is not None:
+            if order in self.order:
+                self.order.remove(order)
+            self.order.append(order)
 
     def to_text(self,
                 show_degree=True,
@@ -5302,7 +5334,7 @@ class chord_type:
                     altered_msg = ''
                 if self.omit:
                     if show_degree:
-                        omit_msg = f' omit {", ".join([str(i) for i in self.omit])}'
+                        omit_msg = f'omit {", ".join([str(i) for i in self.omit])}'
                     else:
                         current_omit = []
                         for i in self.omit:
@@ -5314,41 +5346,37 @@ class chord_type:
                                     current_omit.append(current_degree.name)
                             else:
                                 current_omit.append(i)
-                        omit_msg = f' omit {", ".join(current_omit)}'
+                        omit_msg = f'omit {", ".join(current_omit)}'
                 else:
                     omit_msg = ''
                 voicing_msg = f'sort as {self.voicing}' if self.voicing else ''
                 non_chord_bass_note_msg = f'/{self.non_chord_bass_note}' if self.non_chord_bass_note else ''
-                if self.chord_speciality == 'root position':
-                    result = f'{self.root}{self.chord_type}'
-                    if omit_msg:
-                        result += omit_msg
-                elif self.chord_speciality == 'inverted chord':
-                    result = f'{self.root}{self.chord_type}'
-                    if omit_msg:
-                        result += omit_msg
-                    if self.omit is not None:
-                        current_omit_chord = current_chord.omit([
-                            database.precise_degree_match.get(
-                                i.split('/')[0], i) for i in self.omit
-                        ],
-                                                                mode=1)
+                if self.inversion:
+                    if self.order is not None and 2 in self.order:
+                        current_custom_order = self.order[:self.order.index(2)]
                     else:
-                        current_omit_chord = current_chord
-                    result += f'/{current_omit_chord[self.inversion].name}'
-                elif self.chord_speciality == 'chord voicings' or self.chord_speciality == 'altered chord':
-                    result = f'{self.root}{self.chord_type}'
-                    if omit_msg:
-                        result += omit_msg
-                if non_chord_bass_note_msg:
-                    result += non_chord_bass_note_msg
-                if not show_voicing:
-                    other_msg = [altered_msg]
+                        current_custom_order = None
+                    current_new_chord = self.to_chord(
+                        custom_mapping=custom_mapping,
+                        custom_order=current_custom_order)
+                    inversion_msg = f'/{current_new_chord[self.inversion].name}'
                 else:
-                    other_msg = [altered_msg, voicing_msg]
+                    inversion_msg = ''
+                result = f'{self.root}{self.chord_type}'
+                other_msg = [
+                    omit_msg, altered_msg, inversion_msg, voicing_msg,
+                    non_chord_bass_note_msg
+                ]
+                if not self.order:
+                    current_order = [0, 1, 2, 3, 4]
+                else:
+                    current_order = self.order
+                other_msg = [other_msg[i] for i in current_order]
                 other_msg = [i for i in other_msg if i]
                 if other_msg:
-                    result += ' ' + ' '.join(other_msg)
+                    if other_msg[0] != inversion_msg:
+                        result += ' '
+                    result += ' '.join(other_msg)
                 return result
 
     def clear(self):
@@ -5363,14 +5391,37 @@ class chord_type:
         self.type = 'chord'
         self.note_name = None
         self.interval_name = None
+        self.order = []
 
-    def apply_sort_msg(self, msg):
+    def apply_sort_msg(self, msg, change_order=False):
         if isinstance(msg, int):
             self.chord_speciality = 'inverted chord'
             self.inversion = msg
+            if change_order and self.order is not None:
+                self._add_order(2)
         else:
             self.chord_speciality = 'chord voicings'
             self.voicing = msg
+            if change_order and self.order is not None:
+                self._add_order(3)
+
+    def simplify(self):
+        if self.inversion is not None and self.voicing is not None:
+            current_chord1 = self.to_chord()
+            current_chord2 = self.to_chord(apply_inversion=False,
+                                           apply_voicing=False)
+            current_inversion_way = mp.alg.inversion_way(
+                current_chord1, current_chord2)
+            if isinstance(current_inversion_way, int):
+                self.inversion = current_inversion_way
+                self.voicing = None
+                self.chord_speciality = 'inverted chord'
+                self._add_order(2)
+            elif isinstance(current_inversion_way, list):
+                self.inversion = None
+                self.voicing = current_inversion_way
+                self.chord_speciality = 'chord voicings'
+                self._add_order(3)
 
     def show(self, **to_text_args):
         current_vars = vars(self)
@@ -5387,8 +5438,10 @@ class chord_type:
         elif self.type == 'chord':
             current = [f'type: {self.type}'] + [
                 f'{i.replace("_", " ")}: {j}'
-                for i, j in current_vars.items() if i not in
-                ['type', 'note_name', 'interval_name', 'highest_ratio']
+                for i, j in current_vars.items() if i not in [
+                    'type', 'note_name', 'interval_name', 'highest_ratio',
+                    'order'
+                ]
             ]
             if self.chord_speciality == 'polychord':
                 for i, each in enumerate(current):

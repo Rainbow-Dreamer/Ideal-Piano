@@ -113,15 +113,16 @@ def find_similarity(a,
                     similarity_ratio=0.6,
                     custom_mapping=None):
     current_chord_type = chord_type()
+    current_chord_type.order = []
     if b is None:
         current_chord_types = database.chordTypes if custom_mapping is None else custom_mapping[
             2]
         wholeTypes = current_chord_types.keynames()
         selfname = a.names()
         rootnote = a[0]
-        possible_chords = [(chd(rootnote,
-                                i,
-                                custom_mapping=current_chord_types), i)
+        possible_chords = [(get_chord(rootnote,
+                                      i,
+                                      custom_mapping=current_chord_types), i)
                            for i in wholeTypes]
         lengths = len(possible_chords)
         if same_note_special:
@@ -194,11 +195,13 @@ def find_similarity(a,
                             current_chord_type.voicing = sort_message
                             current_chord_type.root = chordfrom[0].name
                             current_chord_type.chord_type = chordfrom_type
+                            current_chord_type._add_order(3)
                         else:
                             current_chord_type.chord_speciality = 'inverted chord'
                             current_chord_type.inversion = current_inversion_msg
                             current_chord_type.root = chordfrom[0].name
                             current_chord_type.chord_type = chordfrom_type
+                            current_chord_type._add_order(2)
                     else:
                         return current_chord_type
                 current_chord_type.highest_ratio = highest
@@ -213,17 +216,20 @@ def find_similarity(a,
                         current_chord_type.voicing = sort_message
                         current_chord_type.root = chordfrom[0].name
                         current_chord_type.chord_type = chordfrom_type
+                        current_chord_type._add_order(3)
                     else:
                         current_chord_type.chord_speciality = 'inverted chord'
                         current_chord_type.inversion = current_inversion_msg
                         current_chord_type.root = chordfrom[0].name
                         current_chord_type.chord_type = chordfrom_type
+                        current_chord_type._add_order(2)
                 elif contains(a, chordfrom):
                     current_omit_msg = omit_from(a, chordfrom)
                     current_chord_type.chord_speciality = 'root position'
                     current_chord_type.omit = current_omit_msg
                     current_chord_type.root = chordfrom[0].name
                     current_chord_type.chord_type = chordfrom_type
+                    current_chord_type._add_order(0)
                 elif len(a) == len(chordfrom):
                     current_change_msg = change_from(a, chordfrom)
                     if current_change_msg:
@@ -231,6 +237,7 @@ def find_similarity(a,
                         current_chord_type.altered = current_change_msg
                         current_chord_type.root = chordfrom[0].name
                         current_chord_type.chord_type = chordfrom_type
+                        current_chord_type._add_order(1)
                 if current_chord_type.chord_type is None:
                     return current_chord_type
                 else:
@@ -256,17 +263,20 @@ def find_similarity(a,
                 current_chord_type.voicing = sort_message
                 current_chord_type.root = chordfrom[0].name
                 current_chord_type.chord_type = chordfrom_type
+                current_chord_type._add_order(3)
             else:
                 current_chord_type.chord_speciality = 'inverted chord'
                 current_chord_type.inversion = current_inversion_msg
                 current_chord_type.root = chordfrom[0].name
                 current_chord_type.chord_type = chordfrom_type
+                current_chord_type._add_order(2)
         elif contains(a, chordfrom):
             current_omit_msg = omit_from(a, chordfrom)
             current_chord_type.chord_speciality = 'root position'
             current_chord_type.omit = current_omit_msg
             current_chord_type.root = chordfrom[0].name
             current_chord_type.chord_type = chordfrom_type
+            current_chord_type._add_order(0)
         elif len(a) == len(chordfrom):
             current_change_msg = change_from(a, chordfrom)
             if current_change_msg:
@@ -274,6 +284,7 @@ def find_similarity(a,
                 current_chord_type.altered = current_change_msg
                 current_chord_type.root = chordfrom[0].name
                 current_chord_type.chord_type = chordfrom_type
+                current_chord_type._add_order(1)
         return current_chord_type
 
 
@@ -311,10 +322,10 @@ def detect_variation(current_chord,
                                              custom_mapping=custom_mapping)
                 else:
                     result = each_detect
-                    result.apply_sort_msg(inv_msg)
+                    result.apply_sort_msg(inv_msg, change_order=True)
             else:
                 result = each_detect
-                result.apply_sort_msg(inv_msg)
+                result.apply_sort_msg(inv_msg, change_order=True)
             return result
     for each2 in range(1, N):
         each_current = current_chord.inversion_highest(each2)
@@ -341,10 +352,10 @@ def detect_variation(current_chord,
                                              custom_mapping=custom_mapping)
                 else:
                     result = each_detect
-                    result.apply_sort_msg(inv_msg)
+                    result.apply_sort_msg(inv_msg, change_order=True)
             else:
                 result = each_detect
-                result.apply_sort_msg(inv_msg)
+                result.apply_sort_msg(inv_msg, change_order=True)
             return result
 
 
@@ -386,6 +397,16 @@ def interval_check(current_chord, custom_mapping=None):
     return root_note_name, interval_name
 
 
+def _detect_helper(current_chord_type,
+                   get_chord_type=False,
+                   show_degree=True,
+                   custom_mapping=None):
+    return current_chord_type.to_text(
+        show_degree=show_degree,
+        custom_mapping=custom_mapping if current_chord_type.type == 'chord'
+        else None) if not get_chord_type else current_chord_type
+
+
 @method_wrapper(chord)
 def detect(current_chord,
            change_from_first=True,
@@ -405,35 +426,40 @@ def detect(current_chord,
     if N == 1:
         current_chord_type.type = 'note'
         current_chord_type.note_name = str(current_chord.notes[0])
-        return current_chord_type.to_text(
-            show_degree=show_degree
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
     if N == 2:
         current_root_note_name, current_interval_name = interval_check(
             current_chord, custom_mapping=custom_mapping)
         current_chord_type.type = 'interval'
         current_chord_type.root = current_root_note_name
         current_chord_type.interval_name = current_interval_name
-        return current_chord_type.to_text(
-            show_degree=show_degree
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
     current_chord = current_chord.standardize()
     N = len(current_chord)
     if N == 1:
         current_chord_type.type = 'note'
         current_chord_type.note_name = str(current_chord.notes[0])
-        return current_chord_type.to_text(
-            show_degree=show_degree
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
     if N == 2:
         current_root_note_name, current_interval_name = interval_check(
             current_chord, custom_mapping=custom_mapping)
         current_chord_type.type = 'interval'
         current_chord_type.root = current_root_note_name
         current_chord_type.interval_name = current_interval_name
-        return current_chord_type.to_text(
-            show_degree=show_degree
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
+    current_chord_type.order = []
     root = current_chord[0].degree
     rootNote = current_chord[0].name
     distance = tuple(i.degree - root for i in current_chord[1:])
@@ -445,9 +471,10 @@ def detect(current_chord,
     if findTypes != 'not found':
         current_chord_type.root = rootNote
         current_chord_type.chord_type = findTypes[0]
-        return current_chord_type.to_text(
-            show_degree=show_degree, custom_mapping=current_custom_chord_types
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
     current_chord_type = find_similarity(a=current_chord,
                                          change_from_first=change_from_first,
                                          same_note_special=same_note_special,
@@ -456,15 +483,15 @@ def detect(current_chord,
     if current_chord_type.chord_type is not None:
         if original_first:
             if current_chord_type.highest_ratio > original_first_ratio and current_chord_type.altered is None:
-                return current_chord_type.to_text(
-                    show_degree=show_degree,
-                    custom_mapping=current_custom_chord_types
-                ) if not get_chord_type else current_chord_type
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
         if current_chord_type.highest_ratio == 1:
-            return current_chord_type.to_text(
-                show_degree=show_degree,
-                custom_mapping=current_custom_chord_types
-            ) if not get_chord_type else current_chord_type
+            return _detect_helper(current_chord_type=current_chord_type,
+                                  get_chord_type=get_chord_type,
+                                  show_degree=show_degree,
+                                  custom_mapping=custom_mapping)
     for i in range(1, N):
         current = chord(current_chord.inversion(i).names())
         root = current[0].degree
@@ -480,10 +507,11 @@ def detect(current_chord,
                 current_chord_type.inversion = inversion_result
                 current_chord_type.root = current[0].name
                 current_chord_type.chord_type = result1[0]
-                return current_chord_type.to_text(
-                    show_degree=show_degree,
-                    custom_mapping=current_custom_chord_types
-                ) if not get_chord_type else current_chord_type
+                current_chord_type._add_order(2)
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
         else:
             current = current.inoctave()
             root = current[0].degree
@@ -499,10 +527,12 @@ def detect(current_chord,
                     current_chord_type.inversion = inversion_result
                     current_chord_type.root = current[0].name
                     current_chord_type.chord_type = result1[0]
-                    return current_chord_type.to_text(
+                    current_chord_type._add_order(2)
+                    return _detect_helper(
+                        current_chord_type=current_chord_type,
+                        get_chord_type=get_chord_type,
                         show_degree=show_degree,
-                        custom_mapping=current_custom_chord_types
-                    ) if not get_chord_type else current_chord_type
+                        custom_mapping=custom_mapping)
     for i in range(1, N):
         current = chord(current_chord.inversion_highest(i).names())
         root = current[0].degree
@@ -518,10 +548,11 @@ def detect(current_chord,
                 current_chord_type.inversion = inversion_high_result
                 current_chord_type.root = current[0].name
                 current_chord_type.chord_type = result1[0]
-                return current_chord_type.to_text(
-                    show_degree=show_degree,
-                    custom_mapping=current_custom_chord_types
-                ) if not get_chord_type else current_chord_type
+                current_chord_type._add_order(2)
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
         else:
             current = current.inoctave()
             root = current[0].degree
@@ -537,10 +568,12 @@ def detect(current_chord,
                     current_chord_type.inversion = inversion_high_result
                     current_chord_type.root = current[0].name
                     current_chord_type.chord_type = result1[0]
-                    return current_chord_type.to_text(
+                    current_chord_type._add_order(2)
+                    return _detect_helper(
+                        current_chord_type=current_chord_type,
+                        get_chord_type=get_chord_type,
                         show_degree=show_degree,
-                        custom_mapping=current_custom_chord_types
-                    ) if not get_chord_type else current_chord_type
+                        custom_mapping=custom_mapping)
     if poly_chord_first and N > 3:
         current_chord_type = detect_split(current_chord=current_chord,
                                           N=N,
@@ -551,9 +584,10 @@ def detect(current_chord,
                                           poly_chord_first=poly_chord_first,
                                           show_degree=show_degree,
                                           custom_mapping=custom_mapping)
-        return current_chord_type.to_text(
-            show_degree=show_degree, custom_mapping=current_custom_chord_types
-        ) if not get_chord_type else current_chord_type
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
     inversion_final = True
     possibles = [(find_similarity(a=current_chord.inversion(j),
                                   change_from_first=change_from_first,
@@ -573,10 +607,10 @@ def detect(current_chord,
         inversion_final = False
     if len(possibles) == 0:
         if current_chord_type.chord_type is not None:
-            return current_chord_type.to_text(
-                show_degree=show_degree,
-                custom_mapping=current_custom_chord_types
-            ) if not get_chord_type else current_chord_type
+            return _detect_helper(current_chord_type=current_chord_type,
+                                  get_chord_type=get_chord_type,
+                                  show_degree=show_degree,
+                                  custom_mapping=custom_mapping)
         if not whole_detect:
             return
         else:
@@ -607,14 +641,24 @@ def detect(current_chord,
                         poly_chord_first=poly_chord_first,
                         show_degree=show_degree,
                         custom_mapping=custom_mapping)
-                    return current_chord_type.to_text(
+                    return _detect_helper(
+                        current_chord_type=current_chord_type,
+                        get_chord_type=get_chord_type,
                         show_degree=show_degree,
-                        custom_mapping=current_custom_chord_types
-                    ) if not get_chord_type else current_chord_type
+                        custom_mapping=custom_mapping)
                 else:
-                    return result_change
+                    current_chord_type = result_change
+                    return _detect_helper(
+                        current_chord_type=current_chord_type,
+                        get_chord_type=get_chord_type,
+                        show_degree=show_degree,
+                        custom_mapping=custom_mapping)
             else:
-                return detect_var
+                current_chord_type = detect_var
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
     possibles.sort(key=lambda x: x[0].highest_ratio, reverse=True)
     highest_chord_type, current_inversion = possibles[0]
     if current_chord_type.chord_type is not None:
@@ -622,10 +666,10 @@ def detect(current_chord,
                 current_chord_type.highest_ratio >=
                 highest_chord_type.highest_ratio
                 or highest_chord_type.voicing is not None):
-            return current_chord_type.to_text(
-                show_degree=show_degree,
-                custom_mapping=current_custom_chord_types
-            ) if not get_chord_type else current_chord_type
+            return _detect_helper(current_chord_type=current_chord_type,
+                                  get_chord_type=get_chord_type,
+                                  show_degree=show_degree,
+                                  custom_mapping=custom_mapping)
     if highest_chord_type.highest_ratio > similarity_ratio:
         if inversion_final:
             current_invert = current_chord.inversion(current_inversion)
@@ -643,6 +687,7 @@ def detect(current_chord,
                 custom_mapping=custom_mapping)
             current_chord_type.chord_speciality = 'chord voicings'
             current_chord_type.voicing = invfrom_current_invert
+            current_chord_type._add_order(3)
         else:
             current_invert_msg = inversion_way(
                 current_chord,
@@ -650,10 +695,12 @@ def detect(current_chord,
                     apply_voicing=False,
                     custom_mapping=current_custom_chord_types))
             current_chord_type = highest_chord_type
-            current_chord_type.apply_sort_msg(current_invert_msg)
-        return current_chord_type.to_text(
-            show_degree=show_degree, custom_mapping=current_custom_chord_types
-        ) if not get_chord_type else current_chord_type
+            current_chord_type.apply_sort_msg(current_invert_msg,
+                                              change_order=True)
+        return _detect_helper(current_chord_type=current_chord_type,
+                              get_chord_type=get_chord_type,
+                              show_degree=show_degree,
+                              custom_mapping=custom_mapping)
 
     if not whole_detect:
         return
@@ -685,14 +732,22 @@ def detect(current_chord,
                     poly_chord_first=poly_chord_first,
                     show_degree=show_degree,
                     custom_mapping=custom_mapping)
-                return current_chord_type.to_text(
-                    show_degree=show_degree,
-                    custom_mapping=current_custom_chord_types
-                ) if not get_chord_type else current_chord_type
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
             else:
-                return result_change
+                current_chord_type = result_change
+                return _detect_helper(current_chord_type=current_chord_type,
+                                      get_chord_type=get_chord_type,
+                                      show_degree=show_degree,
+                                      custom_mapping=custom_mapping)
         else:
-            return detect_var
+            current_chord_type = detect_var
+            return _detect_helper(current_chord_type=current_chord_type,
+                                  get_chord_type=get_chord_type,
+                                  show_degree=show_degree,
+                                  custom_mapping=custom_mapping)
 
 
 def detect_scale_type(current_scale, mode='scale'):
@@ -703,11 +758,11 @@ def detect_scale_type(current_scale, mode='scale'):
     scales = database.detectScale[interval]
     if scales == 'not found':
         if mode == 'scale':
-            current_notes = current_scale.getScale()
+            current_notes = current_scale.get_scale()
         elif mode == 'interval':
-            current_notes = getchord_by_interval('C',
-                                                 current_scale,
-                                                 cummulative=False)
+            current_notes = get_chord_by_interval('C',
+                                                  current_scale,
+                                                  cummulative=False)
         result = detect_in_scale(current_notes,
                                  get_scales=True,
                                  match_len=True)
@@ -1050,12 +1105,12 @@ def find_chords_for_melody(melody,
             if counter >= length:
                 counter = 0
         current_chord_type = random.choice(database.chordtypes)[0]
-        current_chord = chd(current_root, current_chord_type)
+        current_chord = get_chord(current_root, current_chord_type)
         while current_chord not in current_scale or current_chord_type == '5' or current_chord in result or (
                 chord_length is not None
                 and len(current_chord) < chord_length):
             current_chord_type = random.choice(database.chordtypes)[0]
-            current_chord = chd(current_root, current_chord_type)
+            current_chord = get_chord(current_root, current_chord_type)
         result.append(current_chord)
     if chord_length is not None:
         result = [each[:chord_length + 1] for each in result]
@@ -1175,7 +1230,7 @@ def detect_in_scale(current_chord,
         results.extend(altered_scales)
     if match_len:
         results = [
-            i for i in results if len(i.getScale()) == len(current_chord)
+            i for i in results if len(i.get_scale()) == len(current_chord)
         ]
     if get_scales:
         return results
@@ -1607,7 +1662,7 @@ def get_chord_functions(chords, mode, as_list=False, functions_interval=1):
                     current_function = current_function.lower()
             else:
                 if chord_types in database.chordTypes:
-                    current_chord = chd(root_note, chord_types)
+                    current_chord = get_chord(root_note, chord_types)
                     current_chord_names = current_chord.names()
                 else:
                     if chord_types[5:] not in database.NAME_OF_INTERVAL:
@@ -1679,7 +1734,7 @@ def get_chord_notations(chords,
                     current_notation += notation_result
                 else:
                     if chord_types in database.chordTypes:
-                        current_chord = chd(root_note, chord_types)
+                        current_chord = get_chord(root_note, chord_types)
                         current_chord_names = current_chord.names()
                     else:
                         if chord_types[5:] not in database.NAME_OF_INTERVAL:
@@ -2262,11 +2317,11 @@ def get_melody_shape(current_chord,
                      octave_range=None,
                      filter_notes=True):
     note_intervals = get_note_interval(current_chord, interval_tol)
-    result = getchord_by_interval(current_chord[0],
-                                  note_intervals,
-                                  duration=current_chord.get_duration(),
-                                  interval=current_chord.interval,
-                                  cummulative=False)
+    result = get_chord_by_interval(current_chord[0],
+                                   note_intervals,
+                                   duration=current_chord.get_duration(),
+                                   interval=current_chord.interval,
+                                   cummulative=False)
     if octave_range:
         octave1, octave2 = octave_range
         for each in result:
@@ -2363,11 +2418,11 @@ def generate_melody_from_notes(current_chord,
             durations = [random.choice(choose_durations) for i in range(num)]
         else:
             durations = intervals
-    result = getchord_by_interval(start,
-                                  note_intervals,
-                                  cummulative=False,
-                                  duration=durations,
-                                  interval=intervals)
+    result = get_chord_by_interval(start,
+                                   note_intervals,
+                                   cummulative=False,
+                                   duration=durations,
+                                   interval=intervals)
     if octave_range:
         octave1, octave2 = octave_range
         for each in result:
