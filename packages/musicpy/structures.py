@@ -39,8 +39,12 @@ class note:
             self.name] == database.standard[
                 other.name] and self.num == other.num
 
-    def __matmul__(self, other):
+    def same_note_name(self, other):
         return database.standard[self.name] == database.standard[other.name]
+
+    def __matmul__(self, other):
+        if isinstance(other, rhythm):
+            return self.from_rhythm(other)
 
     def setvolume(self, vol):
         vol = int(vol)
@@ -150,6 +154,11 @@ class note:
         temp = copy(self)
         temp.channel = channel
         return temp
+
+    def from_rhythm(self, current_rhythm, set_duration=True):
+        return mp.get_chords_from_rhythm(chords=self,
+                                         current_rhythm=current_rhythm,
+                                         set_duration=set_duration)
 
 
 class chord:
@@ -758,12 +767,15 @@ class chord:
             return self.add(obj, mode='head')
 
     def __matmul__(self, obj):
-        if isinstance(obj, list):
+        if type(obj) is list:
             return self.get(obj)
         elif isinstance(obj, int):
             return self.inv(obj)
         elif isinstance(obj, str):
-            return self.inv(self.names().index(obj))
+            return self.inv(self.names().index(
+                database.standard_dict.get(obj, obj)))
+        elif isinstance(obj, rhythm):
+            return self.from_rhythm(obj)
         else:
             if isinstance(obj, tuple):
                 return mp.alg.negative_harmony(obj[0], self, *obj[1:])
@@ -2091,6 +2103,11 @@ class chord:
                     temp.notes[counter].duration += current_duration
         temp.start_time = current_start_time
         return temp
+
+    def from_rhythm(self, current_rhythm, set_duration=True):
+        return mp.get_chords_from_rhythm(chords=self,
+                                         current_rhythm=current_rhythm,
+                                         set_duration=set_duration)
 
 
 class scale:
