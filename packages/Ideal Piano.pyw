@@ -902,8 +902,14 @@ class piano_window(pyglet.window.Window):
             if self.mode_num == 0:
                 if current_piano_engine.still_hold_pc:
                     current_piano_engine.still_hold_pc.clear()
+                if piano_config.use_midi_output:
+                    send_midi_mute_all_sounds(
+                        current_piano_engine.midi_output_port)
             elif self.mode_num == 1:
                 piano_config.delay_only_read_current = True
+                if piano_config.use_midi_output:
+                    send_midi_mute_all_sounds(
+                        current_piano_engine.midi_output_port)
             elif self.mode_num == 2:
                 pyglet.clock.unschedule(current_piano_engine.midi_file_play)
                 pyglet.clock.unschedule(
@@ -1157,10 +1163,9 @@ class piano_engine:
                 piano_config.global_volume += piano_config.volume_change_unit
             else:
                 piano_config.global_volume = 1
-            [
-                self.wavdic[j].set_volume(piano_config.global_volume)
-                for j in self.wavdic
-            ]
+            if piano_config.load_sound and not piano_config.use_midi_output:
+                for j in self.wavdic.items():
+                    j.set_volume(piano_config.global_volume)
             self.configshow(
                 f'volume up to {int(piano_config.global_volume*100)}%')
         if self.configkey(piano_config.volume_down):
@@ -1168,10 +1173,9 @@ class piano_engine:
                 piano_config.global_volume -= piano_config.volume_change_unit
             else:
                 piano_config.global_volume = 0
-            [
-                self.wavdic[j].set_volume(piano_config.global_volume)
-                for j in self.wavdic
-            ]
+            if piano_config.load_sound and not piano_config.use_midi_output:
+                for j in self.wavdic.items():
+                    j.set_volume(piano_config.global_volume)
             self.configshow(
                 f'volume down to {int(piano_config.global_volume*100)}%')
         self.switchs(piano_config.change_delay, 'delay')
@@ -1210,8 +1214,11 @@ class piano_engine:
                     self.wavdic = load_sf2(self.notedic, current_sf2,
                                            piano_config.global_volume)
                 else:
-                    notenames = os.listdir(piano_config.sound_path)
-                    notenames = [x[:x.index('.')] for x in notenames]
+                    notenames = [
+                        str(i) for i in mp.note_range(
+                            mp.N(piano_config.pitch_range[0]),
+                            mp.N(piano_config.pitch_range[1]) + 1)
+                    ]
                     self.wavdic = load_sf2({i: i
                                             for i in notenames}, current_sf2,
                                            piano_config.global_volume)
@@ -1349,25 +1356,77 @@ class piano_engine:
             current_piano_window.current_detect_key_label.text = current_detect_key_text
         return current_info
 
-    def init_self_pc(self):
-        if not piano_config.play_use_soundfont:
-            current_wavdic = []
-            current_thread = Thread(
-                target=load,
-                args=(self.notedic, piano_config.sound_path,
-                      piano_config.sound_format, piano_config.global_volume,
-                      current_wavdic),
-                daemon=True)
-            current_thread.start()
+    def find_midi_output_port(self):
+        pygame.midi.quit()
+        pygame.midi.init()
+        midi_info = []
+        counter = 0
+        while True:
+            current = counter, pygame.midi.get_device_info(counter)
+            counter += 1
+            if current[1] is None:
+                break
+            midi_info.append(current)
+        if midi_info:
+            midi_output_port = [i[0] for i in midi_info if i[1][2] == 0]
+            if not midi_output_port:
+                return
+            else:
+                return midi_output_port[0]
         else:
-            current_wavdic = []
-            current_thread = Thread(
-                target=load_sf2,
-                args=(self.notedic, current_piano_window.current_sf2,
-                      piano_config.global_volume, current_wavdic),
-                daemon=True)
-            current_thread.start()
-        self.wait_self_pc_load(current_wavdic)
+            return
+
+    def init_self_pc(self):
+        if piano_config.load_sound and not piano_config.use_midi_output:
+            if not piano_config.play_use_soundfont:
+                current_wavdic = []
+                current_thread = Thread(
+                    target=load,
+                    args=(self.notedic, piano_config.sound_path,
+                          piano_config.sound_format,
+                          piano_config.global_volume, current_wavdic),
+                    daemon=True)
+                current_thread.start()
+            else:
+                current_wavdic = []
+                current_thread = Thread(
+                    target=load_sf2,
+                    args=(self.notedic, current_piano_window.current_sf2,
+                          piano_config.global_volume, current_wavdic),
+                    daemon=True)
+                current_thread.start()
+            self.wait_self_pc_load(current_wavdic)
+        else:
+            if piano_config.use_midi_output:
+                if piano_config.play_midi_port is not None:
+                    pygame.midi.quit()
+                    pygame.midi.init()
+                    self.midi_output_port = pygame.midi.Output(
+                        piano_config.play_midi_port)
+                else:
+                    midi_output_port = self.find_midi_output_port()
+                    if midi_output_port is None:
+                        raise Exception(
+                            'Error: cannot find any MIDI output port')
+                    else:
+                        self.midi_output_port = pygame.midi.Output(
+                            midi_output_port)
+            self.wavdic = {i: mp.N(j) for i, j in self.notedic.items()}
+            self.last = []
+            self.changed = False
+            if piano_config.delay:
+                self.stillplay = []
+            self.lastshow = None
+            if piano_config.show_current_detect_key:
+                self.current_play_chords = mp.chord([])
+                current_piano_window.current_detect_key_label.text = ''
+
+            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                'finished']
+            current_piano_window.label.draw()
+            current_piano_window.func = current_piano_engine.mode_self_pc
+            pyglet.clock.schedule_interval(current_piano_window.func,
+                                           1 / piano_config.fps)
 
     def wait_self_pc_load(self, current_wavdic):
         if current_piano_window.click_mode is None:
@@ -1410,9 +1469,12 @@ class piano_engine:
                     pygame.midi.init()
                     self.device = pygame.midi.Input(
                         piano_config.midi_device_id)
-            notenames = os.listdir(piano_config.sound_path)
-            notenames = [x[:x.index('.')] for x in notenames]
-            if piano_config.load_sound:
+            notenames = [
+                str(i)
+                for i in mp.note_range(mp.N(piano_config.pitch_range[0]),
+                                       mp.N(piano_config.pitch_range[1]) + 1)
+            ]
+            if piano_config.load_sound and not piano_config.use_midi_output:
                 if not piano_config.play_use_soundfont:
                     current_wavdic = []
                     current_thread = Thread(target=load,
@@ -1668,24 +1730,11 @@ class piano_engine:
         if piano_config.play_midi_port is not None:
             self.current_output_port_num = piano_config.play_midi_port
         else:
-            pygame.midi.quit()
-            pygame.midi.init()
-            midi_info = []
-            counter = 0
-            while True:
-                current = counter, pygame.midi.get_device_info(counter)
-                counter += 1
-                if current[1] is None:
-                    break
-                midi_info.append(current)
-            if midi_info:
-                midi_output_port = [i[0] for i in midi_info if i[1][2] == 0]
-                if not midi_output_port:
-                    raise Exception('Error: cannot find any MIDI output port')
-                else:
-                    self.current_output_port_num = midi_output_port[0]
-            else:
+            midi_output_port = self.find_midi_output_port()
+            if midi_output_port is None:
                 raise Exception('Error: cannot find any MIDI output port')
+            else:
+                self.current_output_port_num = midi_output_port
         self.event_list = control.piece_to_event_list(self.current_piece,
                                                       set_instrument=True)
         for each in self.event_list:
@@ -1753,6 +1802,8 @@ class piano_engine:
         if current_piano_window.keyboard_handler[
                 current_piano_window.pause_key]:
             pygame.mixer.stop()
+            if piano_config.use_midi_output:
+                send_midi_mute_all_sounds(self.midi_output_port)
             if piano_config.pause_key_clear_notes:
                 if piano_config.delay:
                     self.stillplay = []
@@ -1773,12 +1824,22 @@ class piano_engine:
                     inds = self.stillplay_obj.index(each)
                     if not self.stillplay[inds][2] and time.time(
                     ) - self.stillplay[inds][1] > piano_config.touch_interval:
-                        self.wavdic[each].fadeout(piano_config.fadeout_ms)
+                        if piano_config.load_sound and not piano_config.use_midi_output:
+                            self.wavdic[each].fadeout(piano_config.fadeout_ms)
+                        elif piano_config.use_midi_output:
+                            self.midi_output_port.note_off(
+                                note=self.wavdic[each].degree, channel=0)
                         self.stillplay.pop(inds)
                         self.stillplay_obj.pop(inds)
                 else:
                     self.changed = True
-                    self.wavdic[each].play()
+                    if piano_config.load_sound and not piano_config.use_midi_output:
+                        self.wavdic[each].play()
+                    elif piano_config.use_midi_output:
+                        self.midi_output_port.note_on(
+                            note=self.wavdic[each].degree,
+                            velocity=int(127 * piano_config.global_volume),
+                            channel=0)
                     self.stillplay.append([each, time.time(), True])
                     self.stillplay_obj.append(each)
                     if piano_config.note_mode in note_display_mode and piano_config.note_mode:
@@ -1789,7 +1850,13 @@ class piano_engine:
             else:
                 if each not in self.last:
                     self.changed = True
-                    self.wavdic[each].play()
+                    if piano_config.load_sound and not piano_config.use_midi_output:
+                        self.wavdic[each].play()
+                    elif piano_config.use_midi_output:
+                        self.midi_output_port.note_on(
+                            note=self.wavdic[each].degree,
+                            velocity=int(127 * piano_config.global_volume),
+                            channel=0)
                     if piano_config.note_mode in note_display_mode and piano_config.note_mode:
                         current_bar = self._pc_draw_note_bar(each)
                     else:
@@ -1839,7 +1906,11 @@ class piano_engine:
                         stillobj = self.stillplay[ind]
                         if time.time() - stillobj[1] > piano_config.delay_time:
                             self.changed = True
-                            self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                            if piano_config.load_sound and not piano_config.use_midi_output:
+                                self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                            elif piano_config.use_midi_output:
+                                self.midi_output_port.note_off(
+                                    note=self.wavdic[j].degree, channel=0)
                             self.stillplay.pop(ind)
                             self.stillplay_obj.pop(ind)
                         else:
@@ -1847,10 +1918,18 @@ class piano_engine:
                             self.current.append(j)
                     else:
                         self.changed = True
-                        self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                        if piano_config.load_sound and not piano_config.use_midi_output:
+                            self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                        elif piano_config.use_midi_output:
+                            self.midi_output_port.note_off(
+                                note=self.wavdic[j].degree, channel=0)
                 else:
                     self.changed = True
-                    self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                    if piano_config.load_sound and not piano_config.use_midi_output:
+                        self.wavdic[j].fadeout(piano_config.fadeout_ms)
+                    elif piano_config.use_midi_output:
+                        self.midi_output_port.note_off(
+                            note=self.wavdic[j].degree, channel=0)
         self.last = self.current
 
     def _pc_move_note_bar(self):
@@ -1937,7 +2016,7 @@ class piano_engine:
                 if piano_config.delay_only_read_current:
                     if not each.sustain_pedal_on:
                         if self.current_time - each.count_time >= piano_config.delay_time:
-                            if piano_config.load_sound:
+                            if piano_config.load_sound and not piano_config.use_midi_output:
                                 current_note_text = str(each)
                                 if current_note_text in self.wavdic:
                                     self.wavdic[current_note_text].fadeout(
@@ -2073,7 +2152,7 @@ class piano_engine:
                     if current_note not in self.stillplay:
                         self.stillplay.append(current_note)
                     current_note.count_time = self.current_time
-                    if piano_config.load_sound:
+                    if piano_config.load_sound and not piano_config.use_midi_output:
                         current_note_text = str(current_note)
                         if current_note_text in self.wavdic:
                             current_sound = self.wavdic[current_note_text]
