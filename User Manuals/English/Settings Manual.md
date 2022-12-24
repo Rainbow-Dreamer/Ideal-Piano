@@ -95,9 +95,9 @@ fps: frames per second of the screen
 
 key_settings: The dictionary of the 88 keys of the computer keyboard, please note that all the files in the sound path must contain the keys you have set to
 
-midi_device_id: This parameter is the input port id of the MIDI device after it is connected to the MIDI device (e.g. MIDI keyboard)
+midi_input_port: This parameter is the input port id of the MIDI device after it is connected to the MIDI device (e.g. MIDI keyboard)
 
-play_midi_port: the MIDI output port id when playing MIDI files
+midi_output_port: the MIDI output port id when playing MIDI files
 
 language: the display language of the software, including main window buttons, chord names, messages and the window to choose MIDI files, currently only 'English' and 'Chinese' are supported
 
@@ -175,7 +175,9 @@ change_read_current: The key used with the function key to change whether only t
 
 change_pause_key_clear_notes: key used with function keys to change whether the display of the currently played note is cleared when paused
 
-load_sound: whether to load the sound source and play it when playing (set to False when using with the host)
+load_sound: whether to load the sound source and play it when playing (set to False when using with DAW)
+
+use_midi_output: whether to connect to MIDI output port when playing
 
 show_key: whether to show the name of the keys of the computer keyboard when playing on it
 

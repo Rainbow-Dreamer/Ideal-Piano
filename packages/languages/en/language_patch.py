@@ -27,7 +27,7 @@ ideal_piano_language_dict = {
     'load': 'loading sound samples, please wait...',
     'finished': 'sounds loading finished',
     'no MIDI input':
-    'MIDI device id does not exist,\nplease right click on the MIDI KEYBOARD button\nto select a MIDI device',
+    'MIDI input port does not exist,\nplease right click on the MIDI KEYBOARD button\nto select a MIDI device',
     'pause': 'paused, press {unpause_key} to unpause',
     'repeat': 'music playing finished,\npress {repeat_key} to listen again',
     'sample':

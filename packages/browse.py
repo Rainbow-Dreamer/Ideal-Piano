@@ -409,12 +409,12 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.midi_input_box.setFixedWidth(400)
         midi_inputs_id = [i[0] for i in self.midi_inputs]
         current_input_ind = 0
-        if piano_config.midi_device_id in midi_inputs_id:
+        if piano_config.midi_input_port in midi_inputs_id:
             current_input_ind = midi_inputs_id.index(
-                piano_config.midi_device_id)
+                piano_config.midi_input_port)
         self.midi_input_box.addItems([i[1] for i in self.midi_inputs])
         self.midi_input_box.move(200, 70)
-        self.midi_input_box.activated.connect(self.change_midi_device_id)
+        self.midi_input_box.activated.connect(self.change_midi_input_port)
         self.midi_input_box.setCurrentIndex(current_input_ind)
         self.midi_input_label = QtWidgets.QLabel(self,
                                                  text='MIDI Input Driver')
@@ -427,12 +427,12 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.midi_output_box.setFixedWidth(400)
         midi_outputs_id = [i[0] for i in self.midi_outputs]
         current_output_ind = 0
-        if piano_config.play_midi_port in midi_outputs_id:
+        if piano_config.midi_output_port in midi_outputs_id:
             current_output_ind = midi_outputs_id.index(
-                piano_config.play_midi_port)
+                piano_config.midi_output_port)
         self.midi_output_box.addItems([i[1] for i in self.midi_outputs])
         self.midi_output_box.move(200, 170)
-        self.midi_output_box.activated.connect(self.change_play_midi_port)
+        self.midi_output_box.activated.connect(self.change_midi_output_port)
         self.midi_output_box.setCurrentIndex(current_output_ind)
         self.midi_output_label = QtWidgets.QLabel(self,
                                                   text='MIDI Output Driver')
@@ -450,25 +450,25 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
         self.msg_label.move(50, 270)
         self.show()
 
-    def change_midi_device_id(self):
+    def change_midi_input_port(self):
         current_midi_input = self.midi_input_box.currentText()
-        current_midi_device_id = self.midi_inputs[[
+        current_midi_input_port = self.midi_inputs[[
             i[1] for i in self.midi_inputs
         ].index(current_midi_input)][0]
         try:
-            change_parameter('midi_device_id', current_midi_device_id,
+            change_parameter('midi_input_port', current_midi_input_port,
                              piano_config_path)
         except:
             import traceback
             print(traceback.format_exc())
 
-    def change_play_midi_port(self):
+    def change_midi_output_port(self):
         current_midi_output = self.midi_output_box.currentText()
-        current_play_midi_port = self.midi_outputs[[
+        current_midi_output_port = self.midi_outputs[[
             i[1] for i in self.midi_outputs
         ].index(current_midi_output)][0]
         try:
-            change_parameter('play_midi_port', current_play_midi_port,
+            change_parameter('midi_output_port', current_midi_output_port,
                              piano_config_path)
         except:
             import traceback

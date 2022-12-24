@@ -107,7 +107,7 @@ Yes, you can, please refer to the settings manual, to be short, you can change t
 
 ## Why can't Ideal Piano detect my MIDI keyboard?
 
-The most possible case is that the current MIDI device id in Ideal Piano does not match with your MIDI keyboard. In this case, you can right click on `MIDI KEYBOARD` button to open the choose MIDI device window to choose current MIDI device as your MIDI keyboard, you should choose the MIDI device in MIDI Input Driver box to make this works.
+The most possible case is that the current MIDI input port in Ideal Piano does not match with your MIDI keyboard. In this case, you can right click on `MIDI KEYBOARD` button to open the choose MIDI device window to choose current MIDI device as your MIDI keyboard, you should choose the MIDI device in MIDI Input Driver box to make this works.
 
 For the other cases, if you open the DAW, the MIDI keyboard is already available in the DAW, then Ideal Piano can't detect your MIDI keyboard at this time, because a MIDI keyboard can only control one software at most, so at this time the DAW has already occupied the MIDI keyboard, and Ideal Piano can't detect the MIDI keyboard.
 
@@ -133,9 +133,9 @@ The input MIDI keyboard should be enabled, the port should not be set (left blan
 
 Then load an instrument sound source and set the MIDI output port number for this instrument to the same number as the output MIDI port.
 
-Then open Ideal Piano, change `midi_device_id` in the config.py file to the number of the new MIDI port in loopMIDI, and remember to set the parameter load_sound to False, so that Ideal Piano will not load the sound source you set, and will only play the sound source in the host when you play it. so that Ideal Piano will not load the sources it has set up, and will only play the sources from the host when playing.
+Then open Ideal Piano, change `midi_input_port` in the config.py file to the number of the new MIDI port in loopMIDI, and remember to set the parameter load_sound to False, so that Ideal Piano will not load the sound source you set, and will only play the sound in the DAW when you play it. so that Ideal Piano will not load the sources it has set up, and will only play the sources from the DAW when playing.
 
-For some sources, even if the MIDI output port is set to the same loopMIDI as the host, the solution is to use the MIDI out plugin, set the port to the same MIDI output port as the host, then set the input port of the source to the MIDI out port, and select the MIDI out channel to play when you play to receive the data. (Another important point is that
+For some sources, even if the MIDI output port is set to the same loopMIDI as the DAW, the solution is to use the MIDI out plugin, set the port to the same MIDI output port as the DAW, then set the input port of the source to the MIDI out port, and select the MIDI out channel to play when you play to receive the data. (Another important point is that
 
 (There is also a very important point is that you must first import the source, and then import the MIDI out plug-in, and then set the port, every time you change the new source to this order, otherwise the data still can not pass loopMIDI)
 
@@ -143,7 +143,7 @@ For some sources, even if the MIDI output port is set to the same loopMIDI as th
 
 With loopMIDI you can also play the project in the DAW and at the same time Ideal Piano can demonstrate the current notes and chords, you just need to set the MIDI out port of the DAW and the MIDI out port of the source to the same number, which corresponds to the new MIDI port you created in loopMIDI.
 
-For example, if loopMIDI creates a new MIDI port called MIDI port A, then in the MIDI settings of the DAW, set the port corresponding to MIDI port A to 0, then set the MIDI output port of the audio source to 0 as well, and then set the setting parameter `midi_device_id` to the number corresponding to MIDI port A.
+For example, if loopMIDI creates a new MIDI port called MIDI port A, then in the MIDI settings of the DAW, set the port corresponding to MIDI port A to 0, then set the MIDI output port of the audio source to 0 as well, and then set the setting parameter `midi_input_port` to the number corresponding to MIDI port A.
 
 Then click the MIDI keyboard button to enter MIDI keyboard mode, at this time, play the track with the MIDI output port set in the DAW. When you play the track with the MIDI output port, you can see that Ideal Piano also follows the same notes in real time.
 

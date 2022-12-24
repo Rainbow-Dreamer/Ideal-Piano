@@ -930,16 +930,17 @@ class piano_window(pyglet.window.Window):
                 current_piano_engine.current_hit_key_notes.clear()
                 current_piano_window.current_progress_bar.width = 2
                 if not piano_config.use_soundfont:
-                    try:
-                        current_piano_engine.current_send_midi_queue.put(
-                            'stop')
-                        current_thread = Thread(
-                            target=current_piano_engine.
-                            current_send_midi_event_process.join,
-                            daemon=True)
-                        current_thread.start()
-                    except:
-                        pass
+                    if piano_config.load_sound:
+                        try:
+                            current_piano_engine.current_send_midi_queue.put(
+                                'stop')
+                            current_thread = Thread(
+                                target=current_piano_engine.
+                                current_send_midi_event_process.join,
+                                daemon=True)
+                            current_thread.start()
+                        except:
+                            pass
                 else:
                     pyglet.clock.unschedule(
                         current_piano_engine.start_play_sf2)
@@ -1244,15 +1245,18 @@ class piano_engine:
                 self.start_play_sf2, current_piano_window.bars_drop_interval +
                 current_use_soundfont_delay_time)
         else:
-            self.current_send_midi_queue = multiprocessing.Queue()
-            self.current_send_midi_event_process = multiprocessing.Process(
-                target=start_send_midi_event,
-                args=(self.event_list, 0, self.current_output_port_num,
-                      self.midi_event_length, self.current_send_midi_queue))
-            self.current_send_midi_event_process.daemon = True
-            current_send_midi_event_thread = Thread(
-                target=self.current_send_midi_event_process.start, daemon=True)
-            current_send_midi_event_thread.start()
+            if piano_config.load_sound:
+                self.current_send_midi_queue = multiprocessing.Queue()
+                self.current_send_midi_event_process = multiprocessing.Process(
+                    target=start_send_midi_event,
+                    args=(self.event_list, 0, self.current_output_port_num,
+                          self.midi_event_length,
+                          self.current_send_midi_queue))
+                self.current_send_midi_event_process.daemon = True
+                current_send_midi_event_thread = Thread(
+                    target=self.current_send_midi_event_process.start,
+                    daemon=True)
+                current_send_midi_event_thread.start()
 
     def start_play_sf2(self, dt):
         current_piano_window.current_sf2_player.play_midi_file(
@@ -1356,9 +1360,10 @@ class piano_engine:
             current_piano_window.current_detect_key_label.text = current_detect_key_text
         return current_info
 
-    def find_midi_output_port(self):
-        pygame.midi.quit()
-        pygame.midi.init()
+    def find_midi_output_port(self, mode=0):
+        if mode == 0:
+            pygame.midi.quit()
+            pygame.midi.init()
         midi_info = []
         counter = 0
         while True:
@@ -1398,11 +1403,11 @@ class piano_engine:
             self.wait_self_pc_load(current_wavdic)
         else:
             if piano_config.use_midi_output:
-                if piano_config.play_midi_port is not None:
+                if piano_config.midi_output_port is not None:
                     pygame.midi.quit()
                     pygame.midi.init()
                     self.midi_output_port = pygame.midi.Output(
-                        piano_config.play_midi_port)
+                        piano_config.midi_output_port)
                 else:
                     midi_output_port = self.find_midi_output_port()
                     if midi_output_port is None:
@@ -1461,14 +1466,14 @@ class piano_engine:
                 self.has_load(True)
                 pygame.midi.quit()
                 pygame.midi.init()
-                self.device = pygame.midi.Input(piano_config.midi_device_id)
+                self.device = pygame.midi.Input(piano_config.midi_input_port)
             else:
                 if self.device:
                     self.device.close()
                     pygame.midi.quit()
                     pygame.midi.init()
                     self.device = pygame.midi.Input(
-                        piano_config.midi_device_id)
+                        piano_config.midi_input_port)
             notenames = [
                 str(i)
                 for i in mp.note_range(mp.N(piano_config.pitch_range[0]),
@@ -1497,6 +1502,31 @@ class piano_engine:
                         daemon=True)
                     current_thread.start()
                 self.wait_self_midi_load(current_wavdic)
+            if piano_config.use_midi_output:
+                if piano_config.midi_output_port is not None:
+                    self.midi_output_port = pygame.midi.Output(
+                        piano_config.midi_output_port)
+                else:
+                    midi_output_port = self.find_midi_output_port(mode=1)
+                    if midi_output_port is None:
+                        raise Exception(
+                            'Error: cannot find any MIDI output port')
+                    else:
+                        self.midi_output_port = pygame.midi.Output(
+                            midi_output_port)
+                if not self.device:
+                    current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                        'no MIDI input']
+                    current_piano_window.mode_num = 3
+                    current_piano_window.reset_click_mode()
+                    current_piano_window.label.draw()
+                else:
+                    current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                        'finished']
+                    current_piano_window.label.draw()
+                    current_piano_window.func = self.mode_self_midi
+                    pyglet.clock.schedule_interval(current_piano_window.func,
+                                                   1 / piano_config.fps)
             self.current_play = []
             self.stillplay = []
             self.last = self.current_play.copy()
@@ -1711,24 +1741,27 @@ class piano_engine:
             current_start_time -= piano_config.play_midi_start_process_time
             if current_start_time < 0:
                 current_start_time = 0
-            try:
-                self._init_send_midi(current_start_time)
-            except Exception as e:
-                current_piano_window.label.text = str(e)
-                current_piano_window.label.draw()
-                current_piano_window.flip()
-                pyglet.clock.schedule_once(
-                    lambda dt: current_piano_window._go_back_func(), 1)
-                time.sleep(1)
-                return
+            if piano_config.load_sound:
+                try:
+                    self._init_send_midi(current_start_time)
+                except Exception as e:
+                    current_piano_window.label.text = str(e)
+                    current_piano_window.label.draw()
+                    current_piano_window.flip()
+                    pyglet.clock.schedule_once(
+                        lambda dt: current_piano_window._go_back_func(), 1)
+                    time.sleep(1)
+                    return
+            else:
+                self.current_position = 0
         else:
             self.current_position = 0
         self._midi_show_init_note_list(musicsheet, unit_time)
         self.midi_file_play()
 
     def _init_send_midi(self, current_start_time):
-        if piano_config.play_midi_port is not None:
-            self.current_output_port_num = piano_config.play_midi_port
+        if piano_config.midi_output_port is not None:
+            self.current_output_port_num = piano_config.midi_output_port
         else:
             midi_output_port = self.find_midi_output_port()
             if midi_output_port is None:
@@ -1748,16 +1781,17 @@ class piano_engine:
         current_start_time -= piano_config.play_midi_start_process_time
         if current_start_time < 0:
             current_start_time = 0
-        try:
-            self._init_send_midi(current_start_time)
-        except Exception as e:
-            current_piano_window.label.text = str(e)
-            current_piano_window.label.draw()
-            current_piano_window.flip()
-            pyglet.clock.schedule_once(
-                lambda dt: current_piano_window._go_back_func(), 1)
-            time.sleep(1)
-            return
+        if piano_config.load_sound:
+            try:
+                self._init_send_midi(current_start_time)
+            except Exception as e:
+                current_piano_window.label.text = str(e)
+                current_piano_window.label.draw()
+                current_piano_window.flip()
+                pyglet.clock.schedule_once(
+                    lambda dt: current_piano_window._go_back_func(), 1)
+                time.sleep(1)
+                return
 
     def _midi_show_init_note_list(self, musicsheet, unit_time):
         self.bars_drop_time.clear()
@@ -2021,6 +2055,9 @@ class piano_engine:
                                 if current_note_text in self.wavdic:
                                     self.wavdic[current_note_text].fadeout(
                                         piano_config.fadeout_ms)
+                            elif piano_config.use_midi_output:
+                                self.midi_output_port.note_off(
+                                    note=each.degree, channel=0)
                             self.stillplay.remove(each)
                     else:
                         current_piano_window.piano_keys[
@@ -2159,6 +2196,11 @@ class piano_engine:
                             current_sound.set_volume(
                                 self.soft_pedal_volume_ratio * velocity / 127)
                             current_sound.play()
+                    elif piano_config.use_midi_output:
+                        self.midi_output_port.note_on(
+                            note=current_note.degree,
+                            velocity=int(127 * piano_config.global_volume),
+                            channel=0)
             elif status == 176:
                 if note_number == 64:
                     if velocity >= 64:
@@ -2369,7 +2411,8 @@ class piano_engine:
                         current_piano_window.current_sf2_player.pause()
                         self.paused = True
                 else:
-                    self.current_send_midi_queue.put('pause')
+                    if piano_config.load_sound:
+                        self.current_send_midi_queue.put('pause')
                     self.paused = True
             else:
                 self.paused = True
@@ -2414,8 +2457,9 @@ class piano_engine:
                     each[2] = 1
 
         if not piano_config.use_soundfont:
-            self.current_send_midi_queue.put(
-                ['set_position', self.current_position])
+            if piano_config.load_sound:
+                self.current_send_midi_queue.put(
+                    ['set_position', self.current_position])
         else:
             current_sf2_player = current_piano_window.current_sf2_player
             current_ticks = int(
@@ -2498,7 +2542,8 @@ class piano_engine:
                 if piano_config.use_soundfont:
                     current_piano_window.current_sf2_player.unpause()
                 else:
-                    self.current_send_midi_queue.put('unpause')
+                    if piano_config.load_sound:
+                        self.current_send_midi_queue.put('unpause')
             self.paused = False
             current_piano_window.message_label = False
             pause_stop = time.time()
