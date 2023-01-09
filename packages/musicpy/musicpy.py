@@ -136,17 +136,17 @@ def freq_to_note(freq, to_str=False, standard=440):
     return result
 
 
-def secondary_dom(root, mode='major'):
+def secondary_dom(root, current_scale='major'):
     if isinstance(root, str):
         root = to_note(root)
-    newscale = scale(root, mode)
+    newscale = scale(root, current_scale)
     return newscale.dom_chord()
 
 
-def secondary_dom7(root, mode='major'):
+def secondary_dom7(root, current_scale='major'):
     if isinstance(root, str):
         root = to_note(root)
-    newscale = scale(root, mode)
+    newscale = scale(root, current_scale)
     return newscale.dom7_chord()
 
 
@@ -181,7 +181,7 @@ def inversion(current_chord, num=1):
 
 
 def get_chord(start,
-              mode=None,
+              current_chord_type=None,
               duration=1 / 4,
               intervals=None,
               interval=None,
@@ -199,18 +199,22 @@ def get_chord(start,
                                      intervals,
                                      cummulative,
                                      start_time=start_time)
-    premode = mode
-    mode = mode.lower().replace(' ', '')
+    pre_chord_type = current_chord_type
+    current_chord_type = current_chord_type.lower().replace(' ', '')
     initial = start.degree
     chordlist = [start]
     current_chord_types = database.chordTypes if custom_mapping is None else custom_mapping
-    interval_premode = current_chord_types(premode, mode=1, index=ind)
-    if interval_premode != 'not found':
-        interval = interval_premode
+    interval_pre_chord_type = current_chord_types(pre_chord_type,
+                                                  mode=1,
+                                                  index=ind)
+    if interval_pre_chord_type != 'not found':
+        interval = interval_pre_chord_type
     else:
-        interval_mode = current_chord_types(mode, mode=1, index=ind)
-        if interval_mode != 'not found':
-            interval = interval_mode
+        interval_current_chord_type = current_chord_types(current_chord_type,
+                                                          mode=1,
+                                                          index=ind)
+        if interval_current_chord_type != 'not found':
+            interval = interval_current_chord_type
         else:
             raise ValueError('could not detect the chord types')
     for i in range(len(interval)):
@@ -1671,7 +1675,7 @@ def relative_note(a, b):
         elif accidental_a == '♮':
             pass
         else:
-            return f'unrecognizable accidentals {accidental_a}'
+            raise ValueError(f'unrecognizable accidentals {accidental_a}')
     if b in database.standard:
         b = note(b, 5)
     else:
@@ -1687,7 +1691,7 @@ def relative_note(a, b):
         elif accidental_b == '♮':
             pass
         else:
-            return f'unrecognizable accidentals {accidental_b}'
+            raise ValueError(f'unrecognizable accidentals {accidental_b}')
     degree1, degree2 = a.degree, b.degree
     diff1, diff2 = degree1 - degree2, (degree1 - degree2 -
                                        12 if degree1 >= degree2 else degree1 +
@@ -1706,6 +1710,47 @@ def relative_note(a, b):
         return b.name + 'b'
     if diff == -2:
         return b.name + 'bb'
+
+
+def standardize_note(a):
+    if a in database.standard2:
+        return a
+    elif a in database.standard_dict:
+        return database.standard_dict[a]
+    else:
+        if a.endswith('bb'):
+            current_name = a[:-2]
+            result = (N(standardize_note(current_name)) - 2).name
+        elif a.endswith('x'):
+            current_name = a[:-1]
+            result = (N(standardize_note(current_name)) + 2).name
+        elif a.endswith('♮'):
+            result = a[:-1]
+        elif a.endswith('#'):
+            current_name = a[:-1]
+            result = (N(standardize_note(current_name)) + 1).name
+        elif a.endswith('b'):
+            current_name = a[:-1]
+            result = (N(standardize_note(current_name)) - 1).name
+        else:
+            raise ValueError('Invalid note name or accidental')
+        return result
+
+
+def get_accidental(a):
+    if a.endswith('bb'):
+        result = 'bb'
+    elif a.endswith('x'):
+        result = 'x'
+    elif a.endswith('♮'):
+        result = '♮'
+    elif a.endswith('#'):
+        result = '#'
+    elif a.endswith('b'):
+        result = 'b'
+    else:
+        result = ''
+    return result
 
 
 def reset(self, **kwargs):
