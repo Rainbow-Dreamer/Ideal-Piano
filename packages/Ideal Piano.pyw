@@ -1609,6 +1609,7 @@ class piano_engine:
                              start_time=actual_start_time,
                              name='temp.mid')
                     self.path = 'temp.mid'
+                    self.current_piece = mp.read(self.path)
             else:
                 return 'back'
         else:
@@ -1649,6 +1650,7 @@ class piano_engine:
                      start_time=start_time,
                      name='temp.mid')
             self.path = 'temp.mid'
+            self.current_piece = mp.read(self.path)
         pygame.mixer.set_num_channels(self.sheetlen)
         self.wholenotes = self.musicsheet.notes
         self.unit_time = 4 * 60 / self.bpm
