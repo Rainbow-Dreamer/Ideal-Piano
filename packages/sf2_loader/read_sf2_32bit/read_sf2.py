@@ -20,7 +20,7 @@ except mp.pygame.error:
     has_audio_interface = False
 
 
-def play_sound(audio, mode=0):
+def play_sound(audio, mode=0, wait=False):
     if mp.pygame.mixer.get_busy():
         mp.pygame.mixer.stop()
     current_audio = audio
@@ -30,6 +30,9 @@ def play_sound(audio, mode=0):
         current_sound_object = mp.pygame.mixer.Sound(
             buffer=current_audio.raw_data)
         current_sound_object.play()
+        if wait:
+            while mp.pygame.mixer.get_busy():
+                mp.pygame.time.delay(10)
     elif mode == 1:
         capture = get_capture()
         try:
@@ -44,6 +47,9 @@ def play_sound(audio, mode=0):
             os.remove('temp.wav')
             os.chdir(current_path)
         current_sound_object.play()
+        if wait:
+            while mp.pygame.mixer.get_busy():
+                mp.pygame.time.delay(10)
         reset_capture(capture)
 
 
@@ -1031,12 +1037,13 @@ current preset name: {self.get_current_instrument()}'''
                   format='wav',
                   effects=None,
                   bpm=80,
-                  export_args={}):
+                  export_args={},
+                  wait=False):
         current_audio = self.export_note(note_name, duration, decay, volume,
                                          channel, start_time, sample_width,
                                          channels, frame_rate, name, format,
                                          True, effects, bpm, export_args)
-        play_sound(current_audio)
+        play_sound(current_audio, wait=wait)
 
     def play_chord(self,
                    current_chord,
@@ -1056,14 +1063,15 @@ current preset name: {self.get_current_instrument()}'''
                    volume=None,
                    length=None,
                    extra_length=None,
-                   export_args={}):
+                   export_args={},
+                   wait=False):
         current_audio = self.export_chord(current_chord, decay, channel,
                                           start_time, piece_start_time,
                                           sample_width, channels, frame_rate,
                                           name, format, bpm, True, fixed_decay,
                                           effects, pan, volume, length,
                                           extra_length, export_args)
-        play_sound(current_audio)
+        play_sound(current_audio, wait=wait)
 
     def play_piece(self,
                    current_chord,
@@ -1081,13 +1089,14 @@ current preset name: {self.get_current_instrument()}'''
                    track_lengths=None,
                    track_extra_lengths=None,
                    export_args={},
-                   show_msg=False):
+                   show_msg=False,
+                   wait=False):
         current_audio = self.export_piece(
             current_chord, decay, sample_width, channels, frame_rate, name,
             format, True, fixed_decay, effects, clear_program_change, length,
             extra_length, track_lengths, track_extra_lengths, export_args,
             show_msg)
-        play_sound(current_audio)
+        play_sound(current_audio, wait=wait)
 
     def play_midi_file(self,
                        current_chord,
@@ -1107,13 +1116,14 @@ current preset name: {self.get_current_instrument()}'''
                        track_extra_lengths=None,
                        export_args={},
                        show_msg=False,
+                       wait=False,
                        **read_args):
         current_audio = self.export_midi_file(
             current_chord, decay, sample_width, channels, frame_rate, name,
             format, True, fixed_decay, effects, clear_program_change,
             instruments, length, extra_length, track_lengths,
             track_extra_lengths, export_args, show_msg, **read_args)
-        play_sound(current_audio)
+        play_sound(current_audio, wait=wait)
 
     def export_sound_modules(self,
                              channel=None,
