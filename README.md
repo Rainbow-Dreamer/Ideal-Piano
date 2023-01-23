@@ -40,7 +40,7 @@ Please check user instructions in `User Manuals` folder, which provides detailed
 
 ## Download
 
-You can download this software for Windows, Linux and macOS from the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest).
+You can download this software for Windows, Linux and macOS from [here](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA).
 
 Note1: for Linux version, playing MIDI files using default settings requires installing freepats and timidity. On Ubuntu you can run
 
