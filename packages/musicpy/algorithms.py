@@ -222,7 +222,10 @@ def find_similarity(a,
             current_chord_type.root = chordfrom[0].name
             current_chord_type.chord_type = chordfrom_type
             current_chord_type._add_order(0)
-            current_chord_omit = current_chord_type.to_chord()
+            current_custom_chord_types = custom_mapping[
+                2] if custom_mapping is not None else None
+            current_chord_omit = current_chord_type.to_chord(
+                custom_mapping=current_custom_chord_types)
             if not samenotes(a, current_chord_omit):
                 current_inv_msg = inversion_way(a, current_chord_omit)
                 current_chord_type.apply_sort_msg(current_inv_msg,
@@ -599,7 +602,8 @@ def detect(current_chord,
                 current_root_position = highest_chord_type.get_root_position()
                 current_chord_type = find_similarity(
                     a=current_chord,
-                    b=C(current_root_position),
+                    b=C(current_root_position,
+                        custom_mapping=custom_mapping[2]),
                     b_type=highest_chord_type.chord_type,
                     similarity_ratio=similarity_ratio,
                     custom_mapping=custom_mapping)
@@ -671,7 +675,8 @@ def detect_chord_by_root(current_chord,
     if current_match_chord:
         current_chord_type = find_similarity(
             a=current_chord,
-            b=C(f'{current_chord[0].name}{current_match_chord}'),
+            b=C(f'{current_chord[0].name}{current_match_chord}',
+                custom_mapping=custom_mapping[2]),
             b_type=current_match_chord,
             custom_mapping=custom_mapping)
         current_chord_types.append(current_chord_type)
@@ -682,7 +687,8 @@ def detect_chord_by_root(current_chord,
         if current_match_chord_inoctave and current_match_chord_inoctave != current_match_chord:
             current_chord_type_inoctave = find_similarity(
                 a=current_chord,
-                b=C(f'{current_chord[0].name}{current_match_chord_inoctave}'),
+                b=C(f'{current_chord[0].name}{current_match_chord_inoctave}',
+                    custom_mapping=custom_mapping[2]),
                 b_type=current_match_chord_inoctave,
                 custom_mapping=custom_mapping)
             current_chord_types.append(current_chord_type_inoctave)
