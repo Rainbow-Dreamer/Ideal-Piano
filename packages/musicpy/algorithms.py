@@ -603,7 +603,7 @@ def detect(current_chord,
                 current_chord_type = find_similarity(
                     a=current_chord,
                     b=C(current_root_position,
-                        custom_mapping=custom_mapping[2]),
+                        custom_mapping=current_custom_chord_types),
                     b_type=highest_chord_type.chord_type,
                     similarity_ratio=similarity_ratio,
                     custom_mapping=custom_mapping)
@@ -670,13 +670,15 @@ def detect_chord_by_root(current_chord,
                           get_chord_type=get_chord_type,
                           custom_mapping=custom_mapping)
     current_chord_types = []
+    current_custom_chord_types = custom_mapping[
+        2] if custom_mapping is not None else None
     current_match_chord = _detect_chord_by_root_helper(
         current_chord, custom_mapping=custom_mapping, inner=inner)
     if current_match_chord:
         current_chord_type = find_similarity(
             a=current_chord,
             b=C(f'{current_chord[0].name}{current_match_chord}',
-                custom_mapping=custom_mapping[2]),
+                custom_mapping=current_custom_chord_types),
             b_type=current_match_chord,
             custom_mapping=custom_mapping)
         current_chord_types.append(current_chord_type)
@@ -688,7 +690,7 @@ def detect_chord_by_root(current_chord,
             current_chord_type_inoctave = find_similarity(
                 a=current_chord,
                 b=C(f'{current_chord[0].name}{current_match_chord_inoctave}',
-                    custom_mapping=custom_mapping[2]),
+                    custom_mapping=current_custom_chord_types),
                 b_type=current_match_chord_inoctave,
                 custom_mapping=custom_mapping)
             current_chord_types.append(current_chord_type_inoctave)
