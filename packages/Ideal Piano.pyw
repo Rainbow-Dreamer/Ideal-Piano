@@ -1286,7 +1286,10 @@ class piano_engine:
             same_note_special=piano_config.same_note_special,
             whole_detect=piano_config.whole_detect,
             poly_chord_first=piano_config.poly_chord_first,
+            root_preference=piano_config.root_preference,
             show_degree=piano_config.show_degree,
+            original_first_ratio=piano_config.original_first_ratio,
+            similarity_ratio=piano_config.similarity_ratio,
             custom_mapping=current_custom_mapping)
         if current_chord_info is None:
             return
