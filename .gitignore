@@ -2,6 +2,7 @@
 *.mid
 *.exe
 last_path.txt
+Ideal Piano start program.pyw
 resources
 .vscode
 # Byte-compiled / optimized / DLL files
