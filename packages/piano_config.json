@@ -197,7 +197,7 @@
     "poly_chord_first": false,
     "root_preference": true,
     "show_degree": true,
-    "original_first_ratio": 0.8,
+    "original_first_ratio": 0.86,
     "similarity_ratio": 0.6,
     "melody_tol": 10,
     "chord_tol": 9,
