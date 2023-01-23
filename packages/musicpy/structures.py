@@ -5591,7 +5591,7 @@ class chord_type:
                 if self.inversion is not None:
                     score += 10
                 if self.omit is not None:
-                    score += 20 * len(self.omit)
+                    score += 10 * len(self.omit)
                 if self.altered is not None:
                     score += 30 * len(self.altered)
                 if self.non_chord_bass_note is not None:
