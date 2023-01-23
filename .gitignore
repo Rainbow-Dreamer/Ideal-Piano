@@ -2,6 +2,7 @@
 *.mid
 *.exe
 last_path.txt
+resources
 .vscode
 # Byte-compiled / optimized / DLL files
 *.py[co]
