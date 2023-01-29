@@ -136,7 +136,7 @@ INTERVAL = {
     12: 'perfect octave',
     13: 'minor ninth',
     14: 'major ninth',
-    15: 'augmented ninth',
+    15: 'minor third / augmented ninth',
     17: 'perfect eleventh',
     18: 'augmented eleventh',
     20: 'minor thirteenth',
