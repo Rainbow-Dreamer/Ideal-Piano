@@ -29,6 +29,12 @@ The best feature of Ideal Piano is that it uses algorithm based on music theory 
 
 Ideal Piano currently supports Windows, Linux and macOS. Please see the download section of README.
 
+Windows: tested on Windows 7, 10, 11
+
+Linux: tested on Ubuntu 21.10
+
+macOS: tested on macOS 12
+
 
 
 ## Usage
@@ -85,6 +91,16 @@ Here is a preview of Ideal Piano:
 ![image](previews/5.jpg)
 
 <p align="center">You can simply drag an image file to the screen to change the background</p>
+
+
+
+## Building from source
+
+If you cannot run the executables on your current system, the best solution is to build from source code.
+
+Take Linux as an example, the executable build from Ubuntu 21.10 may not work on Ubuntu 22.04 due to some core libraries differences and other incompatible issues with newer versions.
+
+For information on how to build Ideal Piano from source, please check user instructions in `User Manuals` folder.
 
 
 

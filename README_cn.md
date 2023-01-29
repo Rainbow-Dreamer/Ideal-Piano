@@ -27,6 +27,12 @@ Ideal Piano的最大特点是，它使用基于乐理的算法来确定你目前
 
 Ideal Piano目前支持Windows、Linux和macOS。请看README的下载部分。
 
+Windows: 在Windows 7, 10, 11上测试通过
+
+Linux：在Ubuntu 21.10上测试通过
+
+macOS：在macOS 12上测试通过
+
 
 
 ## 使用
@@ -87,6 +93,16 @@ brew install fluidsynth
 ![image](previews/5.jpg)
 
 <p align="center">你可以直接拖拽图片文件到屏幕上改变背景</p>
+
+
+
+## 从源代码构建
+
+如果你不能在你目前的系统上运行可执行文件，最好的解决办法就是从源代码构建。
+
+以Linux为例，由于一些核心库的差异和其他与新版本不兼容的问题，从Ubuntu 21.10构建的可执行文件可能无法在Ubuntu 22.04上运行。
+
+有关如何从源代码构建Ideal Piano的信息，请查看`User Manual`文件夹中的使用须知。
 
 
 
