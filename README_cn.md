@@ -25,7 +25,7 @@ Ideal Piano的最大特点是，它使用基于乐理的算法来确定你目前
 
 ## 跨平台
 
-Ideal Piano目前支持Windows、Linux和macOS。请看README的下载部分。
+Ideal Piano目前支持Windows, Linux和macOS。请看README的下载部分。
 
 Windows: 在Windows 7, 10, 11上测试通过
 
