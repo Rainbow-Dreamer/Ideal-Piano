@@ -108,7 +108,7 @@ Here are the steps to build Ideal Piano from source code. These steps are compat
 
 1. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
 
-2. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 pyinstaller`
+2. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 dataclasses pyinstaller`
 
 3. Go to the path `Ideal Piano/packages/`, copy and paste the file `Ideal Piano start program.pyw` to the path `Ideal Piano/`.
 
