@@ -1854,6 +1854,7 @@ def split_melody(current_chord,
                               melody_tol=melody_tol,
                               chord_tol=chord_tol,
                               get_off_overlap_notes=get_off_overlap_notes,
+                              get_off_same_time=get_off_same_time,
                               average_degree_length=average_degree_length,
                               melody_degree_tol=melody_degree_tol)
         current_chord_notes = current_chord.notes
@@ -1865,6 +1866,7 @@ def split_melody(current_chord,
                               melody_tol=melody_tol,
                               chord_tol=chord_tol,
                               get_off_overlap_notes=get_off_overlap_notes,
+                              get_off_same_time=get_off_same_time,
                               average_degree_length=average_degree_length,
                               melody_degree_tol=melody_degree_tol)
         return current_chord.pick(result)

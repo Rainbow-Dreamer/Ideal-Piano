@@ -1625,6 +1625,7 @@ class piano_engine:
                 melody_tol=piano_config.melody_tol,
                 chord_tol=piano_config.chord_tol,
                 get_off_overlap_notes=piano_config.get_off_overlap_notes,
+                get_off_same_time=piano_config.get_off_same_time,
                 average_degree_length=piano_config.average_degree_length,
                 melody_degree_tol=piano_config.melody_degree_tol)
             shift = current_chord.start_time - current_melody.start_time
