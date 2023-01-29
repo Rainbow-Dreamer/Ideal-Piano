@@ -42,7 +42,7 @@ Please check user instructions in `User Manuals` folder, which provides detailed
 
 You can download this software for Windows, Linux and macOS from [here](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA).
 
-Note1: for Linux version, playing MIDI files using default settings requires installing freepats and timidity. On Ubuntu you can run
+Note1: for Linux version, playing MIDI files using default settings requires installing freepats and timidity. Then follow the steps in User Instruction. On Ubuntu you can run
 
 ```
 sudo apt-get install freepats timidity
@@ -54,7 +54,7 @@ If you want to use SoundFont files as instruments in the Linux version, you need
 sudo apt-get install fluidsynth
 ```
 
-Note2: for macOS version, due to an existing bug of pygame's mixer that it cannot pause MIDI file playing on macOS, before the pygame's developers fix this bug, the default settings of playing MIDI files cannot pause for the macOS version. If you want to pause and unpause MIDI files when playing for macOS version, you can switch to use fluidsynth to play MIDI files in Ideal Piano by changing `use_soundfont` to True in the settings file, and then install fluidsynth on macOS, it is pretty easy, you can use homebrew to install fluidsynth by running this line in the terminal
+Note2: for macOS version, If you want to use SoundFont files as instruments, you need to install fluidsynth, you can use homebrew to install fluidsynth by running this line in the terminal
 
 ```
 brew install fluidsynth

@@ -51,7 +51,7 @@ sudo apt-get install freepats timidity
 sudo apt-get install fluidsynth
 ```
 
-注意2：对于macOS版本，由于pygame的mixer存在一个bug，即在macOS上不能暂停播放MIDI文件，在pygame的开发者修复这个bug之前，macOS版本播放MIDI文件的默认设置不能暂停。如果你想在macOS版本上播放MIDI文件时暂停和取消暂停，你可以在Ideal Piano的设置文件中把`use_soundfont`改为True，改用fluidsynth来播放MIDI文件，然后在macOS上安装fluidsynth，这很简单，你可以用homebrew在terminal运行这一行来安装fluidsynth
+注意2：对于macOS版本，如果你想使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以用homebrew在terminal运行这一行来安装fluidsynth
 
 ```
 brew install fluidsynth
