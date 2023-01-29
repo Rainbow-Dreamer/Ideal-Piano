@@ -98,6 +98,40 @@ brew install fluidsynth
 
 
 
+## How to build from source?
+
+If you cannot run the executables on your current system, the best solution is to build from source code.
+
+Take Linux as an example, the executable build from Ubuntu 21.10 may not work on Ubuntu 22.04 due to some core libraries differences and other incompatible issues with newer versions.
+
+Here are the steps to build Ideal Piano from source code. These steps are compatible with Windows, Linux and macOS.
+
+1. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
+
+2. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 pyinstaller`
+
+3. Go to the path `Ideal Piano/packages/`, copy and paste the file `Ideal Piano start program.pyw` to the path `Ideal Piano/`.
+
+4. Then run this code in your IDE to make sure if it works under current environment. You might need to do some more configurations to make it work on some systems or some specific versions. For example, on Ubuntu 22.04, you need to run `sudo apt-get install libxcb-xinerama0` in terminal to make it works.
+
+5. Then modify the line
+
+   ```python
+   abs_path = os.path.dirname(os.path.abspath(__file__))
+   ```
+
+   to
+
+   ```python
+   abs_path = os.path.dirname(sys.executable)
+   ```
+
+6. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw"`, wait for the compilation. If you want to add the icon, then add `--icon="resources/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
+
+7. When the compilation is finished, you can find the executable in the `dist` folder, and move it to the path  `Ideal Piano/` to use it.
+
+
+
 ## The text display is weird or I don't like the fonts, can I change it?
 
 Yes, you can, please refer to the settings manual, to be short, you can change the setting parameter `fonts` in the settings file to the font you like, note that the font should be already installed in your computer.
@@ -114,6 +148,26 @@ For the other cases, if you open the DAW, the MIDI keyboard is already available
 If you want to use a MIDI keyboard in a DAW and also use Ideal Piano, there is a very simple solution.
 
 Using loopMIDI, a free software, you can use both DAW and Ideal Piano to play MIDI keyboard, the procedure is as follows.
+
+
+
+## When playing MIDI files, the sound is not synchronized with when the bars hitting on piano keys?
+
+This issue may occur on computers with less powerful processors. Current configuration parameters works great for the computer it mainly developed on:
+
+CPU: 11th gen Intel(R) Core(TM) i7-11800H
+
+GPU: NVIDIA GeForce RTX 3060 Laptop GPU
+
+RAM: 32GB
+
+You can adjust some settings parameters to make the sound synchronized with the bars.
+
+If the bars fall and hit on piano keys slower or faster than when the sound plays, you can try to adjust the settings parameter `adjust_ratio`, the larger it is, the slower the bar falls.
+
+If the MIDI sound starts playing early or late, you can adjust the settings parameter `play_midi_start_process_time`, which is the time in seconds for initializing the MIDI sound playing process.
+
+When you change current playing position, and the bars are out of sync, you can adjust the settings parameter `move_progress_adjust_time`, which is the delay time in seconds when changing the progress bar.
 
 
 

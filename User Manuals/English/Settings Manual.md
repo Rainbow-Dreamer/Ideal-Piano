@@ -217,7 +217,7 @@ show_degree = True
 
 ## Parameters of the algorithm for separating the main melody of a piece
 
-melody_tol, chord_tol, get_off_overlap_notes, average_degree_length, melody_degree_tol
+melody_tol, chord_tol, get_off_overlap_notes, get_off_same_time, average_degree_length, melody_degree_tol
 
 
 
@@ -257,7 +257,7 @@ bars_drop_interval: in note bar (drop) mode, how long it takes for the bar to dr
 
 bars_drop_place: the specified position (height) that the note bar will drop to in note drop mode
 
-adjust_ratio: A parameter that adjusts the accuracy of the bar drop to the specified position, generally not needed
+adjust_ratio: A parameter that adjusts the accuracy of the bar drop to the specified position, the larger it is, the slower the note falls
 
 bar_border: the width of the bar's border
 
