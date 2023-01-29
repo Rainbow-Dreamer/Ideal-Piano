@@ -126,7 +126,7 @@ Here are the steps to build Ideal Piano from source code. These steps are compat
    abs_path = os.path.dirname(sys.executable)
    ```
 
-6. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw"`, wait for the compilation. If you want to add the icon, then add `--icon="resources/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
+6. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw" --hidden-import dataclasses`, wait for the compilation. If you want to add the icon, then add `--icon="resources/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
 
 7. When the compilation is finished, you can find the executable in the `dist` folder, and move it to the path  `Ideal Piano/` to use it.
 
