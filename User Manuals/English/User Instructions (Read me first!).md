@@ -4,7 +4,25 @@
 
 ## Contents
 
-[How to modify the configuration parameters?](#"How to modify the configuration parameters?")
+* [Contents](#contents)
+* [How to modify the configuration parameters?](#how-to-modify-the-configuration-parameters)
+* [How to change the background image?](#how-to-change-the-background-image)
+* [What do the buttons on the main screen do?](#what-do-the-buttons-on-the-main-screen-do)
+* [When playing MIDI files, how do I pause, unpause and play again?](#when-playing-midi-files-how-do-i-pause-unpause-and-play-again)
+* [Why can't I hear any sound when playing MIDI files?](#why-cant-i-hear-any-sound-when-playing-midi-files)
+* [How do I show the corresponding note names on piano keys?](#how-do-i-show-the-corresponding-note-names-on-piano-keys)
+* [How do I display the details of current chord?](#how-do-i-display-the-details-of-current-chord)
+* [How do I display the key that is currently playing?](#how-do-i-display-the-key-that-is-currently-playing)
+* [Is there a compatible version for Linux and macOS?](#is-there-a-compatible-version-for-linux-and-macos)
+* [How to build from source?](#how-to-build-from-source)
+* [The text display is weird or I don't like the fonts, can I change it?](#the-text-display-is-weird-or-i-dont-like-the-fonts-can-i-change-it)
+* [Why can't Ideal Piano detect my MIDI keyboard?](#why-cant-ideal-piano-detect-my-midi-keyboard)
+* [When playing MIDI files, the sound is not synchronized with when the bars hitting on piano keys?](#when-playing-midi-files-the-sound-is-not-synchronized-with-when-the-bars-hitting-on-piano-keys)
+* [How to use Ideal Piano with DAW?](#how-to-use-ideal-piano-with-daw)
+* [Other cautions of choose MIDI files window](#other-cautions-of-choose-midi-files-window)
+* [What do I need to pay attention to when loading audio files as sound source?](#what-do-i-need-to-pay-attention-to-when-loading-audio-files-as-sound-source)
+* [How to load SoundFont files as sound source?](#how-to-load-soundfont-files-as-sound-source)
+* [I have encountered other problems or have suggestions for improvement](#i-have-encountered-other-problems-or-have-suggestions-for-improvement)
 
 
 
