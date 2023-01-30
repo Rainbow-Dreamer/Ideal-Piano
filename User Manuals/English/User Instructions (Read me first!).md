@@ -1,6 +1,13 @@
 # User Instructions
 
 
+
+## Contents
+
+[How to modify the configuration parameters?](#"How to modify the configuration parameters?")
+
+
+
 ## How to modify the configuration parameters?
 
 The various parameters of this software can be modified by clicking `SETTINGS` button on the main screen to open change settings window, save it and then close the change settings window, the changes will take place immediately.
@@ -106,15 +113,17 @@ Take Linux as an example, the executable build from Ubuntu 21.10 may not work on
 
 Here are the steps to build Ideal Piano from source code. These steps are compatible with Windows, Linux and macOS.
 
-1. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
+1. Download complete release version from [here](https://www.jianguoyun.com/p/DVCbNrUQhPG0CBjQnvMEIAA), extract the folder `Ideal Piano`.
 
-2. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 dataclasses pyinstaller`
+2. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
 
-3. Go to the path `Ideal Piano/packages/`, copy and paste the file `Ideal Piano start program.pyw` to the path `Ideal Piano/`.
+3. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 dataclasses pyinstaller`
 
-4. Then run this code in your IDE to make sure if it works under current environment. You might need to do some more configurations to make it work on some systems or some specific versions. For example, on Ubuntu 22.04, you need to run `sudo apt-get install libxcb-xinerama0` in terminal to make it works.
+4. Go to the path `Ideal Piano/packages/`, copy and paste the file `Ideal Piano start program.pyw` to the path `Ideal Piano/`.
 
-5. Then modify the line
+5. Then run this code in your IDE to make sure if it works under current environment. You might need to do some more configurations to make it work on some systems or some specific versions. For example, on Ubuntu 22.04, you need to run `sudo apt-get install libxcb-xinerama0` in terminal to make it works.
+
+6. Then modify the line
 
    ```python
    abs_path = os.path.dirname(os.path.abspath(__file__))
@@ -126,9 +135,9 @@ Here are the steps to build Ideal Piano from source code. These steps are compat
    abs_path = os.path.dirname(sys.executable)
    ```
 
-6. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw" --hidden-import dataclasses`, wait for the compilation. If you want to add the icon, then add `--icon="resources/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
+7. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw" --hidden-import dataclasses`, wait for the compilation. If you want to add the icon, then add `--icon="resources/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
 
-7. When the compilation is finished, you can find the executable in the `dist` folder, and move it to the path  `Ideal Piano/` to use it.
+8. When the compilation is finished, you can find the executable in the `dist` folder, and move it to the path  `Ideal Piano/` to use it.
 
 
 
