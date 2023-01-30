@@ -4,7 +4,6 @@
 
 ## Contents
 
-* [Contents](#contents)
 * [How to modify the configuration parameters?](#how-to-modify-the-configuration-parameters)
 * [How to change the background image?](#how-to-change-the-background-image)
 * [What do the buttons on the main screen do?](#what-do-the-buttons-on-the-main-screen-do)
