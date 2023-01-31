@@ -655,7 +655,14 @@ class chord:
                 )
 
     def __repr__(self):
-        return f'{self.notes} with interval {self.interval}'
+        current_notes_str = ', '.join([str(i) for i in self.notes[:10]])
+        if len(self.notes) > 10:
+            current_notes_str += ', ...'
+        current_interval_str = ', '.join([str(i) for i in self.interval[:10]])
+        if len(self.interval) > 10:
+            current_interval_str += ', ...'
+        result = f'chord(notes=[{current_notes_str}], interval=[{current_interval_str}], start_time={self.start_time})'
+        return result
 
     def __contains__(self, note1):
         if not isinstance(note1, note):

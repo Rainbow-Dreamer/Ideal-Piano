@@ -760,8 +760,10 @@ def detect_scale_type(current_scale, mode='scale'):
         return scales[0]
 
 
-def choose_melody(focused, now_focus, focus_ratio, focus_notes, remained_notes,
-                  pick, avoid_dim_5, chordinner, newchord, choose_from_chord):
+def _random_composing_choose_melody(focused, now_focus, focus_ratio,
+                                    focus_notes, remained_notes, pick,
+                                    avoid_dim_5, chordinner, newchord,
+                                    choose_from_chord):
     if focused:
         now_focus = random.choices([1, 0], [focus_ratio, 1 - focus_ratio])[0]
         if now_focus == 1:
@@ -863,27 +865,25 @@ def random_composing(current_scale,
         chord_notenames = newchord.names()
         chordinner = [x for x in pick if x.name in chord_notenames]
         while True:
-            firstmelody = choose_melody(focused, now_focus, focus_ratio,
-                                        focus_notes, remained_notes, pick,
-                                        avoid_dim_5, chordinner, newchord,
-                                        choose_from_chord)
+            firstmelody = _random_composing_choose_melody(
+                focused, now_focus, focus_ratio, focus_notes, remained_notes,
+                pick, avoid_dim_5, chordinner, newchord, choose_from_chord)
             firstmelody.volume = right_hand_velocity
             newmelody = [firstmelody]
             length_of_chord = sum(newchord.interval)
             intervals = [random.choice(choose_intervals)]
             firstmelody.duration = random.choice(choose_durations)
             while sum(intervals) <= length_of_chord:
-                currentmelody = choose_melody(focused, now_focus, focus_ratio,
-                                              focus_notes, remained_notes,
-                                              pick, avoid_dim_5, chordinner,
-                                              newchord, choose_from_chord)
+                currentmelody = _random_composing_choose_melody(
+                    focused, now_focus, focus_ratio, focus_notes,
+                    remained_notes, pick, avoid_dim_5, chordinner, newchord,
+                    choose_from_chord)
                 while abs(currentmelody.degree -
                           newmelody[-1].degree) > melody_interval_tol:
-                    currentmelody = choose_melody(focused, now_focus,
-                                                  focus_ratio, focus_notes,
-                                                  remained_notes, pick,
-                                                  avoid_dim_5, chordinner,
-                                                  newchord, choose_from_chord)
+                    currentmelody = _random_composing_choose_melody(
+                        focused, now_focus, focus_ratio, focus_notes,
+                        remained_notes, pick, avoid_dim_5, chordinner,
+                        newchord, choose_from_chord)
                 currentmelody.volume = right_hand_velocity
                 newinter = random.choice(choose_intervals)
                 intervals.append(newinter)
@@ -2253,147 +2253,6 @@ def add_to_last_index(current_chord, value, start=None, stop=None, step=1):
         elif counter > value:
             break
     return ind
-
-
-@method_wrapper(chord)
-def get_note_interval(current_chord, interval_tol=12):
-    degrees = [i.degree for i in current_chord.notes]
-    note_intervals = [
-        degrees[i] - degrees[i - 1] for i in range(1, len(degrees))
-    ]
-    note_intervals = [
-        i % interval_tol if i >= 0 else -(abs(i) % interval_tol)
-        for i in note_intervals
-    ]
-    return note_intervals
-
-
-@method_wrapper(chord)
-def get_melody_shape(current_chord,
-                     interval_tol=12,
-                     octave_range=[4, 5],
-                     filter_notes=True):
-    note_intervals = get_note_interval(current_chord, interval_tol)
-    result = get_chord_by_interval(current_chord[0],
-                                   note_intervals,
-                                   duration=current_chord.get_duration(),
-                                   interval=current_chord.interval,
-                                   cummulative=False)
-    if octave_range:
-        octave1, octave2 = octave_range
-        for each in result:
-            if each.num < octave1:
-                each.num = octave1
-            elif each.num > octave2:
-                each.num = octave2
-    if filter_notes:
-        result = result.filter(lambda s: 0 <= s.degree <= 127)[0]
-    return result
-
-
-@method_wrapper(chord)
-def get_note_interval_frequency(current_chord, interval_tol=12):
-    note_intervals = get_note_interval(current_chord, interval_tol)
-    note_intervals_list = list(set(note_intervals))
-    length = len(note_intervals)
-    note_intervals_list_appearance = [[
-        i, note_intervals.count(i),
-        note_intervals.count(i) / length
-    ] for i in note_intervals_list]
-    note_intervals_list_appearance.sort(key=lambda s: s[1], reverse=True)
-    return note_intervals_list_appearance
-
-
-@method_wrapper(chord)
-def generate_melody_from_notes(current_chord,
-                               interval_tol=12,
-                               num=100,
-                               start=None,
-                               octave_range=[4, 5],
-                               filter_notes=True,
-                               fix_scale=None,
-                               choose_durations=[1 / 16, 1 / 8, 1 / 4],
-                               choose_intervals=[1 / 16, 1 / 8, 1 / 4],
-                               duration_same_as_interval=False,
-                               choose_time_from_chord=False,
-                               drop_same_time=False,
-                               is_melody=True,
-                               get_off_drums=True):
-    '''
-    generate a melody based on the note pitch interval and note duration/interval appearance probabilities,
-    currently in development
-    '''
-    if isinstance(current_chord, piece):
-        current_chord = current_chord.merge(get_off_drums=get_off_drums)[0]
-        if not is_melody:
-            current_chord = split_melody(current_chord, mode='chord')
-
-    note_intervals_list_appearance = get_note_interval_frequency(
-        current_chord, interval_tol)
-    intervals = [i[0] for i in note_intervals_list_appearance]
-    prob = [i[2] for i in note_intervals_list_appearance]
-    note_intervals = [
-        random.choices(intervals, prob)[0] for i in range(num - 1)
-    ]
-    if not start:
-        start = random.choice(note_range(N('C5'), N('C6')))
-    if choose_time_from_chord:
-        current_intervals = current_chord.interval
-        intervals_appearance = [[
-            i, current_intervals.count(i) / len(current_intervals)
-        ] for i in list(set(current_intervals))]
-        if drop_same_time:
-            intervals_appearance = [
-                i for i in intervals_appearance if i[0] != 0
-            ]
-        intervals_appearance.sort(key=lambda s: s[1], reverse=True)
-        choose_intervals = [i[0] for i in intervals_appearance]
-        intervals_prob = [i[1] for i in intervals_appearance]
-        intervals = [
-            random.choices(choose_intervals, intervals_prob)[0]
-            for i in range(num)
-        ]
-        if not duration_same_as_interval:
-            current_durations = current_chord.get_duration()
-            durations_appearance = [[
-                i, current_durations.count(i) / len(current_durations)
-            ] for i in list(set(current_durations))]
-            if drop_same_time:
-                durations_appearance = [
-                    i for i in durations_appearance if i[0] != 0
-                ]
-            durations_appearance.sort(key=lambda s: s[1], reverse=True)
-            choose_durations = [i[0] for i in durations_appearance]
-            durations_prob = [i[1] for i in durations_appearance]
-            durations = [
-                random.choices(choose_durations, durations_prob)[0]
-                for i in range(num)
-            ]
-        else:
-            durations = intervals
-    else:
-        intervals = [random.choice(choose_intervals) for i in range(num)]
-        if not duration_same_as_interval:
-            durations = [random.choice(choose_durations) for i in range(num)]
-        else:
-            durations = intervals
-    result = get_chord_by_interval(start,
-                                   note_intervals,
-                                   cummulative=False,
-                                   duration=durations,
-                                   interval=intervals)
-    if octave_range:
-        octave1, octave2 = octave_range
-        for each in result:
-            if each.num < octave1:
-                each.num = octave1
-            elif each.num > octave2:
-                each.num = octave2
-    if filter_notes:
-        result = result.filter(lambda s: 0 <= s.degree <= 127)[0]
-    if fix_scale:
-        result = adjust_to_scale(result, fix_scale)
-    return result
 
 
 def humanize(current_chord,
