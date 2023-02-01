@@ -1,5 +1,11 @@
 # Changelog
 
+2023-02-01
+
+* Added new mechanism for playing MIDI files to play in a different thread rather than a different process, user can choose whether to use multiprocessing or multithreading by adjust `midi_playing_multiprocess` to True/False.
+
+
+
 2022-11-01
 
 * Rewrote the mechanism for playing MIDI files to include progress bar control.

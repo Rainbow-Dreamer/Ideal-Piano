@@ -17,6 +17,8 @@ Here we give you an explanation of what each parameter in the configuration file
 - [Show composition analysis](#show composition analysis)
   - [Related parameters](#related parameters)
 
+* [Other parameters](#Other parameters)
+
 
 
 ## Screen related parameters
@@ -504,4 +506,10 @@ key_header: the beginning of the key (this parameter shows the beginning of the 
 music_analysis_width: the width of the music analysis text label
 
 music_analysis_fonts_size: the font size of the music analysis text
+
+
+
+## Other parameters
+
+midi_playing_multiprocess: If set to True, play MIDI files in a different process, if set to False, play MIDI files in a different thread
 
