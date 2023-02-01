@@ -1446,8 +1446,8 @@ class chord:
                 else:
                     current_name = current.name
                 if current_name in transdict:
-                    current_note = mp.closest_note(current,
-                                                   transdict[current_name])
+                    current_note = mp.closest_note(transdict[current_name],
+                                                   current)
                     temp.notes[k] = current.reset(name=current_note.name,
                                                   num=current_note.num)
         return temp
@@ -1833,8 +1833,23 @@ class chord:
     def near_voicing(self,
                      other,
                      keep_root=True,
-                     root_lower=False,
-                     standardize=True):
+                     standardize=True,
+                     choose_nearest=False,
+                     get_distance=False):
+        if choose_nearest:
+            result1, distance1 = self.near_voicing(other,
+                                                   keep_root=True,
+                                                   standardize=standardize,
+                                                   choose_nearest=False,
+                                                   get_distance=True)
+            result2, distance2 = self.near_voicing(other,
+                                                   keep_root=False,
+                                                   standardize=standardize,
+                                                   choose_nearest=False,
+                                                   get_distance=True)
+            result = result2 if distance2 < distance1 else result1
+            return result if not get_distance else (result,
+                                                    min(distance1, distance2))
         if standardize:
             temp = self.standardize()
             other = other.standardize()
@@ -1845,84 +1860,34 @@ class chord:
         if keep_root:
             root_note = temp.notes[0]
             other_root_note = other.notes[0]
-            root_note_step = database.standard2[
-                root_note.name] - database.standard2[other_root_note.name]
-            root_note_steps = [abs(root_note_step), 12 - abs(root_note_step)]
-            nearest_step = min(root_note_steps)
-            if root_lower:
-                if root_note_step < 0:
-                    root_note = other_root_note + root_note_step
-                else:
-                    root_note = other_root_note - root_note_steps[1]
-            else:
-                if nearest_step == root_note_steps[0]:
-                    root_note = other_root_note + root_note_step
-                else:
-                    if root_note_step < 0:
-                        root_note = other_root_note + root_note_steps[1]
-                    else:
-                        root_note = other_root_note - root_note_steps[1]
+            new_root_note, current_distance = mp.closest_note(
+                root_note, other_root_note, get_distance=True)
             remain_notes = []
+            current_other_notes = other.notes[1:]
+            total_distance = current_distance
             for each in temp.notes[1:]:
-                note_steps = [
-                    database.standard2[each.name] - database.standard2[i.name]
-                    for i in other.notes[1:]
-                ]
-                note_steps_path = [
-                    min([abs(i), 12 - abs(i)]) for i in note_steps
-                ]
-                most_near_note_steps = min(note_steps_path)
-                most_near_note = other.notes[note_steps_path.index(
-                    most_near_note_steps)]
-                current_step = database.standard2[
-                    each.name] - database.standard2[most_near_note.name]
-                current_steps = [abs(current_step), 12 - abs(current_step)]
-                if most_near_note_steps == current_steps[0]:
-                    new_note = most_near_note + current_step
-                else:
-                    if current_step < 0:
-                        new_note = most_near_note + current_steps[1]
-                    else:
-                        new_note = most_near_note - current_steps[1]
+                current_closest_note, current_distance = mp.closest_note_from_chord(
+                    each, current_other_notes, get_distance=True)
+                total_distance += current_distance
+                current_other_notes.remove(current_closest_note)
+                new_note = mp.closest_note(each, current_closest_note)
                 remain_notes.append(new_note)
-            remain_notes.insert(0, root_note)
-            temp.notes = remain_notes
-            temp = temp.sortchord()
-            temp = temp.set(duration=original_duration, volume=original_volume)
-            if temp[0].name != root_note.name:
-                temp[0] += database.octave * (
-                    (12 -
-                     (temp[0].degree - root_note.degree)) // database.octave)
-                temp = temp.sortchord()
-            return temp
+            remain_notes.insert(0, new_root_note)
         else:
             remain_notes = []
+            current_other_notes = other.notes
+            total_distance = 0
             for each in temp.notes:
-                note_steps = [
-                    database.standard2[each.name] - database.standard2[i.name]
-                    for i in other.notes
-                ]
-                note_steps_path = [
-                    min([abs(i), 12 - abs(i)]) for i in note_steps
-                ]
-                most_near_note_steps = min(note_steps_path)
-                most_near_note = other.notes[note_steps_path.index(
-                    most_near_note_steps)]
-                current_step = database.standard2[
-                    each.name] - database.standard2[most_near_note.name]
-                current_steps = [abs(current_step), 12 - abs(current_step)]
-                if most_near_note_steps == current_steps[0]:
-                    new_note = most_near_note + current_step
-                else:
-                    if current_step < 0:
-                        new_note = most_near_note + current_steps[1]
-                    else:
-                        new_note = most_near_note - current_steps[1]
+                current_closest_note, current_distance = mp.closest_note_from_chord(
+                    each, current_other_notes, get_distance=True)
+                total_distance += current_distance
+                current_other_notes.remove(current_closest_note)
+                new_note = mp.closest_note(each, current_closest_note)
                 remain_notes.append(new_note)
-            temp.notes = remain_notes
-            temp = temp.sortchord()
-            temp = temp.set(duration=original_duration, volume=original_volume)
-            return temp
+        temp.notes = remain_notes
+        temp = temp.sortchord()
+        temp = temp.set(duration=original_duration, volume=original_volume)
+        return temp if not get_distance else (temp, total_distance)
 
     def reset_octave(self, num):
         diff = num - self[0].num

@@ -953,8 +953,8 @@ def negative_harmony(key,
                 if isinstance(current, note):
                     if current.name in database.standard_dict:
                         current.name = database.standard_dict[current.name]
-                    current_note = closest_note(current,
-                                                map_dict[current.name])
+                    current_note = closest_note(map_dict[current.name],
+                                                current)
                     notes[each] = current.reset(name=current_note.name,
                                                 num=current_note.num)
             if sort:
