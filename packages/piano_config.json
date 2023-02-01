@@ -161,7 +161,7 @@
     "delay_only_read_current": true,
     "sound_format": "mp3",
     "sound_path": "resources/sounds",
-    "play_midi_start_process_time": 0.3,
+    "play_midi_start_process_time": 0.5,
     "move_progress_adjust_time": 0.5,
     "use_soundfont_delay_time": 0.5,
     "bars_mode_delay_time": 0.5,
@@ -234,7 +234,7 @@
     "bar_hold_increase": 5,
     "bars_drop_interval": 2,
     "bars_drop_place": 173,
-    "adjust_ratio": 72,
+    "adjust_ratio": 67,
     "bar_border": 5,
     "bar_border_color": [
         100,
@@ -421,5 +421,6 @@
     ],
     "key_header": "current key: ",
     "music_analysis_width": 1300,
-    "music_analysis_fonts_size": 20
+    "music_analysis_fonts_size": 20,
+    "midi_playing_multiprocess": false
 }
