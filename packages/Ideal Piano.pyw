@@ -1836,8 +1836,9 @@ class piano_engine:
                         currentnote, 0
                     ]
                 else:
+                    current_bars_mode_delay_time = piano_config.bars_mode_delay_time if piano_config.midi_playing_multiprocess else 0
                     current_drop_time = [
-                        currentstart + piano_config.bars_mode_delay_time,
+                        currentstart + current_bars_mode_delay_time,
                         currentnote, 0
                     ]
                 self.bars_drop_time.append(current_drop_time)
