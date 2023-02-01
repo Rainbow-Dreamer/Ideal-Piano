@@ -177,9 +177,7 @@ You can adjust some settings parameters to make the sound synchronized with the 
 
 If the bars fall and hit on piano keys slower or faster than when the sound plays, you can try to adjust the settings parameter `adjust_ratio`, the larger it is, the slower the bar falls.
 
-If the MIDI sound starts playing early or late, you can adjust the settings parameter `play_midi_start_process_time`, which is the time in seconds for initializing the MIDI sound playing process.
-
-When you change current playing position, and the bars are out of sync, you can adjust the settings parameter `move_progress_adjust_time`, which is the delay time in seconds when changing the progress bar.
+When you are using multiprocessing mode in playing MIDI files, if the MIDI sound starts playing early or late, you can adjust the settings parameter `play_midi_start_process_time`, which is the time in seconds for initializing the MIDI sound playing process. When you change current playing position, and the bars are out of sync, you can adjust the settings parameter `move_progress_adjust_time`, which is the delay time in seconds when changing the progress bar.
 
 
 
