@@ -754,6 +754,9 @@ class piano_window(pyglet.window.Window):
         current_percentage = x / self.progress_bar_length
         current_position = current_piano_engine.stop_time * current_percentage
         current_piano_engine._midi_show_set_position(current_position)
+        if current_piano_engine.paused:
+            current_progress_bar_length = self.progress_bar_length * current_percentage
+            self.current_progress_bar.width = current_progress_bar_length + 2
 
     def on_draw(self):
         self.clear()
