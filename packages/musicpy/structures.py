@@ -2758,7 +2758,7 @@ class piece:
                  pan=None,
                  volume=None,
                  other_messages=[],
-                 sampler_channels=None):
+                 daw_channels=None):
         self.tracks = tracks
         if instruments is None:
             self.instruments = [
@@ -2791,7 +2791,7 @@ class piece:
         if not self.volume:
             self.volume = [[] for i in range(self.track_number)]
         self.other_messages = other_messages
-        self.sampler_channels = sampler_channels
+        self.daw_channels = daw_channels
 
     def __repr__(self):
         return (
@@ -2819,8 +2819,7 @@ class piece:
             volume=self.volume[i],
             bpm=self.bpm,
             name=self.name,
-            sampler_channel=self.sampler_channels[i]
-            if self.sampler_channels else None)
+            daw_channel=self.daw_channels[i] if self.daw_channels else None)
 
     def __delitem__(self, i):
         del self.tracks[i]
@@ -2833,8 +2832,8 @@ class piece:
             del self.channels[i]
         del self.pan[i]
         del self.volume[i]
-        if self.sampler_channels:
-            del self.sampler_channels[i]
+        if self.daw_channels:
+            del self.daw_channels[i]
         self.track_number -= 1
 
     def __setitem__(self, i, new_track):
@@ -2850,8 +2849,8 @@ class piece:
             self.pan[i] = new_track.pan
         if new_track.volume:
             self.volume[i] = new_track.volume
-        if self.sampler_channels and new_track.sampler_channel is not None:
-            self.sampler_channels[i] = new_track.sampler_channel
+        if self.daw_channels and new_track.daw_channel is not None:
+            self.daw_channels[i] = new_track.daw_channel
 
     def __len__(self):
         return len(self.tracks)
@@ -2895,11 +2894,11 @@ class piece:
                     name is not None else f'track {self.track_number+1}')
         self.pan.append(new_track.pan if new_track.pan else [])
         self.volume.append(new_track.volume if new_track.volume else [])
-        if self.sampler_channels:
-            if new_track.sampler_channel:
-                self.sampler_channels.append(new_track.sampler_channel)
+        if self.daw_channels:
+            if new_track.daw_channel:
+                self.daw_channels.append(new_track.daw_channel)
             else:
-                self.sampler_channels.append(0)
+                self.daw_channels.append(0)
         self.track_number += 1
 
     def insert(self, i, new_track):
@@ -2923,11 +2922,11 @@ class piece:
                     f'track {self.track_number+1}')
         self.pan.insert(i, new_track.pan if new_track.pan else [])
         self.volume.insert(i, new_track.volume if new_track.volume else [])
-        if self.sampler_channels:
-            if new_track.sampler_channel:
-                self.sampler_channels.insert(i, new_track.sampler_channel)
+        if self.daw_channels:
+            if new_track.daw_channel:
+                self.daw_channels.insert(i, new_track.daw_channel)
             else:
-                self.sampler_channels.insert(i, 0)
+                self.daw_channels.insert(i, 0)
         self.track_number += 1
 
     def up(self, n=1, mode=0):
@@ -2961,8 +2960,8 @@ class piece:
             current_start_time = temp.start_times[i]
             current.interval[counter] += (whole_length - current.bars() -
                                           current_start_time)
+            unit = copy(current)
             for k in range(n - 1):
-                unit = copy(current)
                 if current_start_time:
                     for j in range(len(current) - 1, -1, -1):
                         current_note = current.notes[j]
@@ -3987,7 +3986,7 @@ class track:
                  volume=None,
                  bpm=120,
                  name=None,
-                 sampler_channel=None):
+                 daw_channel=None):
         self.content = content
         self.instrument = database.reverse_instruments[
             instrument] if isinstance(instrument, int) else instrument
@@ -3999,7 +3998,7 @@ class track:
         self.name = name
         self.pan = pan
         self.volume = volume
-        self.sampler_channel = sampler_channel
+        self.daw_channel = daw_channel
         if self.pan:
             if not isinstance(self.pan, list):
                 self.pan = [self.pan]

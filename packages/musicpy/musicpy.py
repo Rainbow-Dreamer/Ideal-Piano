@@ -1260,7 +1260,7 @@ def build(*tracks_list, **kwargs):
     track_names = []
     pan_msg = []
     volume_msg = []
-    sampler_channels = []
+    daw_channels = []
     remain_list = [1, 0, None, None, [], [], None]
     for each in tracks_list:
         if isinstance(each, track):
@@ -1271,7 +1271,7 @@ def build(*tracks_list, **kwargs):
             track_names.append(each.track_name)
             pan_msg.append(each.pan if each.pan else [])
             volume_msg.append(each.volume if each.volume else [])
-            sampler_channels.append(each.sampler_channel)
+            daw_channels.append(each.daw_channel)
         else:
             new_each = each + remain_list[len(each) - 1:]
             tracks.append(new_each[0])
@@ -1281,15 +1281,15 @@ def build(*tracks_list, **kwargs):
             track_names.append(new_each[4])
             pan_msg.append(new_each[5])
             volume_msg.append(new_each[6])
-            sampler_channels.append(new_each[7])
+            daw_channels.append(new_each[7])
     if any(i is None for i in channels):
         channels = None
     if all(i is None for i in track_names):
         track_names = None
     else:
         track_names = [i if i else '' for i in track_names]
-    if any(i is None for i in sampler_channels):
-        sampler_channels = None
+    if any(i is None for i in daw_channels):
+        daw_channels = None
     result = P(tracks=tracks,
                instruments=instruments,
                start_times=start_times,
@@ -1297,7 +1297,7 @@ def build(*tracks_list, **kwargs):
                channels=channels,
                pan=pan_msg,
                volume=volume_msg,
-               sampler_channels=sampler_channels)
+               daw_channels=daw_channels)
     for key, value in kwargs.items():
         setattr(result, key, value)
     return result
