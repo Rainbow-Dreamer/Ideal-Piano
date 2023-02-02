@@ -400,11 +400,18 @@ class chord:
                 self.interval[i] = current.duration
                 break
 
-    def bars(self, start_time=0, mode=1, audio_mode=0):
+    def bars(self, start_time=0, mode=1, audio_mode=0, bpm=None):
         if mode == 0:
             max_length = sum(self.interval)
         elif mode == 1:
+            if audio_mode == 1:
+                from pydub import AudioSegment
             temp = self.only_notes(audio_mode=audio_mode)
+            if audio_mode == 1:
+                temp = temp.set(duration=[
+                    mp.real_time_to_bar(len(i), bpm) if isinstance(
+                        i, AudioSegment) else i.duration for i in temp.notes
+                ])
             current_durations = temp.get_duration()
             if not current_durations:
                 return 0
@@ -504,10 +511,10 @@ class chord:
                                   mode=mode,
                                   audio_mode=audio_mode)
         if ind1 is None:
-            whole_bars = self.bars(start_time, audio_mode=audio_mode)
+            whole_bars = self.bars(start_time, audio_mode=audio_mode, bpm=bpm)
         else:
             if ind2 is None:
-                ind2 = self.bars(start_time, audio_mode=audio_mode)
+                ind2 = self.bars(start_time, audio_mode=audio_mode, bpm=bpm)
             whole_bars = ind2 - ind1
         result = (60 / bpm) * whole_bars * 4
         if mode == 'seconds':
@@ -3532,12 +3539,12 @@ class piece:
         start_time = min(self.start_times)
         return self.cut(start_time, n + start_time)
 
-    def bars(self, mode=1, audio_mode=0):
+    def bars(self, mode=1, audio_mode=0, bpm=None):
         return max([
             self.tracks[i].bars(start_time=self.start_times[i],
                                 mode=mode,
-                                audio_mode=audio_mode)
-            for i in range(len(self.tracks))
+                                audio_mode=audio_mode,
+                                bpm=bpm) for i in range(len(self.tracks))
         ])
 
     def total(self, mode='all'):

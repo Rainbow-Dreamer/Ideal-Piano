@@ -2,7 +2,6 @@ import os
 import sys
 import py
 import musicpy as mp
-import time
 import numpy
 
 os.environ['PATH'] += os.pathsep + os.path.dirname(__file__)
@@ -126,7 +125,7 @@ def get_timestamps(current_chord,
             'noteon',
             bar_to_real_time(sum(current_chord.interval[:i]), bpm, 1) / 1000,
             current_chord.notes[i]) for i in range(len(current_chord.notes))
-        if isinstance(current_chord.notes[i], mp.note)
+        if isinstance(current_chord.notes[i], (mp.note, AudioSegment))
     ]
     noteoff_part = [
         general_event(
@@ -749,10 +748,11 @@ current preset name: {self.get_current_instrument()}'''
                 decay = real_time_to_bar(decay * 1000, bpm)
             else:
                 decay = [real_time_to_bar(i * 1000, bpm) for i in decay]
-        whole_length = bar_to_real_time(current_chord.bars(), bpm, 1) / 1000
+        whole_length = bar_to_real_time(
+            current_chord.bars(audio_mode=1, bpm=bpm), bpm, 1) / 1000
         whole_length_with_decay = bar_to_real_time(
-            apply_fadeout(current_chord, decay, fixed_decay).bars(), bpm,
-            1) / 1000
+            apply_fadeout(current_chord, decay, fixed_decay).bars(
+                audio_mode=1, bpm=bpm), bpm, 1) / 1000
         current_chord = copy(current_chord)
         current_chord.normalize_tempo(bpm=bpm)
         if piece_start_time != 0:
@@ -821,9 +821,13 @@ current preset name: {self.get_current_instrument()}'''
             each = current.value
             if current.event_type == 'noteon':
                 if not check_effect(each):
-                    current_channel = each.channel if each.channel is not None else channel
-                    self.synth.noteon(current_channel, each.degree,
-                                      each.volume)
+                    if not isinstance(each, AudioSegment):
+                        current_channel = each.channel if each.channel is not None else channel
+                        self.synth.noteon(current_channel, each.degree,
+                                          each.volume)
+                    else:
+                        current_silent_audio = current_silent_audio.overlay(
+                            each, current.start_time * 1000)
             elif current.event_type == 'noteoff':
                 if not check_effect(each):
                     current_channel = each.channel if each.channel is not None else channel

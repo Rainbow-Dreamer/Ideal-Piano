@@ -1973,6 +1973,17 @@ def write_json(current_chord,
                   ensure_ascii=False)
 
 
+def bar_to_real_time(bar, bpm, mode=0):
+    # convert bar to time in ms
+    return int(
+        (60000 / bpm) * (bar * 4)) if mode == 0 else (60000 / bpm) * (bar * 4)
+
+
+def real_time_to_bar(time, bpm):
+    # convert time in ms to bar
+    return (time / (60000 / bpm)) / 4
+
+
 C = trans
 N = to_note
 S = to_scale
