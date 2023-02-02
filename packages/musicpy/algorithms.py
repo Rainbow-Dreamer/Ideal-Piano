@@ -428,6 +428,19 @@ def detect(current_chord,
                               show_degree=show_degree,
                               custom_mapping=custom_mapping)
 
+    if root_preference:
+        current_chord_type_root_preference = detect_chord_by_root(
+            current_chord,
+            get_chord_type=True,
+            custom_mapping=custom_mapping,
+            inner=True)
+        if current_chord_type_root_preference is not None:
+            return _detect_helper(
+                current_chord_type=current_chord_type_root_preference,
+                get_chord_type=get_chord_type,
+                show_degree=show_degree,
+                custom_mapping=custom_mapping)
+
     current_chord_inoctave = current_chord.inoctave()
     root = current_chord_inoctave[0].degree
     distance = tuple(i.degree - root for i in current_chord_inoctave[1:])
@@ -444,19 +457,6 @@ def detect(current_chord,
                               get_chord_type=get_chord_type,
                               show_degree=show_degree,
                               custom_mapping=custom_mapping)
-
-    if root_preference:
-        current_chord_type_root_preference = detect_chord_by_root(
-            current_chord,
-            get_chord_type=True,
-            custom_mapping=custom_mapping,
-            inner=True)
-        if current_chord_type_root_preference is not None:
-            return _detect_helper(
-                current_chord_type=current_chord_type_root_preference,
-                get_chord_type=get_chord_type,
-                show_degree=show_degree,
-                custom_mapping=custom_mapping)
 
     current_chord_type = find_similarity(a=current_chord,
                                          change_from_first=change_from_first,
