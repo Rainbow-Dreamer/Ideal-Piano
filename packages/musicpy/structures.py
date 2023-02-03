@@ -4417,6 +4417,7 @@ class drum:
                 if symbol_inds:
                     last_symbol_ind = None
                     last_symbol_start_ind = None
+                    available_symbol_ind = len(symbol_inds)
                     if symbol_inds[0] == 0:
                         for k in range(1, len(symbol_inds)):
                             if symbol_inds[k] - symbol_inds[k - 1] != 1:

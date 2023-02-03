@@ -756,16 +756,19 @@ def write(current_chord,
     if i is not None:
         instrument = i
     is_track_type = False
+    is_piece_like_type = True
     if isinstance(current_chord, note):
         current_chord = chord([current_chord])
     elif isinstance(current_chord, list):
         current_chord = concat(current_chord, '|')
     if isinstance(current_chord, chord):
         is_track_type = True
+        is_piece_like_type = False
         if instrument is None:
             instrument = 1
         current_chord = P(
-            [current_chord], [instrument],
+            tracks=[current_chord],
+            instruments=[instrument],
             bpm=bpm,
             channels=[channel],
             start_times=[
@@ -781,10 +784,13 @@ def write(current_chord,
         current_chord = build(current_chord, bpm=current_chord.bpm)
     elif isinstance(current_chord, drum):
         is_track_type = True
+        is_piece_like_type = False
         if hasattr(current_chord, 'other_messages'):
             msg = current_chord.other_messages
-        current_chord = P([current_chord.notes], [current_chord.instrument],
-                          bpm, [
+        current_chord = P(tracks=[current_chord.notes],
+                          instruments=[current_chord.instrument],
+                          bpm=bpm,
+                          start_times=[
                               current_chord.notes.start_time
                               if start_time is None else start_time
                           ],
@@ -843,7 +849,10 @@ def write(current_chord,
         content = tracks_contents[i]
         content_notes = content.notes
         content_intervals = content.interval
-        current_start_time = int(start_times[i] * ticks_per_beat * 4)
+        current_start_time = start_times[i]
+        if is_piece_like_type:
+            current_start_time += content.start_time
+        current_start_time = int(current_start_time * ticks_per_beat * 4)
         for j in range(len(content)):
             current_note = content_notes[j]
             current_type = type(current_note)
@@ -1871,7 +1880,6 @@ def write_json(current_chord,
                bpm=120,
                channel=0,
                start_time=None,
-               name=None,
                filename='untitled.json',
                instrument=None,
                i=None,
@@ -1889,32 +1897,33 @@ def write_json(current_chord,
         if instrument is None:
             instrument = 1
         current_chord = P(
-            [current_chord], [instrument],
+            tracks=[current_chord],
+            instruments=[instrument],
             bpm=bpm,
             channels=[channel],
             start_times=[
                 current_chord.start_time if start_time is None else start_time
             ],
-            other_messages=current_chord.other_messages,
-            name=name)
+            other_messages=current_chord.other_messages)
     elif isinstance(current_chord, track):
         is_track_type = True
         if hasattr(current_chord, 'other_messages'):
             msg = current_chord.other_messages
         else:
             msg = current_chord.content.other_messages
-        current_chord = build(current_chord, bpm=current_chord.bpm, name=name)
+        current_chord = build(current_chord, bpm=current_chord.bpm)
     elif isinstance(current_chord, drum):
         is_track_type = True
         if hasattr(current_chord, 'other_messages'):
             msg = current_chord.other_messages
-        current_chord = P([current_chord.notes], [current_chord.instrument],
-                          bpm, [
+        current_chord = P(tracks=[current_chord.notes],
+                          instruments=[current_chord.instrument],
+                          bpm=bpm,
+                          start_times=[
                               current_chord.notes.start_time
                               if start_time is None else start_time
                           ],
-                          channels=[9],
-                          name=name)
+                          channels=[9])
     else:
         current_chord = copy(current_chord)
     track_number, start_times, instruments_numbers, bpm, tracks_contents, track_names, channels, pan_msg, volume_msg = \
