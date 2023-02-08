@@ -440,14 +440,6 @@ class midi_keyboard_window(QtWidgets.QMainWindow):
             set_font(QtGui.QFont('Consolas', 10), self.dpi))
         self.midi_output_label.setFixedWidth(150)
         self.midi_output_label.move(50, 170)
-        self.msg_label = QtWidgets.QLabel(
-            self,
-            text=
-            'Instruction: Choose your MIDI device in MIDI Input Driver box,\n             and then you can close this window.'
-        )
-        self.msg_label.setFont(set_font(QtGui.QFont('Consolas', 10), self.dpi))
-        self.msg_label.setFixedWidth(600)
-        self.msg_label.move(50, 270)
         self.show()
 
     def change_midi_input_port(self):

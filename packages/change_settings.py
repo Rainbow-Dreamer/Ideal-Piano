@@ -5,6 +5,19 @@ import json
 from copy import deepcopy as copy
 
 
+class json_module:
+
+    def __init__(self, file, text=None):
+        if text is None:
+            with open(file, encoding='utf-8') as f:
+                text = json.load(f)
+        for i, j in text.items():
+            setattr(self, i, j)
+
+    def to_json(self):
+        return vars(self)
+
+
 def set_font(font, dpi):
     if dpi != 96.0:
         font.setPointSize(int(font.pointSize() * (96.0 / dpi)))
@@ -12,6 +25,8 @@ def set_font(font, dpi):
 
 
 def save_json(config, config_path, whole_config=None):
+    if isinstance(config, json_module):
+        config = config.to_json()
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config if not whole_config else whole_config,
                   f,
@@ -27,17 +42,6 @@ def change_parameter(var, new, config_path, whole_config=None):
         if var in current_config:
             current_config[var] = new
             save_json(current_config, config_path, whole_config)
-
-
-class json_module:
-
-    def __init__(self, file, text=None):
-        if text is None:
-            with open(file, encoding='utf-8') as f:
-                text = json.load(f)
-        self.json = text
-        for i, j in self.json.items():
-            setattr(self, i, j)
 
 
 class Dialog(QtWidgets.QMainWindow):
