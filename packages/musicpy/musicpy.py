@@ -1486,7 +1486,8 @@ def analyze_rhythm(current_chord,
                    total_length=None,
                    remove_empty_beats=False,
                    unit=None,
-                   find_unit_ignore_duration=False):
+                   find_unit_ignore_duration=False,
+                   merge_continue=True):
     if all(i <= 0 for i in current_chord.interval):
         return rhythm([beat(0) for i in range(len(current_chord))])
     if unit is None:
@@ -1523,16 +1524,24 @@ def analyze_rhythm(current_chord,
             else:
                 current_duration = current_chord.notes[i].duration
                 if current_duration >= each:
-                    beat_list.extend(
-                        [continue_symbol(unit) for k in range(int(rest_num))])
+                    if not merge_continue:
+                        beat_list.extend([
+                            continue_symbol(unit) for k in range(int(rest_num))
+                        ])
+                    else:
+                        beat_list[-1].duration += unit * int(rest_num)
                 else:
                     current_rest_duration = each - current_duration
                     rest_num = current_rest_duration // unit
                     current_continue_duration = current_duration - unit
                     continue_num = current_continue_duration // unit
-                    beat_list.extend([
-                        continue_symbol(unit) for k in range(int(continue_num))
-                    ])
+                    if not merge_continue:
+                        beat_list.extend([
+                            continue_symbol(unit)
+                            for k in range(int(continue_num))
+                        ])
+                    else:
+                        beat_list[-1].duration += unit * int(continue_num)
                     beat_list.extend(
                         [rest_symbol(unit) for k in range(int(rest_num))])
     result = rhythm(beat_list)
