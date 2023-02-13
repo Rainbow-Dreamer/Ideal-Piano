@@ -534,7 +534,7 @@ class chord:
     def count_bars(self, ind1, ind2, bars_range=True):
         bars_length = self[ind1:ind2].bars()
         if bars_range:
-            start = self[:ind1].bars()
+            start = self[:ind1].bars(mode=0)
             return [start, start + bars_length]
         else:
             return bars_length
