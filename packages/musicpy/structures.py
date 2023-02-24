@@ -38,12 +38,20 @@ class note:
         return f'{self.name}{self.num}'
 
     def __eq__(self, other):
-        return type(other) is note and database.standard[
-            self.name] == database.standard[
-                other.name] and self.num == other.num
+        return type(other) is note and self.same_note_name(
+            other) and self.num == other.num
+
+    def __lt__(self, other):
+        return self.degree < other.degree
+
+    def __le__(self, other):
+        return self.degree <= other.degree
+
+    def get_number(self):
+        return database.standard[self.name]
 
     def same_note_name(self, other):
-        return database.standard[self.name] == database.standard[other.name]
+        return self.get_number() == other.get_number()
 
     def __matmul__(self, other):
         if isinstance(other, rhythm):
@@ -185,9 +193,13 @@ class chord:
                  notes,
                  duration=None,
                  interval=None,
+                 volume=None,
                  rootpitch=4,
                  other_messages=[],
-                 start_time=None):
+                 start_time=None,
+                 default_duration=1 / 4,
+                 default_interval=0,
+                 default_volume=100):
         standardize_msg = False
         if isinstance(notes, str):
             notes = notes.replace(' ', '').split(',')
@@ -200,7 +212,11 @@ class chord:
                 for i in notes) and all(not any(j.isdigit() for j in i)
                                         for i in notes if isinstance(i, str)):
             standardize_msg = True
-        notes_msg = _read_notes(notes, rootpitch)
+        notes_msg = _read_notes(note_ls=notes,
+                                rootpitch=rootpitch,
+                                default_duration=default_duration,
+                                default_interval=default_interval,
+                                default_volume=default_volume)
         notes, current_intervals, current_start_time = notes_msg
         if current_intervals and not interval:
             interval = current_intervals
@@ -217,10 +233,13 @@ class chord:
                     notels.append(current_note)
                 else:
                     if last is not None:
-                        current = note(current_note.name, last.num)
-                        if database.standard[
-                                current.name] <= database.standard[last.name]:
-                            current = note(current.name, last.num + 1)
+                        current = note(name=current_note.name,
+                                       num=last.num,
+                                       duration=current_note.duration,
+                                       volume=current_note.volume,
+                                       channel=current_note.channel)
+                        if current.get_number() <= last.get_number():
+                            current.num += 1
                     else:
                         current = current_note
                     notels.append(current)
@@ -237,6 +256,8 @@ class chord:
             else:
                 for k in range(len(duration)):
                     self.notes[k].duration = duration[k]
+        if volume is not None:
+            self.set_volume(volume)
         if start_time is None:
             self.start_time = current_start_time
         else:
@@ -662,11 +683,18 @@ class chord:
                 )
 
     def __repr__(self):
-        current_notes_str = ', '.join([str(i) for i in self.notes[:10]])
-        if len(self.notes) > 10:
+        return self.show()
+
+    def show(self, limit=10):
+        if limit is None:
+            limit = len(self.notes)
+        current_notes_str = ', '.join([str(i) for i in self.notes[:limit]])
+        if len(self.notes) > limit:
             current_notes_str += ', ...'
-        current_interval_str = ', '.join([str(i) for i in self.interval[:10]])
-        if len(self.interval) > 10:
+        current_interval_str = ', '.join([
+            str(Fraction(i).limit_denominator()) for i in self.interval[:limit]
+        ])
+        if len(self.interval) > limit:
             current_interval_str += ', ...'
         result = f'chord(notes=[{current_notes_str}], interval=[{current_interval_str}], start_time={self.start_time})'
         return result
@@ -2634,6 +2662,117 @@ class scale:
         else:
             return self.inversion(n)
 
+    def _parse_scale_text(self, text, rootpitch):
+        octaves = None
+        if ';' in text:
+            result = [
+                self._parse_scale_text(i, rootpitch) for i in text.split(';')
+            ]
+        else:
+            if '.' in text:
+                text, octaves = text.split('.', 1)
+            current_notes = copy(self.notes)
+            if text.endswith('#'):
+                result = current_notes[int(text[:-1]) - 1] + 1
+            elif text.endswith('b'):
+                result = current_notes[int(text[:-1]) - 1] - 1
+            else:
+                result = current_notes[int(text) - 1]
+            result.num = rootpitch
+            if octaves:
+                octaves = int(octaves) * database.octave
+                result += octaves
+        return result
+
+    def get(self,
+            current_ind,
+            default_duration=1 / 8,
+            default_interval=1 / 8,
+            default_volume=100):
+        current = current_ind.replace(' ', '').split(',')
+        notes_result = []
+        intervals = []
+        rootpitch = self[0].num
+        for each in current:
+            if each.startswith('o'):
+                rootpitch = int(each.split('o', 1)[1])
+            elif '[' in each and ']' in each:
+                notename, info = each.split('[', 1)
+                info = info[:-1].split(';')
+                info_len = len(info)
+                duration = default_duration
+                interval = default_interval
+                volume = default_volume
+                if info_len == 1:
+                    duration = _process_note(info[0])
+                else:
+                    if info_len == 2:
+                        duration, interval = info
+                    else:
+                        duration, interval, volume = info
+                        volume = mp.parse_num(volume)
+                    duration = _process_note(duration)
+                    interval = _process_note(
+                        interval) if interval != '.' else duration
+                if notename == 'r':
+                    if not notes_result:
+                        start_time += duration
+                    elif intervals:
+                        intervals[-1] += duration
+                elif notename == '-':
+                    if notes_result:
+                        notes_result[-1].duration += duration
+                    if intervals:
+                        intervals[-1] += duration
+                else:
+                    current_note = self._parse_scale_text(notename, rootpitch)
+                    if isinstance(current_note, list):
+                        for k in current_note:
+                            k.duration = duration
+                            k.volume = volume
+                        notes_result.extend(current_note)
+                        current_intervals = [0] * (len(current_note) - 1) + [
+                            interval
+                        ]
+                        intervals.extend(current_intervals)
+                    else:
+                        current_note.duration = duration
+                        current_note.volume = volume
+                        notes_result.append(current_note)
+                        intervals.append(interval)
+            else:
+                if each == 'r':
+                    current_interval = default_interval if default_interval != 0 else 1 / 4
+                    if not notes_result:
+                        start_time += current_interval
+                    elif intervals:
+                        intervals[-1] += current_interval
+                elif each == '-':
+                    current_interval = default_interval if default_interval != 0 else 1 / 4
+                    if notes_result:
+                        notes_result[-1].duration += current_interval
+                    if intervals:
+                        intervals[-1] += current_interval
+                else:
+
+                    current_note = self._parse_scale_text(each, rootpitch)
+                    if isinstance(current_note, list):
+                        for k in current_note:
+                            k.duration = default_duration
+                            k.volume = default_volume
+                        notes_result.extend(current_note)
+                        current_intervals = [0] * (len(current_note) - 1) + [
+                            default_interval
+                        ]
+                        intervals.extend(current_intervals)
+                    else:
+                        current_note.duration = default_duration
+                        current_note.volume = default_volume
+                        notes_result.append(current_note)
+                        intervals.append(default_interval)
+        current_chord = chord(notes_result, interval=intervals)
+        return current_chord
+
 
 class circle_of_fifths:
     '''
@@ -2766,12 +2905,16 @@ class piece:
         self.daw_channels = daw_channels
 
     def __repr__(self):
-        return (
+        return self.show()
+
+    def show(self, limit=10):
+        result = (
             f'[piece] {self.name if self.name else ""}\n'
         ) + f'BPM: {round(self.bpm, 3)}\n' + '\n'.join([
-            f'track {i+1}{" channel " + str(self.channels[i]) if self.channels else ""} {self.track_names[i] + " " if self.track_names and self.track_names[i] else ""}| instrument: {self.instruments[i]} | start time: {self.start_times[i]} | {self.tracks[i]}'
+            f'track {i+1}{" channel " + str(self.channels[i]) if self.channels else ""} {self.track_names[i] + " " if self.track_names and self.track_names[i] else ""}| instrument: {self.instruments[i]} | start time: {self.start_times[i]} | {self.tracks[i].show(limit=limit)}'
             for i in range(len(self.tracks))
         ])
+        return result
 
     def __eq__(self, other):
         return type(other) is piece and self.__dict__ == other.__dict__
@@ -3983,6 +4126,9 @@ class track:
             self.volume = []
 
     def __repr__(self):
+        return self.show()
+
+    def show(self, limit=10):
         msg = []
         if self.channel is not None:
             msg.append(f'{"channel " + str(self.channel)}')
@@ -3993,7 +4139,7 @@ class track:
             msg += ' | '
         return (f'[track] {self.name if self.name is not None else ""}\n') + (
             f'BPM: {round(self.bpm, 3)}\n' if self.bpm is not None else ""
-        ) + f'{msg}instrument: {self.instrument} | start time: {self.start_time} | {self.content}'
+        ) + f'{msg}instrument: {self.instrument} | start time: {self.start_time} | {self.content.show(limit=limit)}'
 
     def add_pan(self,
                 value,
@@ -4244,6 +4390,7 @@ class drum:
         self.default_interval = default_interval
         self.default_volume = default_volume
         self.translate_mode = translate_mode
+        self.last_non_num_note = None
         self.notes = self.translate(
             self.pattern,
             self.mapping,
@@ -4269,6 +4416,7 @@ class drum:
                   translate_mode=0):
         current_rest_symbol = '0'
         current_continue_symbol = '-'
+        self.last_non_num_note = None
         if -1 in mapping.values():
             current_rest_symbol = [i for i, j in mapping.items() if j == -1][0]
         if -2 in mapping.values():
@@ -4595,17 +4743,19 @@ class drum:
         else:
             current_append_notes = [current_append_notes]
         current_same_time = True
-        current_chord_same_time = False
+        current_chord_same_time = True
         current_repeat_times = 1
         current_after_repeat_times = 1
         current_fix_length = None
         current_fix_beats = None
         current_inner_fix_beats = 1
         current_append_durations = [
-            default_duration for i in current_append_notes
+            self._apply_dotted_notes(default_duration, self._get_dotted(i))
+            for i in current_append_notes
         ]
         current_append_intervals = [
-            default_interval for i in current_append_notes
+            self._apply_dotted_notes(default_interval, self._get_dotted(i))
+            for i in current_append_notes
         ]
         current_append_volumes = [default_volume for i in current_append_notes]
         if translate_mode == 0:
@@ -4641,71 +4791,104 @@ class drum:
                         current_each_note = mp.C(
                             f'{current_note.name}{current_chord_type}',
                             current_note.num)
+                        for i in current_each_note:
+                            i.dotted_num = current_note.dotted_num
                         new_current_append_notes.append(current_each_note)
+                        self.last_non_num_note = current_each_note.notes[-1]
             current_append_notes = new_current_append_notes
         custom_durations = False
         for j in current_brackets:
-            num_keywords = j.count(':')
-            if num_keywords == 1:
-                current_bracket_settings = [j.split(':')]
+            current_bracket_settings = [k.split(':') for k in j.split(';')]
+            if all(len(k) == 1 for k in current_bracket_settings):
+                current_settings = _process_settings(
+                    [k[0] for k in current_bracket_settings])
+                current_append_durations, current_append_intervals, current_append_volumes = current_settings
+                if current_append_durations is None:
+                    current_append_durations = default_duration
+                if not isinstance(current_append_durations, list):
+                    current_append_durations = [
+                        current_append_durations for k in current_append_notes
+                    ]
+                    custom_durations = True
+                if current_append_intervals is None:
+                    current_append_intervals = default_interval
+                if not isinstance(current_append_intervals, list):
+                    current_append_intervals = [
+                        current_append_intervals for k in current_append_notes
+                    ]
+                if current_append_volumes is None:
+                    current_append_volumes = default_volume
+                if not isinstance(current_append_volumes, list):
+                    current_append_volumes = [
+                        current_append_volumes for k in current_append_notes
+                    ]
             else:
-                current_bracket_settings = [k.split(':') for k in j.split(';')]
-            for each_setting in current_bracket_settings:
-                current_setting_keyword, current_content = each_setting
-                if current_setting_keyword == 's':
-                    if current_content == 'F':
-                        current_same_time = False
-                    elif current_content == 'T':
-                        current_same_time = True
-                if current_setting_keyword == 'cs':
-                    if current_content == 'F':
-                        current_chord_same_time = False
-                    elif current_content == 'T':
-                        current_chord_same_time = True
-                elif current_setting_keyword == 'r':
-                    current_repeat_times = int(current_content)
-                elif current_setting_keyword == 'R':
-                    current_after_repeat_times = int(current_content)
-                elif current_setting_keyword == 't':
-                    current_fix_length = _process_note(current_content)
-                elif current_setting_keyword == 'b':
-                    current_fix_beats = _process_note(current_content)
-                elif current_setting_keyword == 'B':
-                    current_inner_fix_beats = _process_note(current_content)
-                elif current_setting_keyword == 'i':
-                    if current_content == '.':
-                        current_append_intervals = _process_note(
-                            current_content,
-                            mode=1,
-                            value2=current_append_durations)
-                    else:
-                        current_append_intervals = _process_note(
+                for each_setting in current_bracket_settings:
+                    if len(each_setting) != 2:
+                        continue
+                    current_setting_keyword, current_content = each_setting
+                    if current_setting_keyword == 's':
+                        if current_content == 'F':
+                            current_same_time = False
+                        elif current_content == 'T':
+                            current_same_time = True
+                    if current_setting_keyword == 'cs':
+                        if current_content == 'F':
+                            current_chord_same_time = False
+                        elif current_content == 'T':
+                            current_chord_same_time = True
+                    elif current_setting_keyword == 'r':
+                        current_repeat_times = int(current_content)
+                    elif current_setting_keyword == 'R':
+                        current_after_repeat_times = int(current_content)
+                    elif current_setting_keyword == 't':
+                        current_fix_length = _process_note(current_content)
+                    elif current_setting_keyword == 'b':
+                        current_fix_beats = _process_note(current_content)
+                    elif current_setting_keyword == 'B':
+                        current_inner_fix_beats = _process_note(
                             current_content)
-                    if not isinstance(current_append_intervals, list):
-                        current_append_intervals = [
-                            current_append_intervals
-                            for k in current_append_notes
-                        ]
-                elif current_setting_keyword == 'l':
-                    current_append_durations = _process_note(current_content)
-                    if not isinstance(current_append_durations, list):
-                        current_append_durations = [
-                            current_append_durations
-                            for k in current_append_notes
-                        ]
-                        custom_durations = True
-                elif current_setting_keyword == 'v':
-                    current_append_volumes = _process_note(current_content,
-                                                           mode=2)
-                    if not isinstance(current_append_volumes, list):
-                        current_append_volumes = [
-                            current_append_volumes
-                            for k in current_append_notes
-                        ]
-                elif current_setting_keyword == 'cm':
-                    if len(current_append_notes) == 1 and isinstance(
-                            current_append_notes[0], continue_symbol):
-                        current_append_notes[0].mode = int(current_content)
+                    elif current_setting_keyword == 'i':
+                        if current_content == '.':
+                            current_append_intervals = _process_note(
+                                current_content,
+                                mode=1,
+                                value2=current_append_durations)
+                        else:
+                            current_append_intervals = _process_note(
+                                current_content)
+                        if current_append_intervals is None:
+                            current_append_intervals = default_interval
+                        if not isinstance(current_append_intervals, list):
+                            current_append_intervals = [
+                                current_append_intervals
+                                for k in current_append_notes
+                            ]
+                    elif current_setting_keyword == 'l':
+                        current_append_durations = _process_note(
+                            current_content)
+                        if current_append_durations is None:
+                            current_append_durations = default_duration
+                        if not isinstance(current_append_durations, list):
+                            current_append_durations = [
+                                current_append_durations
+                                for k in current_append_notes
+                            ]
+                            custom_durations = True
+                    elif current_setting_keyword == 'v':
+                        current_append_volumes = _process_note(current_content,
+                                                               mode=2)
+                        if current_append_volumes is None:
+                            current_append_volumes = default_volume
+                        if not isinstance(current_append_volumes, list):
+                            current_append_volumes = [
+                                current_append_volumes
+                                for k in current_append_notes
+                            ]
+                    elif current_setting_keyword == 'cm':
+                        if len(current_append_notes) == 1 and isinstance(
+                                current_append_notes[0], continue_symbol):
+                            current_append_notes[0].mode = int(current_content)
         current_fix_length_unit = None
         if current_fix_length is not None:
             if current_same_time:
@@ -4857,18 +5040,21 @@ class drum:
                         current_each_note = mp.C(
                             f'{current_note.name}{current_chord_type}',
                             current_note.num)
+                        for i in current_each_note:
+                            i.dotted_num = current_note.dotted_num
                         new_current_append_notes.extend(
                             current_each_note.notes)
+                        self.last_non_num_note = current_each_note.notes[-1]
             current_append_notes = new_current_append_notes
 
         current_append_durations = [
-            default_duration
+            self._apply_dotted_notes(default_duration, k.dotted_num)
             if not current_part_fix_length_unit else self._apply_dotted_notes(
                 current_part_fix_length_unit, k.dotted_num)
             for k in current_append_notes
         ]
         current_append_intervals = [
-            default_interval
+            self._apply_dotted_notes(default_interval, k.dotted_num)
             if not current_part_fix_length_unit else self._apply_dotted_notes(
                 current_part_fix_length_unit, k.dotted_num)
             for k in current_append_notes
@@ -4909,6 +5095,12 @@ class drum:
             elif keyword == 'd':
                 current_part_default_duration, current_part_default_interval, current_part_default_volume = _process_settings(
                     content.split(';'))
+                if current_part_default_duration is None:
+                    current_part_default_duration = self.default_duration
+                if current_part_default_interval is None:
+                    current_part_default_interval = self.default_interval
+                if current_part_default_volume is None:
+                    current_part_default_volume = self.default_volume
             elif keyword == 'a':
                 current_part_all_same_duration, current_part_all_same_interval, current_part_all_same_volume = _process_settings(
                     content.split(';'))
@@ -4980,19 +5172,35 @@ class drum:
 
     def _convert_to_note(self, text, mapping=None, mode=0):
         dotted_num = 0
-        if '.' in text:
-            text, dotted = text.split('.', 1)
-            dotted_num = len(dotted) + 1
-        if mode == 0:
-            result = mp.degree_to_note(mapping[text])
+        if text.startswith('+') or text.startswith('-'):
+            current_num, current_changed, current_settings, dotted_num = _parse_change_num(
+                text, mode=1)
+            if self.last_non_num_note is not None:
+                result = self.last_non_num_note + current_num
+                result.dotted_num = dotted_num
+            else:
+                raise ValueError(
+                    'requires at least a previous non-number note')
+            if current_changed:
+                self.last_non_num_note = result
         else:
-            result = mp.N(text)
-        result.dotted_num = dotted_num
+            if '.' in text:
+                text, dotted = text.split('.', 1)
+                dotted_num = len(dotted) + 1
+            if mode == 0:
+                result = mp.degree_to_note(mapping[text])
+            else:
+                result = mp.N(text)
+            result.dotted_num = dotted_num
+            self.last_non_num_note = result
+
         return result
 
     def _get_dotted(self, text):
         result = 0
         if isinstance(text, str):
+            if ':' in text:
+                text = text.split(':', 1)[0]
             if '.' in text:
                 ind = text.index('.')
                 ind2 = len(text)
@@ -5580,15 +5788,21 @@ class chord_type:
         return score
 
 
-def _read_notes(note_ls, rootpitch=4):
+def _read_notes(note_ls,
+                rootpitch=4,
+                default_duration=1 / 4,
+                default_interval=0,
+                default_volume=100):
     intervals = []
     notes_result = []
     start_time = 0
+    last_non_num_note = None
     for each in note_ls:
         if each == '':
             continue
         if isinstance(each, note):
             notes_result.append(each)
+            last_non_num_note = notes_result[-1]
         elif isinstance(each, (tempo, pitch_bend)):
             notes_result.append(each)
         elif isinstance(each, rest):
@@ -5601,7 +5815,7 @@ def _read_notes(note_ls, rootpitch=4):
                 current = [mp.parse_num(k) for k in each.split(';')[1:]]
                 current_tempo = tempo(*current)
                 notes_result.append(current_tempo)
-                intervals.append(0)
+                intervals.append(default_interval)
             elif each.startswith('pitch'):
                 current = each.split(';')[1:]
                 length = len(current)
@@ -5613,52 +5827,167 @@ def _read_notes(note_ls, rootpitch=4):
                     current = [mp.parse_num(k) for k in current]
                 current_pitch_bend = pitch_bend(*current)
                 notes_result.append(current_pitch_bend)
-                intervals.append(0)
-            else:
-                if any(all(i in each for i in j) for j in ['()', '[]', '{}']):
-                    split_symbol = '(' if '(' in each else (
-                        '[' if '[' in each else '{')
-                    notename, info = each.split(split_symbol)
-                    volume = 100
-                    info = info[:-1].split(';')
-                    info_len = len(info)
-                    if info_len == 1:
-                        duration = _process_note(info[0])
-                        if notename != 'r':
-                            intervals.append(0)
-                    else:
-                        if info_len == 2:
-                            duration, interval = info
-                        else:
-                            duration, interval, volume = info
-                            volume = mp.parse_num(volume)
-                        duration = _process_note(duration)
-                        interval = _process_note(
-                            interval) if interval != '.' else duration
-                        if notename != 'r':
-                            intervals.append(interval)
-                    if notename == 'r':
-                        if not notes_result:
-                            start_time += duration
-                        elif intervals:
-                            intervals[-1] += duration
-                    else:
-                        notes_result.append(
-                            mp.to_note(notename, duration, volume, rootpitch))
+                intervals.append(default_interval)
+            elif '[' in each and ']' in each:
+                notename, info = each.split('[', 1)
+                duration = default_duration
+                interval = default_interval
+                volume = default_volume
+                info = info[:-1].split(';')
+                info_len = len(info)
+                if info_len == 1:
+                    duration = _process_note(info[0])
                 else:
-                    if each == 'r':
-                        if not notes_result:
-                            start_time += 1 / 4
-                        elif intervals:
-                            intervals[-1] += 1 / 4
+                    if info_len == 2:
+                        duration, interval = info
                     else:
-                        intervals.append(0)
-                        notes_result.append(mp.to_note(each, pitch=rootpitch))
+                        duration, interval, volume = info
+                        volume = mp.parse_num(volume)
+                    duration = _process_note(duration)
+                    interval = _process_note(
+                        interval) if interval != '.' else duration
+                if notename == 'r':
+                    if not notes_result:
+                        start_time += duration
+                    elif intervals:
+                        intervals[-1] += duration
+                elif notename == '-':
+                    if notes_result:
+                        notes_result[-1].duration += duration
+                    if intervals:
+                        intervals[-1] += duration
+                else:
+                    current_note = mp.to_note(notename, duration, volume,
+                                              rootpitch)
+                    notes_result.append(current_note)
+                    intervals.append(interval)
+                    last_non_num_note = notes_result[-1]
+            elif each != '-' and (each.startswith('+')
+                                  or each.startswith('-')):
+                current_num, current_changed, current_settings = _parse_change_num(
+                    each)
+                if last_non_num_note is not None:
+                    current_note = last_non_num_note + current_num
+                    if current_settings is not None:
+                        duration = default_duration
+                        interval = default_interval
+                        volume = default_volume
+                        current_settings = current_settings[:-1].split(';')
+                        current_settings_len = len(current_settings)
+                        if current_settings_len == 1:
+                            duration = _process_note(current_settings[0])
+                        else:
+                            if current_settings_len == 2:
+                                duration, interval = current_settings
+                            else:
+                                duration, interval, volume = current_settings
+                                volume = mp.parse_num(volume)
+                            duration = _process_note(duration)
+                            interval = _process_note(
+                                interval) if interval != '.' else duration
+                        intervals.append(interval)
+                        current_note = current_note.set(duration=duration,
+                                                        volume=volume)
+                    else:
+                        intervals.append(default_interval)
+                    notes_result.append(current_note)
+                    if current_changed:
+                        last_non_num_note = current_note
+                else:
+                    raise ValueError(
+                        'requires at least a previous non-number note')
+            else:
+                if each == 'r':
+                    current_interval = default_interval if default_interval != 0 else 1 / 4
+                    if not notes_result:
+                        start_time += current_interval
+                    elif intervals:
+                        intervals[-1] += current_interval
+                elif each == '-':
+                    current_interval = default_interval if default_interval != 0 else 1 / 4
+                    if notes_result:
+                        notes_result[-1].duration += current_interval
+                    if intervals:
+                        intervals[-1] += current_interval
+                else:
+                    intervals.append(default_interval)
+                    current_note = mp.to_note(each,
+                                              duration=default_duration,
+                                              pitch=rootpitch)
+                    notes_result.append(current_note)
+                    last_non_num_note = notes_result[-1]
         else:
             notes_result.append(each)
     if len(intervals) != len(notes_result):
         intervals = []
     return notes_result, intervals, start_time
+
+
+def _parse_change_num(each, mode=0):
+    current_changed = False
+    if '[' in each and ']' in each:
+        each, current_settings = each.split('[', 1)
+    else:
+        current_settings = None
+    if mode == 1:
+        dotted_num = 0
+        if '.' in each:
+            each, dotted = each.split('.', 1)
+            dotted_num = len(dotted) + 1
+    if each.startswith('++'):
+        current_changed = True
+        current_content = each.split('++', 1)[1]
+        if 'o' in current_content:
+            current_octave, current_extra = current_content.split('o', 1)
+            current_octave = int(current_octave)
+            if current_extra:
+                current_extra = int(current_extra)
+            else:
+                current_extra = 0
+            current_num = current_octave * database.octave + current_extra
+        else:
+            current_num = int(current_content)
+    elif each.startswith('--'):
+        current_changed = True
+        current_content = each.split('--', 1)[1]
+        if 'o' in current_content:
+            current_octave, current_extra = current_content.split('o', 1)
+            current_octave = int(current_octave)
+            if current_extra:
+                current_extra = int(current_extra)
+            else:
+                current_extra = 0
+            current_num = -(current_octave * database.octave + current_extra)
+        else:
+            current_num = -int(current_content)
+    elif each.startswith('+'):
+        current_content = each.split('+', 1)[1]
+        if 'o' in current_content:
+            current_octave, current_extra = current_content.split('o', 1)
+            current_octave = int(current_octave)
+            if current_extra:
+                current_extra = int(current_extra)
+            else:
+                current_extra = 0
+            current_num = current_octave * database.octave + current_extra
+        else:
+            current_num = int(current_content)
+    elif each.startswith('-'):
+        current_content = each.split('-', 1)[1]
+        if 'o' in current_content:
+            current_octave, current_extra = current_content.split('o', 1)
+            current_octave = int(current_octave)
+            if current_extra:
+                current_extra = int(current_extra)
+            else:
+                current_extra = 0
+            current_num = -(current_octave * database.octave + current_extra)
+        else:
+            current_num = -int(current_content)
+    if mode == 0:
+        return current_num, current_changed, current_settings
+    elif mode == 1:
+        return current_num, current_changed, current_settings, dotted_num
 
 
 def _process_note(value, mode=0, value2=None):

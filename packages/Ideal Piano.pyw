@@ -2318,6 +2318,10 @@ class piano_engine:
             self._midi_show_draw_notes_bars_mode(mode=1)
             self._midi_show_draw_notes_hit_key_bars_mode()
         if self.current_past_time >= self.stop_time:
+            try:
+                self.current_send_midi_queue.put('stop')
+            except:
+                pass
             self.finished = True
 
     def _midi_show_draw_notes_bars_drop_mode(self):

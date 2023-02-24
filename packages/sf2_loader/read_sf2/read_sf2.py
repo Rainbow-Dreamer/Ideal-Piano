@@ -225,7 +225,9 @@ def adsr_func(sound, attack, decay, sustain, release):
     if decay > 0:
         sound = sound.fade(to_gain=result_db, start=attack, duration=decay)
     else:
-        sound = sound[:attack].append(sound[attack:] + change_db)
+        if sustain > 0:
+            sound = sound[:attack].append(sound[attack:] + change_db,
+                                          crossfade=0)
     if release > 0:
         sound = sound.fade_out(release)
     return sound
@@ -1128,26 +1130,26 @@ current preset name: {self.get_current_instrument()}'''
             track_extra_lengths, export_args, show_msg, **read_args)
         play_sound(current_audio, wait=wait)
 
-    def export_sound_modules(self,
-                             channel=None,
-                             sfid=None,
-                             bank=None,
-                             preset=None,
-                             start='A0',
-                             stop='C8',
-                             duration=6,
-                             decay=1,
-                             volume=127,
-                             sample_width=2,
-                             channels=2,
-                             frame_rate=44100,
-                             format='wav',
-                             folder_name='Untitled',
-                             effects=None,
-                             bpm=80,
-                             name=None,
-                             show_full_path=False,
-                             export_args={}):
+    def export_instruments(self,
+                           channel=None,
+                           sfid=None,
+                           bank=None,
+                           preset=None,
+                           start='A0',
+                           stop='C8',
+                           duration=6,
+                           decay=1,
+                           volume=127,
+                           sample_width=2,
+                           channels=2,
+                           frame_rate=44100,
+                           format='wav',
+                           folder_name='Untitled',
+                           effects=None,
+                           bpm=80,
+                           name=None,
+                           show_full_path=False,
+                           export_args={}):
         try:
             os.mkdir(folder_name)
             os.chdir(folder_name)
