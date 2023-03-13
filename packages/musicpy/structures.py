@@ -277,9 +277,7 @@ class chord:
         return [i.name for i in self if isinstance(i, note)]
 
     def __eq__(self, other):
-        return type(
-            other
-        ) is chord and self.notes == other.notes and self.interval == other.interval
+        return type(other) is chord and self.notes == other.notes
 
     def split(self, return_type, get_time=False, sort=False):
         temp = copy(self)
@@ -1734,10 +1732,8 @@ class chord:
         else:
             return temp
 
-    def info(self, show_degree=True, **detect_args):
-        chord_type = self.detect(show_degree=show_degree,
-                                 get_chord_type=True,
-                                 **detect_args)
+    def info(self, **detect_args):
+        chord_type = self.detect(get_chord_type=True, **detect_args)
         return chord_type
 
     def same_accidentals(self, mode='#'):
@@ -5174,7 +5170,7 @@ class drum:
         dotted_num = 0
         if text.startswith('+') or text.startswith('-'):
             current_num, current_changed, current_settings, dotted_num = _parse_change_num(
-                text, mode=1)
+                text)
             if self.last_non_num_note is not None:
                 result = self.last_non_num_note + current_num
                 result.dotted_num = dotted_num
@@ -5856,6 +5852,19 @@ def _read_notes(note_ls,
                         notes_result[-1].duration += duration
                     if intervals:
                         intervals[-1] += duration
+                elif notename.startswith('+') or notename.startswith('-'):
+                    current_num, current_changed, current_settings, dotted_num = _parse_change_num(
+                        notename)
+                    if last_non_num_note is None:
+                        raise ValueError(
+                            'requires at least a previous non-number note')
+                    current_note = last_non_num_note + current_num
+                    intervals.append(interval)
+                    current_note = current_note.set(duration=duration,
+                                                    volume=volume)
+                    notes_result.append(current_note)
+                    if current_changed:
+                        last_non_num_note = current_note
                 else:
                     current_note = mp.to_note(notename, duration, volume,
                                               rootpitch)
@@ -5864,38 +5873,22 @@ def _read_notes(note_ls,
                     last_non_num_note = notes_result[-1]
             elif each != '-' and (each.startswith('+')
                                   or each.startswith('-')):
-                current_num, current_changed, current_settings = _parse_change_num(
+                current_num, current_changed, current_settings, dotted_num = _parse_change_num(
                     each)
-                if last_non_num_note is not None:
-                    current_note = last_non_num_note + current_num
-                    if current_settings is not None:
-                        duration = default_duration
-                        interval = default_interval
-                        volume = default_volume
-                        current_settings = current_settings[:-1].split(';')
-                        current_settings_len = len(current_settings)
-                        if current_settings_len == 1:
-                            duration = _process_note(current_settings[0])
-                        else:
-                            if current_settings_len == 2:
-                                duration, interval = current_settings
-                            else:
-                                duration, interval, volume = current_settings
-                                volume = mp.parse_num(volume)
-                            duration = _process_note(duration)
-                            interval = _process_note(
-                                interval) if interval != '.' else duration
-                        intervals.append(interval)
-                        current_note = current_note.set(duration=duration,
-                                                        volume=volume)
-                    else:
-                        intervals.append(default_interval)
-                    notes_result.append(current_note)
-                    if current_changed:
-                        last_non_num_note = current_note
-                else:
+                if last_non_num_note is None:
                     raise ValueError(
                         'requires at least a previous non-number note')
+                current_note = last_non_num_note + current_num
+                interval = default_interval
+                duration = current_note.duration
+                if dotted_num > 0:
+                    interval = mp.dotted(interval, dotted_num)
+                    duration = mp.dotted(duration, dotted_num)
+                    current_note.duration = duration
+                intervals.append(interval)
+                notes_result.append(current_note)
+                if current_changed:
+                    last_non_num_note = current_note
             else:
                 if each == 'r':
                     current_interval = default_interval if default_interval != 0 else 1 / 4
@@ -5923,17 +5916,16 @@ def _read_notes(note_ls,
     return notes_result, intervals, start_time
 
 
-def _parse_change_num(each, mode=0):
+def _parse_change_num(each):
     current_changed = False
     if '[' in each and ']' in each:
         each, current_settings = each.split('[', 1)
     else:
         current_settings = None
-    if mode == 1:
-        dotted_num = 0
-        if '.' in each:
-            each, dotted = each.split('.', 1)
-            dotted_num = len(dotted) + 1
+    dotted_num = 0
+    if '.' in each:
+        each, dotted = each.split('.', 1)
+        dotted_num = len(dotted) + 1
     if each.startswith('++'):
         current_changed = True
         current_content = each.split('++', 1)[1]
@@ -5984,10 +5976,7 @@ def _parse_change_num(each, mode=0):
             current_num = -(current_octave * database.octave + current_extra)
         else:
             current_num = -int(current_content)
-    if mode == 0:
-        return current_num, current_changed, current_settings
-    elif mode == 1:
-        return current_num, current_changed, current_settings, dotted_num
+    return current_num, current_changed, current_settings, dotted_num
 
 
 def _process_note(value, mode=0, value2=None):
