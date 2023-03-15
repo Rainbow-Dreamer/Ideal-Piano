@@ -5866,10 +5866,27 @@ def _read_notes(note_ls,
                     if current_changed:
                         last_non_num_note = current_note
                 else:
-                    current_note = mp.to_note(notename, duration, volume,
-                                              rootpitch)
-                    notes_result.append(current_note)
-                    intervals.append(interval)
+                    if ';' in each:
+                        current_notes = [
+                            mp.to_note(i,
+                                       duration=duration,
+                                       volume=volume,
+                                       pitch=rootpitch)
+                            for i in notename.split(';')
+                        ]
+                        notes_result.extend(current_notes)
+                        current_intervals = [0] * (len(current_notes) - 1) + [
+                            interval
+                        ]
+                        intervals.extend(current_intervals)
+                    else:
+                        current_note = mp.to_note(notename,
+                                                  duration=duration,
+                                                  volume=volume,
+                                                  pitch=rootpitch)
+                        notes_result.append(current_note)
+                        intervals.append(interval)
+
                     last_non_num_note = notes_result[-1]
             elif each != '-' and (each.startswith('+')
                                   or each.startswith('-')):
@@ -5903,11 +5920,27 @@ def _read_notes(note_ls,
                     if intervals:
                         intervals[-1] += current_interval
                 else:
-                    intervals.append(default_interval)
-                    current_note = mp.to_note(each,
-                                              duration=default_duration,
-                                              pitch=rootpitch)
-                    notes_result.append(current_note)
+
+                    if ';' in each:
+                        current_notes = [
+                            mp.to_note(i,
+                                       duration=default_duration,
+                                       volume=default_volume,
+                                       pitch=rootpitch)
+                            for i in each.split(';')
+                        ]
+                        notes_result.extend(current_notes)
+                        current_intervals = [0] * (len(current_notes) - 1) + [
+                            default_interval
+                        ]
+                        intervals.extend(current_intervals)
+                    else:
+                        current_note = mp.to_note(each,
+                                                  duration=default_duration,
+                                                  volume=default_volume,
+                                                  pitch=rootpitch)
+                        notes_result.append(current_note)
+                        intervals.append(default_interval)
                     last_non_num_note = notes_result[-1]
         else:
             notes_result.append(each)
