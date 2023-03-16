@@ -2686,6 +2686,8 @@ class scale:
         start_time = 0
         rootpitch = self[0].num
         for each in current:
+            if each == '':
+                continue
             if each.startswith('o'):
                 rootpitch = int(each.split('o', 1)[1])
             else:
@@ -2743,9 +2745,13 @@ class scale:
                           has_settings=False,
                           has_same_time=False):
         dotted_num = 0
-        if '.' in each:
-            each, dotted = each.split('.', 1)
-            dotted_num = len(dotted) + 1
+        if each.endswith('.'):
+            for k in range(len(each) - 1, -1, -1):
+                if each[k] != '.':
+                    each = each[:k + 1]
+                    break
+                else:
+                    dotted_num += 1
         if each == 'r':
             current_interval = duration if has_settings else (
                 mp.dotted(interval, dotted_num) if interval != 0 else 1 / 4)
