@@ -2432,7 +2432,7 @@ class piano_engine:
 
     def _midi_show_playing_read_pc_keyboard_key(self, dt):
         if current_piano_window.keyboard_handler[
-                current_piano_window.pause_key]:
+                current_piano_window.pause_key] and not self.paused:
             if self.play_midi_file:
                 if piano_config.use_soundfont:
                     if current_piano_window.current_sf2_player.playing:
