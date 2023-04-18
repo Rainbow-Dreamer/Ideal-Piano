@@ -110,6 +110,14 @@ Currently supported languages only include English and Chinese, you can change t
 
 
 
+## Donation
+
+This project is developed by Rainbow Dreamer on his spare time to create a smart piano software. If you feel this project is useful to you and want to support it and it's future development, please consider buy me a coffee, I appreciate any amount.
+
+[![Support via PayPal](https://cdn.rawgit.com/twolfson/paypal-github-button/1.0.0/dist/button.svg)](https://www.paypal.com/donate/?business=7XSUZCQNT4M4Y&no_recurring=0&currency_code=CAD)
+
+
+
 ## Summary
 
 If you encounter any problems when using this software, please take a look at the user manual first, if you cannot solve the problem, you can contact me by sending emails to 2180502841@qq.com, thank you for your support~

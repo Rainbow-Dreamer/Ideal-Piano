@@ -112,6 +112,14 @@ brew install fluidsynth
 
 
 
+## 捐赠
+
+这个项目是由Rainbow Dreamer在业余时间开发的，旨在创建一个智能钢琴软件。如果你觉得这个项目对你有用，想支持它和它的未来发展，请考虑给我买杯咖啡，我很感激任何金额。
+
+[![Support via PayPal](https://cdn.rawgit.com/twolfson/paypal-github-button/1.0.0/dist/button.svg)](https://www.paypal.com/donate/?business=7XSUZCQNT4M4Y&no_recurring=0&currency_code=CAD)
+
+
+
 ## 总结
 
 如果你在使用本软件时遇到任何问题，请先看一下使用须知，如果你不能解决问题，请发邮件到 2180502841@qq.com 来联系我，感谢大家的支持~
