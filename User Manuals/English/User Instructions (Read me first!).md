@@ -113,6 +113,10 @@ You can download the macOS compatible version from the release page, which conta
 
 For macOS version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window.
 
+If you don't currently have any MIDI ports with a synthesizer, here's a suggestion to install VMPK (Virtual MIDI Piano Keyboard), click [here](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-mac-x64.dmg/download) to download the installation package, open VMPK after installation, open `Edit - MIDI Connections ` from the menu bar, check `Enable MIDI Input` and `Enable MIDI Thru on MIDI Output`, then in the `MIDI IN Driver`, select `CoreMIDI`, then click `OK` to save the settings. Next, right-click on the `MIDI KEYBOARD` button in Ideal Piano to open the interface for selecting MIDI ports, and select `CoreMIDI,MIDI In` in the `MIDI Output Driver` column, close the window. Then you can play MIDI files normally.
+
+You can also use [VMPK](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-x86_64.AppImage/download) for Linux version, select `ALSA` for `MIDI IN Driver`, and select `ALSA, in` in `MIDI Output Driver` column of the interface for selecting MIDI ports.
+
 If you want to use SoundFont files as instruments in the macOS version, you need to install fluidsynth, it is recommended to install fluidsynth with homebrew.
 
 ```
