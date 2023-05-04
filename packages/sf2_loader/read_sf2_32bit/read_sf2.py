@@ -940,7 +940,7 @@ current preset name: {self.get_current_instrument()}'''
                                                   bpm, 1)
             current_pan = current_chord.pan[i]
             current_volume = current_chord.volume[i]
-            current_instrument = current_chord.instruments_numbers[i]
+            current_instrument = current_chord.instruments[i]
             # instrument of a track of the piece type could be preset or [preset, bank, (sfid)]
             current_channel = current_chord.channels[
                 i] if current_chord.channels else i
