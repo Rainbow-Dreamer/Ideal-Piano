@@ -339,7 +339,7 @@ def read(name,
             split_channels = False
         elif current_type == 2:
             split_channels = False
-    changes = []
+    changes = chord([])
     if not split_channels:
         changes_track_ind = [
             i for i, each in enumerate(whole_tracks)
@@ -519,9 +519,8 @@ def read(name,
             for each in volume_list:
                 each.track = result_piece.channels.index(each.channel)
             for k in range(len(result_piece.tracks)):
-                for each in result_piece.tracks[k].notes:
-                    if isinstance(each, pitch_bend):
-                        each.track = k
+                for each in result_piece.tracks[k].pitch_bends:
+                    each.track = k
             result_merge_track.other_messages = [
                 i for i in result_merge_track.other_messages
                 if not (hasattr(i, 'channel')
@@ -545,11 +544,14 @@ def read(name,
             for i in range(len(current_track_names)):
                 result_piece.tracks[i].other_messages.append(
                     current_track_names[i])
-    if current_type == 1 and changes:
+    if current_type == 1 and not changes.is_empty():
         if result_piece.tracks:
-            result_piece.tracks[0].notes.extend(changes.notes)
-            result_piece.tracks[0].interval.extend(changes.interval)
-            result_piece.tracks[0].other_messages[0:0] = changes.other_messages
+            first_track = result_piece.tracks[0]
+            first_track.notes.extend(changes.notes)
+            first_track.interval.extend(changes.interval)
+            first_track.tempos.extend(changes.tempos)
+            first_track.pitch_bends.extend(changes.pitch_bends)
+            first_track.other_messages[0:0] = changes.other_messages
         result_piece.other_messages[0:0] = changes.other_messages
 
     if clear_other_channel_msg:
@@ -578,6 +580,8 @@ def _midi_to_chord(current_track,
                    track_channels=None):
     intervals = []
     notelist = []
+    tempo_list = []
+    pitch_bend_list = []
     notes_len = len(current_track)
     find_first_note = False
     start_time = 0
@@ -650,8 +654,7 @@ def _midi_to_chord(current_track,
                                   track=track_ind)
             if add_track_num:
                 current_tempo.track_num = track_ind
-            notelist.append(current_tempo)
-            intervals.append(0)
+            tempo_list.append(current_tempo)
         elif current_msg.type == 'pitchwheel':
             current_msg_channel = current_msg.channel
             if track_channels:
@@ -665,8 +668,7 @@ def _midi_to_chord(current_track,
                                             mode='values')
             if add_track_num:
                 current_pitch_bend.track_num = current_track_ind
-            notelist.append(current_pitch_bend)
-            intervals.append(0)
+            pitch_bend_list.append(current_pitch_bend)
         elif current_msg.type == 'control_change':
             current_msg_channel = current_msg.channel
             if track_channels:
@@ -702,15 +704,11 @@ def _midi_to_chord(current_track,
                                  current_track_ind)
     result = chord(notelist, interval=intervals)
     if clear_empty_notes:
-        result.interval = [
-            result.interval[j] for j in range(len(result))
-            if not isinstance(result.notes[j], note)
-            or result.notes[j].duration > 0
-        ]
-        result.notes = [
-            each for each in result.notes
-            if not isinstance(each, note) or each.duration > 0
-        ]
+        inds = [i for i, each in enumerate(result.notes) if each.duration > 0]
+        result.notes = [result.notes[i] for i in inds]
+        result.interval = [result.interval[i] for i in inds]
+    result.tempos = tempo_list
+    result.pitch_bends = pitch_bend_list
     result.pan_list = pan_list
     result.volume_list = volume_list
     result.other_messages = other_messages
@@ -857,54 +855,47 @@ def write(current_chord,
         current_start_time = current_start_time * interval_unit
         for j in range(len(content)):
             current_note = content_notes[j]
-            current_type = type(current_note)
-            if current_type == note:
-                current_note_on_message = mido.Message(
-                    'note_on',
-                    time=int(current_start_time),
-                    channel=current_channel
-                    if current_note.channel is None else current_note.channel,
-                    note=current_note.degree,
-                    velocity=current_note.volume)
-                current_note_off_message = mido.Message(
-                    'note_off',
-                    time=int(current_start_time +
-                             current_note.duration * interval_unit),
-                    channel=current_channel
-                    if current_note.channel is None else current_note.channel,
-                    note=current_note.degree,
-                    velocity=current_note.volume)
-                current_midi.tracks[i].append(current_note_on_message)
-                current_midi.tracks[i].append(current_note_off_message)
-                current_start_time += content_intervals[j] * interval_unit
-            elif current_type == tempo:
-                if current_note.start_time is not None:
-                    if current_note.start_time < 0:
-                        tempo_change_time = 0
-                    else:
-                        tempo_change_time = current_note.start_time * interval_unit
+            current_note_on_message = mido.Message(
+                'note_on',
+                time=int(current_start_time),
+                channel=current_channel
+                if current_note.channel is None else current_note.channel,
+                note=current_note.degree,
+                velocity=current_note.volume)
+            current_note_off_message = mido.Message(
+                'note_off',
+                time=int(current_start_time +
+                         current_note.duration * interval_unit),
+                channel=current_channel
+                if current_note.channel is None else current_note.channel,
+                note=current_note.degree,
+                velocity=current_note.volume)
+            current_midi.tracks[i].append(current_note_on_message)
+            current_midi.tracks[i].append(current_note_off_message)
+            current_start_time += content_intervals[j] * interval_unit
+        for each in content.tempos:
+            if each.start_time is not None:
+                if each.start_time < 0:
+                    tempo_change_time = 0
                 else:
-                    tempo_change_time = current_start_time
-                current_midi.tracks[0].append(
-                    mido.MetaMessage('set_tempo',
-                                     time=int(tempo_change_time),
-                                     tempo=mido.bpm2tempo(current_note.bpm)))
-            elif current_type == pitch_bend:
-                if current_note.start_time is not None:
-                    if current_note.start_time < 0:
-                        pitch_bend_time = 0
-                    else:
-                        pitch_bend_time = current_note.start_time * interval_unit
-                else:
-                    pitch_bend_time = current_start_time
-                pitch_bend_track = i if current_note.track is None else current_note.track
-                pitch_bend_channel = current_channel if current_note.channel is None else current_note.channel
-                current_midi.tracks[
-                    pitch_bend_track if not is_track_type else 0].append(
-                        mido.Message('pitchwheel',
-                                     time=int(pitch_bend_time),
-                                     channel=pitch_bend_channel,
-                                     pitch=current_note.value))
+                    tempo_change_time = each.start_time * interval_unit
+            current_midi.tracks[0].append(
+                mido.MetaMessage('set_tempo',
+                                 time=int(tempo_change_time),
+                                 tempo=mido.bpm2tempo(each.bpm)))
+        for each in content.pitch_bends:
+            if each.start_time < 0:
+                pitch_bend_time = 0
+            else:
+                pitch_bend_time = each.start_time * interval_unit
+            pitch_bend_track = i if each.track is None else each.track
+            pitch_bend_channel = current_channel if each.channel is None else each.channel
+            current_midi.tracks[
+                pitch_bend_track if not is_track_type else 0].append(
+                    mido.Message('pitchwheel',
+                                 time=int(pitch_bend_time),
+                                 channel=pitch_bend_channel,
+                                 pitch=each.value))
 
     if not nomsg:
         if current_chord.other_messages:
@@ -1055,7 +1046,8 @@ def chord_to_piece(current_chord, bpm=120, start_time=0, has_track_num=False):
         for each in current_chord.notes:
             each.track_num = channels_list.index(
                 each.channel) if each.channel is not None else 0
-            if isinstance(each, pitch_bend) and each.track != each.track_num:
+        for each in current_chord.pitch_bends:
+            if each.track != each.track_num:
                 each.track = each.track_num
         for each in current_chord.other_messages:
             if hasattr(each, 'channel') and each.channel is not None:
@@ -1086,9 +1078,8 @@ def chord_to_piece(current_chord, bpm=120, start_time=0, has_track_num=False):
             for each in volume_list:
                 each.track = result_piece.channels.index(each.channel)
             for k in range(len(result_piece.tracks)):
-                for each in result_piece.tracks[k].notes:
-                    if isinstance(each, pitch_bend):
-                        each.track = k
+                for each in result_piece.tracks[k].pitch_bends:
+                    each.track = k
             current_chord.other_messages = [
                 i for i in current_chord.other_messages
                 if not (hasattr(i, 'channel')
@@ -1892,6 +1883,8 @@ def read_json(file):
                 **{i: j
                    for i, j in k.items() if i != 'type'}) for k in j['notes']
         ]
+        j['tempos'] = [tempo(**k) for k in j['tempos']]
+        j['pitch_bends'] = [pitch_bend(**k) for k in j['pitch_bends']]
         j['other_messages'] = [event(**k) for k in j['other_messages']]
     current['tracks'] = [chord(**i) for i in current['tracks']]
     current['other_messages'] = [event(**k) for k in current['other_messages']]
@@ -1907,18 +1900,14 @@ def write_json(current_chord,
                start_time=None,
                filename='untitled.json',
                instrument=None,
-               i=None,
-               msg=None,
-               nomsg=False):
+               i=None):
     if i is not None:
         instrument = i
-    is_track_type = False
     if isinstance(current_chord, note):
         current_chord = chord([current_chord])
     elif isinstance(current_chord, list):
         current_chord = concat(current_chord, '|')
     if isinstance(current_chord, chord):
-        is_track_type = True
         if instrument is None:
             instrument = 1
         current_chord = P(
@@ -1931,16 +1920,8 @@ def write_json(current_chord,
             ],
             other_messages=current_chord.other_messages)
     elif isinstance(current_chord, track):
-        is_track_type = True
-        if hasattr(current_chord, 'other_messages'):
-            msg = current_chord.other_messages
-        else:
-            msg = current_chord.content.other_messages
         current_chord = build(current_chord, bpm=current_chord.bpm)
     elif isinstance(current_chord, drum):
-        is_track_type = True
-        if hasattr(current_chord, 'other_messages'):
-            msg = current_chord.other_messages
         current_chord = P(tracks=[current_chord.notes],
                           instruments=[current_chord.instrument],
                           bpm=bpm,
@@ -1951,37 +1932,29 @@ def write_json(current_chord,
                           channels=[9])
     else:
         current_chord = copy(current_chord)
-    track_number, start_times, instruments, bpm, tracks_contents, track_names, channels, pan_msg, volume_msg = \
-    current_chord.track_number, current_chord.start_times, current_chord.instruments, current_chord.bpm, current_chord.tracks, current_chord.track_names, current_chord.channels, current_chord.pan, current_chord.volume
-    instruments = [
-        i if isinstance(i, int) else database.INSTRUMENTS[i]
-        for i in instruments
-    ]
     result = current_chord.__dict__
     result['tracks'] = [i.__dict__ for i in result['tracks']]
     for j in result['tracks']:
         for i, each in enumerate(j['notes']):
             current_dict = {'type': each.__class__.__name__}
-            if isinstance(each, note):
-                current_dict.update({
-                    k1: k2
-                    for k1, k2 in each.__dict__.items()
-                    if k1 not in ['degree']
-                })
-            elif isinstance(each, pitch_bend):
-                current_dict.update({
-                    k1: k2
-                    for k1, k2 in each.__dict__.items()
-                    if k1 not in ['degree', 'volume', 'duration']
-                })
-                current_dict['mode'] = 'value'
-            elif isinstance(each, tempo):
-                current_dict.update({
-                    k1: k2
-                    for k1, k2 in each.__dict__.items()
-                    if k1 not in ['degree', 'volume', 'duration']
-                })
+            current_dict.update({
+                k1: k2
+                for k1, k2 in each.__dict__.items() if k1 not in ['degree']
+            })
             j['notes'][i] = current_dict
+        for each in j['pitch_bends']:
+            current_dict.update({
+                k1: k2
+                for k1, k2 in each.__dict__.items()
+                if k1 not in ['degree', 'volume', 'duration']
+            })
+            current_dict['mode'] = 'value'
+        for each in j['tempos']:
+            current_dict.update({
+                k1: k2
+                for k1, k2 in each.__dict__.items()
+                if k1 not in ['degree', 'volume', 'duration']
+            })
         j['other_messages'] = [k.__dict__ for k in j['other_messages']]
         for i, each in enumerate(j['notes']):
             each['interval'] = j['interval'][i]

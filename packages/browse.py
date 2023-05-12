@@ -25,7 +25,6 @@ def read_midi_file(self, state, result):
         all_tracks = mp.read(self.parent.file_path, get_off_drums=False)
         current_piece = mp.copy(all_tracks)
         all_tracks.normalize_tempo()
-        all_tracks.get_off_not_notes()
         current_bpm = all_tracks.bpm
         actual_start_time = min(all_tracks.start_times)
         drum_tracks = []
