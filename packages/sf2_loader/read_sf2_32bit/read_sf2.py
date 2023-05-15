@@ -93,22 +93,18 @@ def apply_fadeout(current_chord, decay, fixed_decay, new=True):
         if isinstance(decay, list):
             for i in range(len(temp.notes)):
                 each = temp.notes[i]
-                if isinstance(each, mp.note):
-                    each.duration += decay[i]
+                each.duration += decay[i]
         else:
             for each in temp.notes:
-                if isinstance(each, mp.note):
-                    each.duration += decay
+                each.duration += decay
     else:
         if isinstance(decay, list):
             for i in range(len(temp.notes)):
                 each = temp.notes[i]
-                if isinstance(each, mp.note):
-                    each.duration += each.duration * decay[i]
+                each.duration += each.duration * decay[i]
         else:
             for each in temp.notes:
-                if isinstance(each, mp.note):
-                    each.duration += each.duration * decay
+                each.duration += each.duration * decay
     return temp
 
 
@@ -117,10 +113,6 @@ def get_timestamps(current_chord,
                    ignore_other_messages=False,
                    pan=None,
                    volume=None):
-    for i in range(len(current_chord.notes)):
-        current = current_chord.notes[i]
-        if isinstance(current, mp.pitch_bend) and current.start_time is None:
-            current.start_time = sum(current_chord.interval[:i])
     noteon_part = [
         general_event(
             'noteon',
@@ -140,7 +132,7 @@ def get_timestamps(current_chord,
     pitch_bend_part = [
         general_event('pitch_bend',
                       bar_to_real_time(i.start_time, bpm, 1) / 1000, i)
-        for i in current_chord.notes if isinstance(i, mp.pitch_bend)
+        for i in current_chord.pitch_bends
     ]
     result = noteon_part + noteoff_part + pitch_bend_part
     if not ignore_other_messages:
@@ -765,14 +757,14 @@ current preset name: {self.get_current_instrument()}'''
                 pan = copy(pan)
                 for each in pan:
                     each.start_time -= piece_start_time
-                    if each.start_time < 1:
-                        each.start_time = 1
+                    if each.start_time < 0:
+                        each.start_time = 0
             if volume:
                 volume = copy(volume)
                 for each in volume:
                     each.start_time -= piece_start_time
-                    if each.start_time < 1:
-                        each.start_time = 1
+                    if each.start_time < 0:
+                        each.start_time = 0
 
         current_timestamps = get_timestamps(current_chord,
                                             bpm,

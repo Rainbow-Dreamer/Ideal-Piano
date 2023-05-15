@@ -1602,7 +1602,7 @@ class chord:
     def pitch_inversion(self):
         pitch_bend_changes = self.pitch_bends
         temp = self.copy()
-        temp.clear_pitch_bend('all')
+        temp.clear_pitch_bend()
         tempo_changes = temp.tempos
         if tempo_changes:
             temp.normalize_tempo(tempo_changes[0].bpm)
@@ -1634,7 +1634,7 @@ class chord:
             self.notes.insert(0, note('C', 5, duration=0))
             self.interval.insert(0, start_time)
         tempo_changes = copy(self.tempos)
-        tempo_changes.insert(0, tempo(bpm, 0))
+        tempo_changes.insert(0, tempo(bpm=bpm, start_time=0))
         self.clear_tempo()
         tempo_changes.sort(key=lambda s: s.start_time)
         new_tempo_changes = [tempo_changes[0]]
@@ -1662,7 +1662,7 @@ class chord:
         if volume_msg:
             other_types += volume_msg
         other_types.sort(key=lambda s: s.start_time)
-        other_types.insert(0, pitch_bend(0, start_time=0))
+        other_types.insert(0, pitch_bend(value=0, start_time=0))
         other_types_interval = [
             other_types[i + 1].start_time - other_types[i].start_time
             for i in range(len(other_types) - 1)
@@ -3290,40 +3290,33 @@ class piece:
 
     def add_pitch_bend(self,
                        value,
-                       start_time=0,
+                       start_time,
                        channel='all',
                        track=0,
-                       mode='cents',
-                       ind=None):
+                       mode='cents'):
         if channel == 'all':
             for i in range(len(self.tracks)):
                 current_channel = self.channels[
                     i] if self.channels is not None else i
-                self.tracks[i].pitch_bends.append(
-                    chord([
-                        pitch_bend(value, start_time, current_channel, track,
-                                   mode)
-                    ]))
+                current_pitch_bend = pitch_bend(value=value,
+                                                start_time=start_time,
+                                                mode=mode,
+                                                channel=current_channel,
+                                                track=track)
+                self.tracks[i].pitch_bends.append(current_pitch_bend)
         else:
             current_channel = self.channels[
                 channel] if self.channels is not None else channel
-            if ind is not None:
-                self.tracks[channel].pitch_bends.insert(
-                    ind,
-                    pitch_bend(value, start_time, current_channel, track,
-                               mode))
-            else:
-                self.tracks[channel].pitch_bends.append(
-                    chord([
-                        pitch_bend(value, start_time, current_channel, track,
-                                   mode)
-                    ]))
+            self.tracks[channel].pitch_bends.append(
+                pitch_bend(value=value,
+                           start_time=start_time,
+                           mode=mode,
+                           channel=current_channel,
+                           track=track))
 
-    def add_tempo_change(self, bpm, start_time=None, ind=None, track_ind=None):
-        if ind is not None and track_ind is not None:
-            self.tracks[track_ind].tempos.insert(ind, tempo(bpm, start_time))
-        else:
-            self.tracks[0].tempos.append(chord([tempo(bpm, start_time)]))
+    def add_tempo_change(self, bpm, start_time, track_ind=0):
+        self.tracks[track_ind].tempos.append(
+            tempo(bpm=bpm, start_time=start_time))
 
     def clear_pitch_bend(self, ind='all', value='all', cond=None):
         if ind == 'all':
@@ -3541,7 +3534,12 @@ class piece:
         all_tracks = self.tracks
         length = len(all_tracks)
         for k in range(length):
-            for each in all_tracks[k]:
+            current_track = all_tracks[k]
+            for each in current_track.notes:
+                each.track_num = k
+            for each in current_track.tempos:
+                each.track_num = k
+            for each in current_track.pitch_bends:
                 each.track_num = k
 
     def reconstruct(self,
@@ -3697,7 +3695,10 @@ class piece:
         start_time -= ind1
         if start_time < 0:
             start_time = 0
-        temp.reconstruct(result, start_time, offset, correct)
+        temp.reconstruct(track=result,
+                         start_time=start_time,
+                         offset=offset,
+                         correct=correct)
         if ind2 is None:
             ind2 = temp.bars()
         for each in temp.pan:
@@ -3807,15 +3808,13 @@ class piece:
             current_start_time = start_time[i]
             current_track = tracks[i]
             for each in current_track.tempos:
-                if each.start_time is not None:
-                    each.start_time += current_start_time
-                    if each.start_time < 0:
-                        each.start_time = 0
+                each.start_time += current_start_time
+                if each.start_time < 0:
+                    each.start_time = 0
             for each in current_track.pitch_bends:
-                if each.start_time is not None:
-                    each.start_time += current_start_time
-                    if each.start_time < 0:
-                        each.start_time = 0
+                each.start_time += current_start_time
+                if each.start_time < 0:
+                    each.start_time = 0
             if msg:
                 for each in current_track.other_messages:
                     each.start_time += current_start_time
@@ -4068,12 +4067,9 @@ class tempo:
     then it also works for the piece.
     '''
 
-    def __init__(self, bpm, start_time=None, channel=None, track=None):
+    def __init__(self, bpm, start_time=0, channel=None, track=None):
         self.bpm = bpm
         self.start_time = start_time
-        self.degree = 0
-        self.duration = 0
-        self.volume = 100
         self.channel = channel
         self.track = track
 
@@ -4102,7 +4098,7 @@ class pitch_bend:
 
     def __init__(self,
                  value,
-                 start_time=None,
+                 start_time=0,
                  mode='cents',
                  channel=None,
                  track=None):
@@ -4125,9 +4121,6 @@ class pitch_bend:
             self.value = int(self.value * 40.96)
         elif self.mode == 'semitones':
             self.value = int(self.value * 4096)
-        self.degree = 0
-        self.duration = 0
-        self.volume = 100
 
     def __repr__(self):
         attributes = ['value', 'start_time', 'channel', 'track']
