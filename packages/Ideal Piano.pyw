@@ -105,10 +105,10 @@ def start_send_midi_event(event_list, current_event_counter,
                             if current_pause_msg[0] == 'set_position':
                                 current_position_time = current_pause_msg[1]
                                 for k, each in enumerate(event_list):
-                                    if each.time == current_position_time:
+                                    if each.start_time == current_position_time:
                                         current_event_counter = k
                                         break
-                                    elif each.time > current_position_time:
+                                    elif each.start_time > current_position_time:
                                         current_event_counter = k - 1
                                         if current_event_counter < 0:
                                             current_event_counter = 0
@@ -120,10 +120,10 @@ def start_send_midi_event(event_list, current_event_counter,
                         send_midi_mute_all_sounds(current_player)
                     current_position_time = current_msg[1]
                     for k, each in enumerate(event_list):
-                        if each.time == current_position_time:
+                        if each.start_time == current_position_time:
                             current_event_counter = k
                             break
-                        elif each.time > current_position_time:
+                        elif each.start_time > current_position_time:
                             current_event_counter = k - 1
                             if current_event_counter < 0:
                                 current_event_counter = 0
@@ -135,7 +135,7 @@ def start_send_midi_event(event_list, current_event_counter,
         current_time = time.time()
         past_time = current_time - current_start_time + current_position_time
         current_event = event_list[current_event_counter]
-        if past_time >= current_event.time:
+        if past_time >= current_event.start_time:
             mode = current_event.mode
             current_track = current_event.track
             if mode == 0:
@@ -1792,7 +1792,7 @@ class piano_engine:
         self.event_list = control.piece_to_event_list(self.current_piece,
                                                       set_instrument=True)
         for each in self.event_list:
-            each.time += current_start_time
+            each.start_time += current_start_time
         self.current_position = 0
         self.midi_event_length = len(self.event_list)
 
