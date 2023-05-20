@@ -1038,25 +1038,31 @@ class chord:
             for i in result
         ]
 
-    def add(self, note1=None, mode='after', start=0, duration=1 / 4):
-        if not self.notes and not self.tempos and not self.pitch_bends:
+    def add(self,
+            note1=None,
+            mode='after',
+            start=0,
+            duration=1 / 4,
+            adjust_msg=True):
+        if self.is_empty():
             result = copy(note1)
             result.start_time += start
             return result
         temp = copy(self)
-        if not note1.notes and not note1.tempos and not note1.pitch_bends:
+        if note1.is_empty():
             return temp
         if mode == 'tail':
             note1 = copy(note1)
             adjust_interval = sum(temp.interval)
             temp.notes += note1.notes
             temp.interval += note1.interval
-            for each in note1.other_messages:
-                each.start_time += adjust_interval
-            for each in note1.tempos:
-                each.start_time += adjust_interval
-            for each in note1.pitch_bends:
-                each.start_time += adjust_interval
+            if adjust_msg:
+                for each in note1.other_messages:
+                    each.start_time += adjust_interval
+                for each in note1.tempos:
+                    each.start_time += adjust_interval
+                for each in note1.pitch_bends:
+                    each.start_time += adjust_interval
             temp.other_messages += note1.other_messages
             temp.tempos += note1.tempos
             temp.pitch_bends += note1.pitch_bends
@@ -1072,14 +1078,23 @@ class chord:
             # calculate the absolute distances of all of the notes of the chord to add and self,
             # and then sort them, make differences between each two distances
             if temp.notes:
+                note1_start_time = note1.start_time + start
+                if note1_start_time < 0:
+                    start = temp.start_time - note1_start_time
+                    note1.start_time = temp.start_time + note1_start_time
+                    temp, note1 = note1, temp
+                else:
+                    if note1_start_time < temp.start_time:
+                        start = temp.start_time - note1_start_time
+                        note1.start_time = note1_start_time
+                        temp, note1 = note1, temp
+                    else:
+                        start = note1_start_time - temp.start_time
                 distance = []
                 intervals1 = temp.interval
                 intervals2 = note1.interval
-                current_start_time = min(temp.start_time,
-                                         note1.start_time + start)
-                start += (note1.start_time - temp.start_time)
-                if start < 0:
-                    raise ValueError('shift time must be non-negative')
+                current_start_time = temp.start_time
+
                 if start != 0:
                     note1.notes.insert(0, temp.notes[0])
                     intervals2.insert(0, start)
@@ -1100,19 +1115,16 @@ class chord:
                     for i in range(1, len(new_interval))
                 ] + [distance[-1][1].duration]
             else:
-                if start < 0:
-                    raise ValueError('shift time must be non-negative')
                 new_notes = note1.notes
                 new_interval = note1.interval
-                temp.start_time += start
-                current_start_time = min(temp.start_time,
-                                         note1.start_time + start)
-            for each in note1.other_messages:
-                each.start_time += start
-            for each in note1.tempos:
-                each.start_time += start
-            for each in note1.pitch_bends:
-                each.start_time += start
+                current_start_time = note1.start_time + start
+            if adjust_msg:
+                for each in note1.other_messages:
+                    each.start_time += start
+                for each in note1.tempos:
+                    each.start_time += start
+                for each in note1.pitch_bends:
+                    each.start_time += start
             return chord(new_notes,
                          interval=new_interval,
                          start_time=current_start_time,
@@ -3038,9 +3050,14 @@ class piece:
         else:
             self.tracks[i].set_volume(self.muted_msg[i])
 
+    def update_msg(self):
+        self.other_messages = mp.concat(
+            [i.other_messages for i in self.tracks], start=[])
+
     def append(self, new_track):
         if not isinstance(new_track, track):
             raise ValueError('must be a track type to be appended')
+        new_track = copy(new_track)
         self.tracks.append(new_track.content)
         self.instruments.append(new_track.instrument)
         self.start_times.append(new_track.start_time)
@@ -3063,32 +3080,38 @@ class piece:
                 self.daw_channels.append(new_track.daw_channel)
             else:
                 self.daw_channels.append(0)
+        self.tracks[-1].reset_track(len(self.tracks) - 1)
+        self.update_msg()
 
-    def insert(self, i, new_track):
+    def insert(self, ind, new_track):
         if not isinstance(new_track, track):
             raise ValueError('must be a track type to be inserted')
-        self.tracks.insert(i, new_track.content)
-        self.instruments.insert(i, new_track.instrument)
-        self.start_times.insert(i, new_track.start_time)
+        new_track = copy(new_track)
+        self.tracks.insert(ind, new_track.content)
+        self.instruments.insert(ind, new_track.instrument)
+        self.start_times.insert(ind, new_track.start_time)
         if self.channels:
             if new_track.channel:
-                self.channels.insert(i, new_track.channel)
+                self.channels.insert(ind, new_track.channel)
             else:
-                self.channels.insert(i, max(self.channels) + 1)
+                self.channels.insert(ind, max(self.channels) + 1)
         if self.track_names:
             if new_track.track_name:
-                self.track_names.insert(i, new_track.track_name)
+                self.track_names.insert(ind, new_track.track_name)
             else:
                 self.track_names.insert(
-                    i, new_track.name if new_track.name is not None else
+                    ind, new_track.name if new_track.name is not None else
                     f'track {self.track_number}')
-        self.pan.insert(i, new_track.pan if new_track.pan else [])
-        self.volume.insert(i, new_track.volume if new_track.volume else [])
+        self.pan.insert(ind, new_track.pan if new_track.pan else [])
+        self.volume.insert(ind, new_track.volume if new_track.volume else [])
         if self.daw_channels:
             if new_track.daw_channel:
-                self.daw_channels.insert(i, new_track.daw_channel)
+                self.daw_channels.insert(ind, new_track.daw_channel)
             else:
-                self.daw_channels.insert(i, 0)
+                self.daw_channels.insert(ind, 0)
+        for k in range(ind, len(self.tracks)):
+            self.tracks[k].reset_track(k)
+        self.update_msg()
 
     def up(self, n=1, mode=0):
         temp = copy(self)
@@ -3198,7 +3221,11 @@ class piece:
                     each.start_time += start_time
                 current_start_time = temp2.start_times[
                     i] + start_time - temp.start_times[current_ind]
-                temp.tracks[current_ind] &= (current_track, current_start_time)
+                temp.tracks[current_ind] = temp.tracks[current_ind].add(
+                    current_track,
+                    start=current_start_time,
+                    mode='head',
+                    adjust_msg=False)
                 if current_start_time < 0:
                     temp.start_times[current_ind] += current_start_time
             else:
@@ -3445,7 +3472,13 @@ class piece:
         first_track_ind = sort_tracks_inds[0][0]
         first_track = all_tracks[first_track_ind]
         for i in sort_tracks_inds[1:]:
-            first_track &= (all_tracks[i[0]], i[1] - first_track_start_time)
+            current_track = all_tracks[i[0]]
+            current_start_time = i[1]
+            current_shift = current_start_time - first_track_start_time
+            first_track = first_track.add(current_track,
+                                          start=current_shift,
+                                          mode='head',
+                                          adjust_msg=False)
         first_track.other_messages = temp.other_messages
         if add_pan_volume:
             whole_pan = mp.concat(temp.pan)
@@ -6128,8 +6161,13 @@ def _piece_process_normalize_tempo(self,
     first_track = all_tracks[0]
 
     for i in range(1, length):
-        first_track &= (all_tracks[i],
-                        start_time_ls[i] - first_track_start_time)
+        current_track = all_tracks[i]
+        current_start_time = start_time_ls[i]
+        current_shift = current_start_time - first_track_start_time
+        first_track = first_track.add(current_track,
+                                      start=current_shift,
+                                      mode='head',
+                                      adjust_msg=False)
     first_track.other_messages = other_messages
     if self.pan:
         for k in range(len(self.pan)):
