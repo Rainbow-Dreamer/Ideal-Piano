@@ -314,6 +314,13 @@ class chord:
             if 0 <= each.start_time < cut_bar_length:
                 new_other_messages.append(each)
 
+        if ind2 <= start_time:
+            result = chord([], start_time=ind2 - ind1)
+            result.tempos = new_tempos
+            result.pitch_bends = new_pitch_bends
+            result.other_messages = new_other_messages
+            return result
+
         current_bar = start_time
         notes = temp.notes
         intervals = temp.interval
@@ -365,9 +372,10 @@ class chord:
             result.notes = new_notes
             result.interval = new_intervals
         if cut_extra_interval:
-            current_bar = result.bars(mode=0, start_time=result.start_time)
-            if current_bar > cut_bar_length:
-                result.interval[-1] -= (current_bar - cut_bar_length)
+            if result.interval:
+                current_bar = result.bars(mode=0, start_time=result.start_time)
+                if current_bar > cut_bar_length:
+                    result.interval[-1] -= (current_bar - cut_bar_length)
         return result
 
     def cut_time(self,
@@ -1040,12 +1048,32 @@ class chord:
             adjust_msg=True):
         if self.is_empty():
             result = copy(note1)
-            result.start_time += start
+            shift = start
+            if mode == 'after':
+                shift += self.start_time
+            elif mode == 'head':
+                if result.interval:
+                    last_note_diff = self.start_time - (
+                        result.start_time + shift + sum(result.interval[:-1]))
+                    result.interval[-1] = max(result.interval[-1],
+                                              last_note_diff)
+            result.start_time += shift
             if adjust_msg:
-                result.apply_start_time_to_changes(start, msg=True)
+                result.apply_start_time_to_changes(shift, msg=True)
             return result
         temp = copy(self)
         if note1.is_empty():
+            if mode == 'after':
+                if note1.start_time > 0:
+                    temp = temp.rest(note1.start_time)
+            elif mode == 'head':
+                if temp.interval:
+                    last_note_diff = (note1.start_time + start) - (
+                        temp.start_time + sum(temp.interval[:-1]))
+                    temp.interval[-1] = max(temp.interval[-1], last_note_diff)
+                else:
+                    temp.start_time = max(temp.start_time,
+                                          note1.start_time + start)
             return temp
         if mode == 'tail':
             note1 = copy(note1)
@@ -1119,12 +1147,7 @@ class chord:
                          tempos=temp.tempos + note1.tempos,
                          pitch_bends=temp.pitch_bends + note1.pitch_bends)
         elif mode == 'after':
-            if self.interval and self.interval[-1] == 0:
-                return (self.rest(0) | (start + note1.start_time)).add(
-                    note1, mode='tail')
-            else:
-                return (self | (start + note1.start_time)).add(note1,
-                                                               mode='tail')
+            return self.rest(start + note1.start_time).add(note1, mode='tail')
 
     def inversion(self, num=1):
         if not 1 <= num < len(self.notes):
