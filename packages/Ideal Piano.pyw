@@ -2158,10 +2158,11 @@ class piano_engine:
             event = self.device.read(1)[0]
             data, timestamp = event
             status, note_number, velocity, note_off_velocity = data
-            if status == 128 or (status == 144 and velocity == 0):
+            # 128-143 is the status code of note off in midi for different channels
+            if 128 <= status <= 143 or (144 <= status <= 159
+                                        and velocity == 0):
                 current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
-                # 128 is the status code of note off in midi
                 if piano_config.delay_only_read_current:
                     if 0 <= note_number - 21 < current_piano_window.note_num:
                         current_piano_window.piano_keys[
@@ -2170,10 +2171,11 @@ class piano_engine:
                                 note_number - 21]
                 if current_note in self.current_play:
                     self.current_play.remove(current_note)
-            elif status == 144:
+            # 144-159 is the status code of note on in midi for different channels
+            elif 144 <= status <= 159:
                 current_note = mp.degree_to_note(note_number)
                 current_note.sustain_pedal_on = False
-                # 144 is the status code of note on in midi
+
                 if piano_config.note_mode in note_display_mode and piano_config.note_mode:
                     if 0 <= current_note.degree - 21 < current_piano_window.note_num:
                         places = current_piano_window.note_place[
@@ -2224,7 +2226,8 @@ class piano_engine:
                             note=current_note.degree,
                             velocity=int(127 * piano_config.global_volume),
                             channel=0)
-            elif status == 176:
+            # 176-191 is the status code of a controller event in midi for different channels
+            elif 176 <= status <= 191:
                 if note_number == 64:
                     if velocity >= 64:
                         if piano_config.delay_only_read_current:
