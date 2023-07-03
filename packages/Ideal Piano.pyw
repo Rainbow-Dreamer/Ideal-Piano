@@ -41,7 +41,7 @@ def load(dic, path, file_format, volume, current_wavdic=None):
         i: pygame.mixer.Sound(f'{path}/{dic[i]}.{file_format}')
         for i in dic
     }
-    if volume != None:
+    if volume is not None:
         [wavedict[x].set_volume(volume) for x in wavedict]
     if current_wavdic is not None:
         current_wavdic.append(wavedict)
@@ -58,7 +58,7 @@ def load_sf2(dic, sf2, volume, current_wavdic=None):
                                    get_audio=True).raw_data)
         for i in dic
     }
-    if volume != None:
+    if volume is not None:
         [wavedict[x].set_volume(volume) for x in wavedict]
     if current_wavdic is not None:
         current_wavdic.append(wavedict)

@@ -818,7 +818,7 @@ def random_composing(current_scale,
     # pick is the sets of notes from the required scales which used to pick up notes for melody
     pick = [x.up(2 * database.octave) for x in standard]
     focused = False
-    if focus_notes != None:
+    if focus_notes is not None:
         focused = True
         focus_notes = [pick[i - 1] for i in focus_notes]
         remained_notes = [j for j in pick if j not in focus_notes]

@@ -2294,8 +2294,8 @@ class scale:
                     ]
 
     def get_scale(self, intervals=1 / 4, durations=None):
-        if self.mode == None:
-            if self.interval == None:
+        if self.mode is None:
+            if self.interval is None:
                 raise ValueError(
                     'at least one of mode or interval in the scale should be settled'
                 )
