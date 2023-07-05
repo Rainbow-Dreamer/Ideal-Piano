@@ -2,6 +2,7 @@ from copy import deepcopy as copy
 from fractions import Fraction
 from dataclasses import dataclass
 import functools
+
 if __name__ == 'musicpy.structures':
     from . import database
 else:
@@ -13,12 +14,24 @@ class note:
     This class represents a single note.
     '''
 
-    def __init__(self, name, num=4, duration=1 / 4, volume=100, channel=None):
-        if name not in database.standard:
-            raise ValueError(
-                f"Invalid note name '{name}', accepted note names are {list(database.standard.keys())}"
-            )
-        self.name = name
+    def __init__(self,
+                 name,
+                 num=4,
+                 duration=1 / 4,
+                 volume=100,
+                 channel=None,
+                 accidental=None):
+        if name[0] not in database.standard:
+            raise ValueError(f"Invalid note name '{name}'")
+        if accidental is not None:
+            self.base_name = name
+            self.accidental = accidental
+        else:
+            self.base_name = name[0]
+            accidental = name[1:]
+            if not accidental:
+                accidental = None
+            self.accidental = accidental
         self.num = num
         self.duration = duration
         volume = int(volume)
@@ -26,8 +39,22 @@ class note:
         self.channel = channel
 
     @property
+    def name(self):
+        return f'{self.base_name}{self.accidental if self.accidental is not None else ""}'
+
+    @name.setter
+    def name(self, value):
+        self.base_name = value[0]
+        accidental = value[1:]
+        if not accidental:
+            accidental = None
+        self.accidental = accidental
+
+    @property
     def degree(self):
-        return database.standard[self.name] + 12 * (self.num + 1)
+        return database.standard.get(
+            self.name, database.standard.get(
+                self.standard_name())) + 12 * (self.num + 1)
 
     @degree.setter
     def degree(self, value):
@@ -47,8 +74,17 @@ class note:
     def __le__(self, other):
         return self.degree <= other.degree
 
+    def to_standard(self):
+        temp = copy(self)
+        temp.name = mp.standardize_note(temp.name)
+        return temp
+
+    def standard_name(self):
+        return mp.standardize_note(self.name)
+
     def get_number(self):
-        return database.standard[self.name]
+        return database.standard.get(
+            self.name, database.standard.get(self.standard_name()))
 
     def same_note_name(self, other):
         return self.get_number() == other.get_number()
@@ -100,6 +136,18 @@ class note:
     def down(self, unit=1):
         return self.up(-unit)
 
+    def sharp(self, unit=1):
+        temp = self
+        for i in range(unit):
+            temp += database.A1
+        return temp
+
+    def flat(self, unit=1):
+        temp = self
+        for i in range(unit):
+            temp -= database.A1
+        return temp
+
     def __pos__(self):
         return self.up()
 
@@ -124,6 +172,8 @@ class note:
     def __add__(self, obj):
         if isinstance(obj, int):
             return self.up(obj)
+        elif isinstance(obj, database.Interval):
+            return obj + self
         if not isinstance(obj, note):
             obj = mp.to_note(obj)
         return chord([copy(self), copy(obj)])
@@ -131,6 +181,8 @@ class note:
     def __sub__(self, obj):
         if isinstance(obj, int):
             return self.down(obj)
+        elif isinstance(obj, database.Interval):
+            return obj.__rsub__(self)
 
     def __call__(self, obj=''):
         return mp.C(self.name + obj, self.num)
@@ -600,15 +652,15 @@ class chord:
         elif isinstance(alist, (str, note)):
             return self.on(alist)
 
-    def standardize(self):
+    def standardize(self, standardize_note=True):
         temp = self.only_notes()
         notenames = temp.names()
         intervals = temp.interval
         durations = temp.get_duration()
-        names_standard = [
-            database.standard_dict[i] if i in database.standard_dict else i
-            for i in notenames
-        ]
+        if standardize_note:
+            names_standard = [mp.standardize_note(i) for i in notenames]
+        else:
+            names_standard = notenames
         names_offrep = []
         new_duration = []
         new_interval = []
@@ -851,17 +903,19 @@ class chord:
                     degree_ls = database.degree_match[degree]
                     found = False
                     for i in degree_ls:
-                        current_note = temp[0].up(i)
+                        current_note = temp[0] + i
                         if current_note in temp:
                             ind = temp.notes.index(current_note)
-                            temp.notes[ind] = temp.notes[ind].up(
-                            ) if first == '#' else temp.notes[ind].down()
+                            temp.notes[ind] = temp.notes[ind].sharp(
+                            ) if first == '#' else temp.notes[ind].flat()
                             found = True
                             break
                     if not found:
-                        temp += temp[0].up(
-                            degree_ls[0]).up() if first == '#' else temp[0].up(
-                                degree_ls[0]).down()
+                        if first == '#':
+                            new_note = (temp[0] + degree_ls[0]).sharp()
+                        else:
+                            new_note = (temp[0] + degree_ls[0]).flat()
+                        temp += new_note
                 else:
                     if degree in database.standard:
                         if degree in database.standard_dict:
@@ -872,14 +926,14 @@ class chord:
                         ]
                         if degree in self_names:
                             ind = temp.names().index(degree)
-                            temp.notes[ind] = temp.notes[ind].up(
-                            ) if first == '#' else temp.notes[ind].down()
+                            temp.notes[ind] = temp.notes[ind].sharp(
+                            ) if first == '#' else temp.notes[ind].flat()
             elif each.startswith('omit') or each.startswith('no'):
                 degree = each[4:] if each.startswith('omit') else each[2:]
                 if degree in database.degree_match:
                     degree_ls = database.degree_match[degree]
                     for i in degree_ls:
-                        current_note = temp[0].up(i)
+                        current_note = temp[0] + i
                         if current_note in temp:
                             ind = temp.notes.index(current_note)
                             del temp.notes[ind]
@@ -906,7 +960,7 @@ class chord:
                 degree = each[3:]
                 if degree in database.degree_match:
                     degree_ls = database.degree_match[degree]
-                    temp += temp[0].up(degree_ls[0])
+                    temp += (temp[0] + degree_ls[0])
             else:
                 raise ValueError(f'{obj} is not a valid chord alternation')
         return temp
@@ -1031,20 +1085,26 @@ class chord:
 
     def intervalof(self, cumulative=True, translate=False):
         degrees = self.get_degree()
+        N = len(degrees)
         if not cumulative:
-            N = len(degrees)
-            result = [degrees[i] - degrees[i - 1] for i in range(1, N)]
+            if not translate:
+                result = [degrees[i] - degrees[i - 1] for i in range(1, N)]
+            else:
+                result = [
+                    mp.get_pitch_interval(self.notes[i - 1], self.notes[i])
+                    for i in range(1, N)
+                ]
         else:
-            root = degrees[0]
-            others = degrees[1:]
-            result = [i - root for i in others]
-        if not translate:
-            return result
-        return [
-            database.INTERVAL.get(i % (database.octave * 2),
-                                  database.INTERVAL[i % database.octave])
-            for i in result
-        ]
+            if not translate:
+                root = degrees[0]
+                others = degrees[1:]
+                result = [i - root for i in others]
+            else:
+                result = [
+                    mp.get_pitch_interval(self.notes[0], i)
+                    for i in self.notes[1:]
+                ]
+        return result
 
     def add(self,
             note1=None,
@@ -1340,18 +1400,18 @@ class chord:
         first_note = temp[0]
         if num == 4:
             temp.notes = [
-                i.up() if abs(i.degree - first_note.degree) %
-                database.octave == database.major_third else
-                i.up(2) if abs(i.degree - first_note.degree) %
-                database.octave == database.minor_third else i
+                temp.notes[0] +
+                database.P4 if abs(i.degree - first_note.degree) %
+                database.octave
+                in [database.major_third, database.minor_third] else i
                 for i in temp.notes
             ]
         elif num == 2:
             temp.notes = [
-                i.down(2) if abs(i.degree - first_note.degree) %
-                database.octave == database.major_third else
-                i.down() if abs(i.degree - first_note.degree) %
-                database.octave == database.minor_third else i
+                temp.notes[0] +
+                database.M2 if abs(i.degree - first_note.degree) %
+                database.octave
+                in [database.major_third, database.minor_third] else i
                 for i in temp.notes
             ]
         return temp
@@ -2163,7 +2223,12 @@ class scale:
     This class represents a scale.
     '''
 
-    def __init__(self, start=None, mode=None, interval=None, notes=None):
+    def __init__(self,
+                 start=None,
+                 mode=None,
+                 interval=None,
+                 notes=None,
+                 standard_interval=True):
         self.interval = interval
         self.notes = None
         if notes is not None:
@@ -2182,7 +2247,8 @@ class scale:
             self.notes = self.get_scale().notes
 
         if interval is None:
-            self.interval = self.get_interval()
+            self.interval = self.get_interval(
+                standard_interval=standard_interval)
         if mode is None:
             current_mode = mp.alg.detect_scale_type(self.interval,
                                                     mode='interval')
@@ -2255,13 +2321,13 @@ class scale:
             for each in altered_notes:
                 if each.startswith('#'):
                     current_ind = int(each.split('#')[1]) - 1
-                    notes[current_ind] = notes[current_ind].up()
+                    notes[current_ind] = notes[current_ind].sharp()
                 elif each.startswith('b'):
                     current_ind = int(each.split('b')[1]) - 1
-                    notes[current_ind] = notes[current_ind].down()
+                    notes[current_ind] = notes[current_ind].flat()
             return scale(notes=notes)
 
-    def get_interval(self):
+    def get_interval(self, standard_interval=True):
         if self.mode is None:
             if self.interval is None:
                 if self.notes is None:
@@ -2269,11 +2335,18 @@ class scale:
                         'a mode or interval or notes list should be settled')
                 else:
                     notes = self.notes
-                    rootdegree = notes[0].degree
-                    return [
-                        notes[i].degree - notes[i - 1].degree
-                        for i in range(1, len(notes))
-                    ]
+                    if not standard_interval:
+                        root_degree = notes[0].degree
+                        return [
+                            notes[i].degree - notes[i - 1].degree
+                            for i in range(1, len(notes))
+                        ]
+                    else:
+                        start = notes[0]
+                        return [
+                            mp.get_pitch_interval(notes[i - 1], notes[i])
+                            for i in range(1, len(notes))
+                        ]
             else:
                 return self.interval
         else:
@@ -2287,11 +2360,18 @@ class scale:
                     raise ValueError(f'could not find scale {self.mode}')
                 else:
                     notes = self.notes
-                    rootdegree = notes[0].degree
-                    return [
-                        notes[i].degree - notes[i - 1].degree
-                        for i in range(1, len(notes))
-                    ]
+                    if not standard_interval:
+                        root_degree = notes[0].degree
+                        return [
+                            notes[i].degree - notes[i - 1].degree
+                            for i in range(1, len(notes))
+                        ]
+                    else:
+                        start = notes[0]
+                        return [
+                            mp.get_pitch_interval(notes[i - 1], notes[i])
+                            for i in range(1, len(notes))
+                        ]
 
     def get_scale(self, intervals=1 / 4, durations=None):
         if self.mode is None:
@@ -2301,22 +2381,20 @@ class scale:
                 )
             else:
                 result = [self.start]
-                count = self.start.degree
+                start = copy(self.start)
                 for t in self.interval:
-                    count += t
-                    result.append(mp.degree_to_note(count))
+                    start += t
+                    result.append(start)
                 if (result[-1].degree - result[0].degree) % 12 == 0:
                     result[-1].name = result[0].name
                 return chord(result, duration=durations, interval=intervals)
         else:
             result = [self.start]
-            count = self.start.degree
+            start = copy(self.start)
             interval1 = self.get_interval()
-            if isinstance(interval1, str):
-                raise ValueError(f'cannot find scale {interval1}')
             for t in interval1:
-                count += t
-                result.append(mp.degree_to_note(count))
+                start += t
+                result.append(start)
             if (result[-1].degree - result[0].degree) % 12 == 0:
                 result[-1].name = result[0].name
             return chord(result, duration=durations, interval=intervals)
@@ -2337,7 +2415,8 @@ class scale:
                              duration=1 / 4,
                              interval=0,
                              num=3,
-                             step=2):
+                             step=2,
+                             standardize=False):
         result = []
         high = False
         if degree1 == 7:
@@ -2347,13 +2426,15 @@ class scale:
         scale_notes = temp.notes[:-1]
         for i in range(degree1, degree1 + step * num, step):
             result.append(scale_notes[i % 7])
-        resultchord = chord(result,
-                            rootpitch=temp[0].num,
-                            interval=interval,
-                            duration=duration).standardize()
+        result_chord = chord(result,
+                             rootpitch=temp[0].num,
+                             interval=interval,
+                             duration=duration)
+        if standardize:
+            result_chord = result_chord.standardize()
         if high:
-            resultchord = resultchord.up(database.octave)
-        return resultchord
+            result_chord = result_chord.up(database.octave)
+        return result_chord
 
     def pattern(self, indlist, duration=1 / 4, interval=0, num=3, step=2):
         if isinstance(indlist, str):
