@@ -717,9 +717,7 @@ def _detect_chord_by_root_helper(current_chord,
                                  inner=False):
     current_match_chord = None
     current_note_interval = current_chord.intervalof(translate=True)
-    current_note_interval = [
-        database.NAME_OF_INTERVAL[i] for i in current_note_interval
-    ]
+    print(111, current_note_interval, current_chord, flush=True)
     current_note_interval.sort()
     current_note_interval = tuple(current_note_interval)
     current_detect_types = database.detectTypes if not custom_mapping else custom_mapping[
@@ -730,12 +728,13 @@ def _detect_chord_by_root_helper(current_chord,
         return current_detect_types[current_note_interval][0]
     if not any(i in current_note_interval
                for i in database.non_standard_intervals):
-        chord_type_intervals = [i[0] for i in current_chord_types.values()]
+        chord_type_intervals = list(current_chord_types.values())
         match_chords = [
             current_detect_types[i][0] for i in chord_type_intervals
             if all((each in i or each - database.octave in i)
                    for each in current_note_interval)
         ]
+        print(333, match_chords)
         if match_chords:
             match_chords.sort(key=lambda s: len(s))
             current_match_chord = match_chords[0]
