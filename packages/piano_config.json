@@ -199,6 +199,7 @@
     "show_degree": true,
     "original_first_ratio": 0.86,
     "similarity_ratio": 0.6,
+    "standardize_note": false,
     "melody_tol": 10,
     "chord_tol": 9,
     "get_off_overlap_notes": true,

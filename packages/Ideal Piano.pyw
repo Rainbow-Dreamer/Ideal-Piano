@@ -1304,6 +1304,7 @@ class piano_engine:
             show_degree=piano_config.show_degree,
             original_first_ratio=piano_config.original_first_ratio,
             similarity_ratio=piano_config.similarity_ratio,
+            standardize_note=piano_config.standardize_note,
             custom_mapping=current_custom_mapping)
         if current_chord_info is None:
             return
