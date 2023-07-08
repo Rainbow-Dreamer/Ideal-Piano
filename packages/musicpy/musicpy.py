@@ -8,10 +8,8 @@ import functools
 import json
 
 if __name__ == '__main__' or __name__ == 'musicpy':
-    import database
     from structures import *
 else:
-    from . import database
     from .structures import *
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -172,9 +170,9 @@ def get_chord(start,
               interval=None,
               cumulative=True,
               pitch=4,
-              ind=0,
               start_time=0,
-              custom_mapping=None):
+              custom_mapping=None,
+              pitch_interval=True):
     if not isinstance(start, note):
         start = to_note(start, pitch=pitch)
     if interval is not None:
@@ -186,22 +184,28 @@ def get_chord(start,
                                      start_time=start_time)
     pre_chord_type = current_chord_type
     current_chord_type = current_chord_type.lower().replace(' ', '')
-    initial = start.degree
     chordlist = [start]
     current_chord_types = database.chordTypes if custom_mapping is None else custom_mapping
     if pre_chord_type in current_chord_types:
-        interval_pre_chord_type = current_chord_types[pre_chord_type][ind]
+        interval_pre_chord_type = current_chord_types[pre_chord_type]
         interval = interval_pre_chord_type
     else:
         if current_chord_type in current_chord_types:
             interval_current_chord_type = current_chord_types[
-                current_chord_type][ind]
+                current_chord_type]
             interval = interval_current_chord_type
         else:
             raise ValueError(
                 f'could not detect the chord type {current_chord_type}')
     for i in range(len(interval)):
-        chordlist.append(degree_to_note(initial + interval[i]))
+        if pitch_interval:
+            current_note = start + interval[i]
+        else:
+            current_pitch_interval = interval[i]
+            if isinstance(current_pitch_interval, database.Interval):
+                current_pitch_interval = current_pitch_interval.value
+            current_note = start + current_pitch_interval
+        chordlist.append(current_note)
     return chord(chordlist, duration, intervals, start_time=start_time)
 
 
@@ -1131,32 +1135,36 @@ def modulation(current_chord, old_scale, new_scale, **args):
     return current_chord.modulation(old_scale, new_scale, **args)
 
 
-def trans(obj, pitch=4, duration=1 / 4, interval=None, custom_mapping=None):
+def trans(obj,
+          pitch=4,
+          duration=1 / 4,
+          interval=None,
+          custom_mapping=None,
+          pitch_interval=True):
     obj = obj.replace(' ', '')
-    if ':' in obj:
-        current = obj.split(':')
-        current[0] = to_note(current[0])
-        return trans(f'{current[0].name}{current[1]}', current[0].num,
-                     duration, interval)
-    if obj.count('/') > 1:
-        current_parts = obj.split('/')
-        current_parts = [int(i) if i.isdigit() else i for i in current_parts]
-        result = trans(current_parts[0], pitch, duration, interval)
-        for each in current_parts[1:]:
-            if each in database.standard:
-                each = database.standard_dict.get(each, each)
-            elif not isinstance(each, int):
-                each = trans(each, pitch, duration, interval)
-            result /= each
-        return result
-    if obj in database.standard:
+    if is_valid_note(obj):
         return get_chord(obj,
                          'M',
                          pitch=pitch,
                          duration=duration,
                          intervals=interval,
-                         custom_mapping=custom_mapping)
-    if '/' not in obj:
+                         custom_mapping=custom_mapping,
+                         pitch_interval=pitch_interval)
+    elif ':' in obj:
+        current = obj.split(':')
+        current[0] = to_note(current[0])
+        return trans(f'{current[0].name}{current[1]}', current[0].num,
+                     duration, interval)
+    elif obj.count('/') > 1:
+        current_parts = obj.split('/')
+        current_parts = [int(i) if i.isdigit() else i for i in current_parts]
+        result = trans(current_parts[0], pitch, duration, interval)
+        for each in current_parts[1:]:
+            if not isinstance(each, int):
+                each = trans(each, pitch, duration, interval)
+            result /= each
+        return result
+    elif '/' not in obj:
         check_structure = obj.split(',')
         check_structure_len = len(check_structure)
         if check_structure_len > 1:
@@ -1167,32 +1175,30 @@ def trans(obj, pitch=4, duration=1 / 4, interval=None, custom_mapping=None):
         if N == 2:
             first = obj[0]
             types = obj[1]
-            if first in database.standard and types in current_chord_types:
+            if is_valid_note(first) and types in current_chord_types:
                 return get_chord(first,
                                  types,
                                  pitch=pitch,
                                  duration=duration,
                                  intervals=interval,
-                                 custom_mapping=custom_mapping)
+                                 custom_mapping=custom_mapping,
+                                 pitch_interval=pitch_interval)
         elif N > 2:
-            first_two = obj[:2]
-            type1 = obj[2:]
-            if first_two in database.standard and type1 in current_chord_types:
-                return get_chord(first_two,
+            current_root_name = ''
+            for i, each in enumerate(obj):
+                if is_valid_note(current_root_name + each):
+                    current_root_name += each
+                else:
+                    type1 = obj[i:]
+                    break
+            if current_root_name and type1 in current_chord_types:
+                return get_chord(current_root_name,
                                  type1,
                                  pitch=pitch,
                                  duration=duration,
                                  intervals=interval,
-                                 custom_mapping=custom_mapping)
-            first_one = obj[0]
-            type2 = obj[1:]
-            if first_one in database.standard and type2 in current_chord_types:
-                return get_chord(first_one,
-                                 type2,
-                                 pitch=pitch,
-                                 duration=duration,
-                                 intervals=interval,
-                                 custom_mapping=custom_mapping)
+                                 custom_mapping=custom_mapping,
+                                 pitch_interval=pitch_interval)
     else:
         parts = obj.split('/')
         part1, part2 = parts[0], '/'.join(parts[1:])
@@ -1202,9 +1208,7 @@ def trans(obj, pitch=4, duration=1 / 4, interval=None, custom_mapping=None):
                 return (first_chord / int(part2)) % (duration, interval)
             elif part2[-1] == '!' and part2[:-1].isdigit():
                 return (first_chord @ int(part2[:-1])) % (duration, interval)
-            elif part2 in database.standard:
-                if part2 not in database.standard2:
-                    part2 = database.standard_dict[part2]
+            elif is_valid_note(part2):
                 first_chord_notenames = first_chord.names()
                 if part2 in first_chord_notenames and part2 != first_chord_notenames[
                         0]:
@@ -1627,7 +1631,7 @@ def parse_dotted(text, get_fraction=False):
         else:
             dotted_num += 1
     duration = parse_num(text[:ind + 1], get_fraction=get_fraction)
-    current_duration = mp.beat(duration, dotted_num).get_duration()
+    current_duration = beat(duration, dotted_num).get_duration()
     return current_duration
 
 
@@ -1669,14 +1673,13 @@ def relative_note(a, b):
         a = note(a, 5)
     else:
         a = note(a_name, 5)
-        if accidental_a == 'b':
-            a = a.down()
-        elif accidental_a == 'bb':
-            a = a.down(2)
-        elif accidental_a == '#':
-            a = a.up()
+        a_distinct = list(set(accidental_a))
+        if len(a_distinct) == 1 and a_distinct[0] == 'b':
+            a = a.flat(len(accidental_a))
+        elif len(a_distinct) == 1 and a_distinct[0] == '#':
+            a = a.sharp(len(accidental_a))
         elif accidental_a == 'x':
-            a = a.up(2)
+            a = a.sharp(2)
         elif accidental_a == '♮':
             pass
         else:
@@ -1685,14 +1688,13 @@ def relative_note(a, b):
         b = note(b, 5)
     else:
         b = note(b_name, 5)
-        if accidental_b == 'b':
-            b = b.down()
-        elif accidental_b == 'bb':
-            b = b.down(2)
-        elif accidental_b == '#':
-            b = b.up()
+        b_distinct = list(set(accidental_b))
+        if len(b_distinct) == 1 and b_distinct[0] == 'b':
+            b = b.flat(len(accidental_b))
+        elif len(b_distinct) == 1 and b_distinct[0] == '#':
+            b = b.sharp(len(accidental_b))
         elif accidental_b == 'x':
-            b = b.up(2)
+            b = b.sharp(2)
         elif accidental_b == '♮':
             pass
         else:
@@ -1707,20 +1709,22 @@ def relative_note(a, b):
         diff = diff2
     if diff == 0:
         return b.name
-    if diff == 1:
+    elif diff == 1:
         return b.name + '#'
-    if diff == 2:
+    elif diff == 2:
         return b.name + 'x'
-    if diff == -1:
+    elif diff > 2:
+        return b.name + '#' * diff
+    elif diff == -1:
         return b.name + 'b'
-    if diff == -2:
+    elif diff == -2:
         return b.name + 'bb'
+    elif diff < -2:
+        return b.name + 'b' * abs(diff)
 
 
 def get_note_name(current_note):
-    if any(i.isdigit() for i in current_note):
-        current_note = ''.join([i for i in current_note if not i.isdigit()])
-    return current_note
+    return current_note[0]
 
 
 def get_note_num(current_note):
@@ -1728,46 +1732,101 @@ def get_note_num(current_note):
     return int(result) if result else None
 
 
+def get_accidental(current_note):
+    accidental_part = ''.join([i for i in current_note[1:] if not i.isdigit()])
+    if accidental_part.endswith('b'):
+        result = accidental_part[accidental_part.index('b'):]
+    elif accidental_part.endswith('#'):
+        result = accidental_part[accidental_part.index('#'):]
+    elif accidental_part.endswith('x'):
+        result = 'x'
+    elif accidental_part.endswith('♮'):
+        result = '♮'
+    else:
+        result = ''
+    return result
+
+
 def standardize_note(current_note):
-    current_note = get_note_name(current_note)
     if current_note in database.standard2:
         return current_note
     elif current_note in database.standard_dict:
         return database.standard_dict[current_note]
     else:
-        if current_note.endswith('bb'):
-            current_name = current_note[:-2]
-            result = (N(standardize_note(current_name)) - 2).name
-        elif current_note.endswith('x'):
-            current_name = current_note[:-1]
-            result = (N(standardize_note(current_name)) + 2).name
-        elif current_note.endswith('♮'):
-            result = current_note[:-1]
-        elif current_note.endswith('#'):
-            current_name = current_note[:-1]
-            result = (N(standardize_note(current_name)) + 1).name
-        elif current_note.endswith('b'):
-            current_name = current_note[:-1]
-            result = (N(standardize_note(current_name)) - 1).name
-        else:
+        current_note_name = get_note_name(current_note)
+        current_accidentals = get_accidental(current_note)
+        if not current_accidentals:
             raise ValueError(f'Invalid note name or accidental {current_note}')
+        else:
+            diff = 0
+            for each in current_accidentals:
+                if each == '#':
+                    diff += 1
+                elif each == 'b':
+                    diff -= 1
+                elif each == 'x':
+                    diff += 2
+            result = (N(current_note_name) + diff).name
+            return result
+
+
+def is_valid_note(current_note):
+    return len(
+        current_note) > 0 and current_note[0] in database.standard and all(
+            i in database.accidentals for i in current_note[1:])
+
+
+def get_pitch_interval(note1, note2):
+    if not isinstance(note1, note):
+        note1 = N(note1)
+    if not isinstance(note2, note):
+        note2 = N(note2)
+    direction = 1
+    if note1.degree > note2.degree:
+        note1, note2 = note2, note1
+        direction = -1
+    name1 = note1.base_name.upper()
+    name2 = note2.base_name.upper()
+    pitch_names = database.standard_pitch_name
+    number = ((pitch_names.index(name2) - pitch_names.index(name1)) %
+              len(pitch_names)) + 1
+    if note2.num > note1.num:
+        number += 7 * ((note2.degree - note1.degree) // database.octave)
+    degree_diff = note2.degree - note1.degree
+    max_pitch_interval = max(database.interval_dict.values())
+    if number == 1 and degree_diff == 11:
+        number = 8
+    elif number > max(database.interval_number_dict):
+        down_octave, degree_diff = divmod(degree_diff, database.octave)
+        number -= down_octave * 7
+    found = False
+    current_number_interval = [
+        i for i in database.interval_dict.values() if i.number == number
+    ]
+    current_number_interval_values = [i.value for i in current_number_interval]
+    if degree_diff in current_number_interval_values:
+        result_interval = current_number_interval[
+            current_number_interval_values.index(degree_diff)]
+        result = database.Interval(number=result_interval.number,
+                                   quality=result_interval.quality,
+                                   name=result_interval.name,
+                                   direction=direction)
         return result
-
-
-def get_accidental(current_note):
-    if current_note.endswith('bb'):
-        result = 'bb'
-    elif current_note.endswith('x'):
-        result = 'x'
-    elif current_note.endswith('♮'):
-        result = '♮'
-    elif current_note.endswith('#'):
-        result = '#'
-    elif current_note.endswith('b'):
-        result = 'b'
     else:
-        result = ''
-    return result
+        min_interval = min(current_number_interval_values)
+        max_interval = max(current_number_interval_values)
+        if degree_diff < min_interval:
+            result = min(current_number_interval,
+                         key=lambda s: s.value).flat(min_interval -
+                                                     degree_diff)
+        elif degree_diff > max_interval:
+            result = max(current_number_interval,
+                         key=lambda s: s.value).sharp(degree_diff -
+                                                      max_interval)
+        else:
+            raise ValueError(
+                f'cannot find pitch interval for {note1} and {note2}')
+        return result
 
 
 def reset(self, **kwargs):
