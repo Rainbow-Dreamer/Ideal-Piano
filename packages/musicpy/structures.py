@@ -139,12 +139,16 @@ class note:
         return self.up(-unit)
 
     def sharp(self, unit=1):
+        if isinstance(unit, database.Interval):
+            return self + unit
         temp = self
         for i in range(unit):
             temp += database.A1
         return temp
 
     def flat(self, unit=1):
+        if isinstance(unit, database.Interval):
+            return self - unit
         temp = self
         for i in range(unit):
             temp -= database.A1
@@ -772,6 +776,8 @@ class chord:
                 return self.up(*obj)
         elif isinstance(obj, rest):
             return self.rest(obj.get_duration())
+        elif isinstance(obj, database.Interval):
+            return self.sharp(obj)
         temp = copy(self)
         if isinstance(obj, note):
             temp.notes.append(copy(obj))
@@ -788,7 +794,7 @@ class chord:
             temp.start_time += (obj if not isinstance(obj, rest) else
                                 obj.get_duration())
             return temp
-        elif isinstance(obj, int):
+        elif isinstance(obj, (int, database.Interval)):
             return self + obj
 
     def __ror__(self, obj):
@@ -996,8 +1002,10 @@ class chord:
     def __sub__(self, obj):
         if isinstance(obj, (int, list)):
             return self.down(obj)
-        if isinstance(obj, tuple):
+        elif isinstance(obj, tuple):
             return self.down(*obj)
+        elif isinstance(obj, database.Interval):
+            return self.flat(obj)
         if not isinstance(obj, note):
             obj = mp.to_note(obj)
         temp = copy(self)
@@ -2671,6 +2679,12 @@ class scale:
     def down(self, unit=1, ind=None, ind2=None):
         return self.up(-unit, ind, ind2)
 
+    def sharp(self, unit=1):
+        return scale(self[0].sharp(unit), self.mode, self.interval)
+
+    def flat(self, unit=1):
+        return scale(self[0].flat(unit), self.mode, self.interval)
+
     def __pos__(self):
         return self.up()
 
@@ -2713,12 +2727,16 @@ class scale:
             return self.up(obj)
         elif isinstance(obj, tuple):
             return self.up(*obj)
+        elif isinstance(obj, database.Interval):
+            return self.sharp(obj)
 
     def __sub__(self, obj):
         if isinstance(obj, int):
             return self.down(obj)
         elif isinstance(obj, tuple):
             return self.down(*obj)
+        elif isinstance(obj, database.Interval):
+            return self.flat(obj)
 
     def chord_progression(self,
                           chords,
