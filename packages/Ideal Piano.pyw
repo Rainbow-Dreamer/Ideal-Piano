@@ -616,7 +616,7 @@ class piano_window(pyglet.window.Window):
                     font_size=piano_config.piano_key_note_name_font_size,
                     bold=piano_config.piano_key_note_name_bold,
                     italic=piano_config.piano_key_note_name_italic,
-                    dpi=piano_config.dpi,
+                    dpi=piano_config.fonts_dpi,
                     x=self.note_place[each][0] +
                     piano_config.piano_key_note_name_pad_x,
                     y=self.note_place[each][1] +
@@ -1294,6 +1294,8 @@ class piano_engine:
     def _detect_chord(self, current_chord):
         if not isinstance(current_chord, mp.chord):
             current_chord = mp.chord(current_chord)
+        if piano_config.show_chord_accidentals == 'flat':
+            current_chord = current_chord.same_accidentals('b')
         current_chord_info = current_chord.info(
             change_from_first=piano_config.change_from_first,
             original_first=piano_config.original_first,
@@ -1307,6 +1309,8 @@ class piano_engine:
             standardize_note=piano_config.standardize_note,
             custom_mapping=current_custom_mapping)
         if current_chord_info is None:
+            if piano_config.show_chord_details:
+                current_piano_window.chord_details_label.text = ''
             return
         current_dict = language_patch.ideal_piano_language_dict
         if current_chord_info.type == 'chord':
@@ -1314,28 +1318,12 @@ class piano_engine:
                 show_degree=piano_config.show_degree,
                 custom_mapping=current_custom_chord_types,
                 show_voicing=not piano_config.sort_invisible)
-            if piano_config.show_chord_accidentals == 'flat':
-                current_chord_root = current_chord_info.root
-                if '#' in current_chord_root:
-                    new_current_chord_root = (~mp.N(current_chord_root)).name
-                    current_info = current_info.replace(
-                        current_chord_root, new_current_chord_root)
         elif current_chord_info.type == 'note':
             current_note = current_chord_info.note_name
-            if piano_config.show_chord_accidentals == 'flat':
-                if '#' in current_note:
-                    new_current_note = ~mp.N(current_note)
-                    current_info = f'{current_dict["note"]} {new_current_note}'
-            else:
-                current_info = f'{current_dict["note"]} {current_note}'
+            current_info = f'{current_dict["note"]} {current_note}'
         elif current_chord_info.type == 'interval':
             current_root = current_chord_info.root
-            if piano_config.show_chord_accidentals == 'flat':
-                if '#' in current_root:
-                    new_current_root = (~mp.N(current_root)).name
-                    current_info = f'{new_current_root} {current_dict["with"]} {current_chord_info.interval_name}'
-            else:
-                current_info = f'{current_root} {current_dict["with"]} {current_chord_info.interval_name}'
+            current_info = f'{current_root} {current_dict["with"]} {current_chord_info.interval_name}'
         if piano_config.show_chord_details:
             current_piano_window.chord_details_label.text = current_chord_info.show(
                 custom_mapping=current_custom_chord_types)
@@ -2054,11 +2042,10 @@ class piano_engine:
         if piano_config.show_key:
             current_piano_window.label.text = str(self.truecurrent)
 
-    def _show_notes(self, currentchord):
+    def _show_notes(self, current_chord):
         if piano_config.show_chord_accidentals == 'flat':
-            return str([~i if '#' in i.name else i for i in currentchord])
-        else:
-            return str(currentchord)
+            current_chord = current_chord.same_accidentals('b')
+        return str(current_chord)
 
     def mode_self_midi(self, dt):
         self._midi_keyboard_read_stillplay_notes()
