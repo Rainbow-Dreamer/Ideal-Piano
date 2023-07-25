@@ -2044,7 +2044,7 @@ class piano_engine:
 
     def _show_notes(self, current_chord):
         if piano_config.show_chord_accidentals == 'flat':
-            current_chord = current_chord.same_accidentals('b')
+            current_chord = [~i if '#' in i.name else i for i in current_chord]
         return str(current_chord)
 
     def mode_self_midi(self, dt):
