@@ -87,11 +87,11 @@ By default, the key detection algorithm only detects major or minor keys, change
 
 ## Is there a compatible version for Linux and macOS?
 
-There are Linux and macOS compatible versions, you can download at the [release page](https://github.com/Rainbow-Dreamer/Ideal-Piano/releases/latest) of Ideal Piano on github. For the installation of Linux and macOS versions, here are the instructions.
+There are Linux and macOS compatible versions, you can download from [here](https://www.jianguoyun.com/p/DVCbNrUQhPG0CBjQnvMEIAA). For the installation of Linux and macOS versions, here are the instructions.
 
 ### Linux
 
-You can download the Linux compatible version from the release page, which contains the Linux executable for Ideal Piano, double click to open the software to use.
+You can download the Linux compatible version from the provided link above, which contains the Linux executable for Ideal Piano, double click to open the software to use.
 
 For Linux version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window. Here is a recommendation to install freepats and timidity. On Ubuntu you can run
 
@@ -109,7 +109,7 @@ sudo apt-get install fluidsynth
 
 ### macOS
 
-You can download the macOS compatible version from the release page, which contains the macOS app for Ideal Piano, double click to open the software to use.
+You can download the macOS compatible version from the provided link above, which contains the macOS app for Ideal Piano, double click to open the software to use.
 
 For macOS version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window.
 
