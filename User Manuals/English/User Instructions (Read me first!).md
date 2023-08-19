@@ -87,7 +87,7 @@ By default, the key detection algorithm only detects major or minor keys, change
 
 ## Is there a compatible version for Linux and macOS?
 
-There are Linux and macOS compatible versions, you can download from [here](https://www.jianguoyun.com/p/DVCbNrUQhPG0CBjQnvMEIAA). For the installation of Linux and macOS versions, here are the instructions.
+There are Linux and macOS compatible versions, you can download from [here](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA). For the installation of Linux and macOS versions, here are the instructions.
 
 ### Linux
 
