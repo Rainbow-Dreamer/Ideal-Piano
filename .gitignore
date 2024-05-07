@@ -1,3 +1,6 @@
+# JetBrains Pycharm user/project files
+.idea
+
 **/__pycache__
 *.mid
 *.exe

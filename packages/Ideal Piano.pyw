@@ -340,11 +340,19 @@ class piano_window(pyglet.window.Window):
 
     def init_layers(self):
         self.batch = pyglet.graphics.Batch()
-        self.bottom_group = pyglet.graphics.OrderedGroup(0)
-        self.piano_bg = pyglet.graphics.OrderedGroup(1)
-        self.piano_key = pyglet.graphics.OrderedGroup(2)
-        self.play_highlight = pyglet.graphics.OrderedGroup(3)
-        self.piano_keys_note_name = pyglet.graphics.OrderedGroup(4)
+        pyglet_main_version = int(pyglet.version[0])
+        if pyglet_main_version >= 2:
+            self.bottom_group = pyglet.graphics.Group(order=0)
+            self.piano_bg = pyglet.graphics.Group(order=1)
+            self.piano_key = pyglet.graphics.Group(order=2)
+            self.play_highlight = pyglet.graphics.Group(order=3)
+            self.piano_keys_note_name = pyglet.graphics.Group(order=4)
+        else:
+            self.bottom_group = pyglet.graphics.OrderedGroup(0)
+            self.piano_bg = pyglet.graphics.OrderedGroup(1)
+            self.piano_key = pyglet.graphics.OrderedGroup(2)
+            self.play_highlight = pyglet.graphics.OrderedGroup(3)
+            self.piano_keys_note_name = pyglet.graphics.OrderedGroup(4)
 
     def init_note_mode(self):
         current_piano_engine.plays = []
@@ -1857,7 +1865,7 @@ class piano_engine:
     def _pc_read_pc_keyboard_key(self):
         self.current = [
             current_piano_window.map_key_dict_reverse[i]
-            for i, j in current_piano_window.keyboard_handler.items()
+            for i, j in current_piano_window.keyboard_handler.data.items()
             if j and i in current_piano_window.map_key_dict_reverse
         ]
         self.current = [i for i in self.current if i in self.wavdic]
