@@ -340,7 +340,6 @@ class piano_window(pyglet.window.Window):
 
     def init_layers(self):
         self.batch = pyglet.graphics.Batch()
-        pyglet_main_version = int(pyglet.version[0])
         if pyglet_main_version >= 2:
             self.bottom_group = pyglet.graphics.Group(order=0)
             self.piano_bg = pyglet.graphics.Group(order=1)
@@ -1863,11 +1862,18 @@ class piano_engine:
                     self.stillplay = []
 
     def _pc_read_pc_keyboard_key(self):
-        self.current = [
-            current_piano_window.map_key_dict_reverse[i]
-            for i, j in current_piano_window.keyboard_handler.data.items()
-            if j and i in current_piano_window.map_key_dict_reverse
-        ]
+        if pyglet_main_version >= 2:
+            self.current = [
+                current_piano_window.map_key_dict_reverse[i]
+                for i, j in current_piano_window.keyboard_handler.data.items()
+                if j and i in current_piano_window.map_key_dict_reverse
+            ]
+        else:
+            self.current = [
+                current_piano_window.map_key_dict_reverse[i]
+                for i, j in current_piano_window.keyboard_handler.items()
+                if j and i in current_piano_window.map_key_dict_reverse
+            ]
         self.current = [i for i in self.current if i in self.wavdic]
         if piano_config.delay:
             self.stillplay_obj = [x[0] for x in self.stillplay]
@@ -2626,6 +2632,7 @@ class piano_engine:
 
 
 if __name__ == '__main__':
+    pyglet_main_version = int(pyglet.version[0])
     multiprocessing.freeze_support()
     if sys.platform == 'darwin':
         try:
