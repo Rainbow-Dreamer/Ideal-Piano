@@ -3,8 +3,11 @@ import sys
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(abs_path)
-sys.path.insert(0, abs_path)
+if abs_path.split("\\")[-1] == "packages":
+    os.chdir("../")
+sys.path.insert(0, os.getcwd())
 sys.path.insert(0, 'packages')
+sys.path.insert(0, 'resources')
 import fractions
 import pygame
 import pygame.midi
