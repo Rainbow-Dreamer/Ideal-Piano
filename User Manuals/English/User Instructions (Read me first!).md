@@ -13,7 +13,7 @@
 * [How do I display the details of current chord?](#how-do-i-display-the-details-of-current-chord)
 * [How do I display the key that is currently playing?](#how-do-i-display-the-key-that-is-currently-playing)
 * [Is there a compatible version for Linux and macOS?](#is-there-a-compatible-version-for-linux-and-macos)
-* [How to build from instrument?](#how-to-build-from-instrument)
+* [How to build from source?](#how-to-build-from-source)
 * [The text display is weird or I don't like the fonts, can I change it?](#the-text-display-is-weird-or-i-dont-like-the-fonts-can-i-change-it)
 * [When playing MIDI files, the sound is not synchronized with when the bars hitting on piano keys?](#when-playing-midi-files-the-sound-is-not-synchronized-with-when-the-bars-hitting-on-piano-keys)
 * [Why can't Ideal Piano detect my MIDI keyboard?](#why-cant-ideal-piano-detect-my-midi-keyboard)
@@ -87,7 +87,7 @@ By default, the key detection algorithm only detects major or minor keys, change
 
 ## Is there a compatible version for Linux and macOS?
 
-There are Linux and macOS compatible versions, you can download from [here](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA). For the installation of Linux and macOS versions, here are the instructions.
+There are Linux and macOS compatible versions, you can download from [here](https://www.jianguoyun.com/p/DQxzhfAQt43aDBi-rckFIAA). For the installation of Linux and macOS versions, here are the instructions.
 
 ### Linux
 
@@ -125,15 +125,15 @@ brew install fluidsynth
 
 
 
-## How to build from instrument?
+## How to build from source?
 
-If you cannot run the executables on your current system, the best solution is to build from instrument code.
+If you cannot run the executables on your current system, the best solution is to build from source code.
 
 Take Linux as an example, the executable build from Ubuntu 21.10 may not work on Ubuntu 22.04 due to some core libraries differences and other incompatible issues with newer versions.
 
-Here are the steps to build Ideal Piano from instrument code. These steps are compatible with Windows, Linux and macOS.
+Here are the steps to build Ideal Piano from source code. These steps are compatible with Windows, Linux and macOS.
 
-1. Download complete release version from [here](https://www.jianguoyun.com/p/DVCbNrUQhPG0CBjQnvMEIAA), extract the folder `Ideal Piano`.
+1. Download complete release version from [here](https://www.jianguoyun.com/p/DQBbt8AQt43aDBisrskFIAA), extract the folder `Ideal Piano`.
 
 2. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
 

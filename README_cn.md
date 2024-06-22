@@ -43,7 +43,7 @@ macOS：在macOS 12上测试通过
 
 ## 下载
 
-你可以从[这里](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA)下载这个软件的Windows, Linux和macOS版本。
+你可以从[这里](https://www.jianguoyun.com/p/DQxzhfAQt43aDBi-rckFIAA)下载这个软件的Windows, Linux和macOS版本。
 
 注意1：对于Linux版本，使用默认设置播放MIDI文件需要安装freepats 和 timidity。然后按照使用须知里的步骤进行。在Ubuntu上，你可以运行
 

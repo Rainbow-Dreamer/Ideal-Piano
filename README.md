@@ -46,7 +46,7 @@ Please check user instructions in `User Manuals` folder, which provides detailed
 
 ## Download
 
-You can download this software for Windows, Linux and macOS from [here](https://www.jianguoyun.com/p/Daurwu0QhPG0CBjxt8QEIAA).
+You can download this software for Windows, Linux and macOS from [here](https://www.jianguoyun.com/p/DQxzhfAQt43aDBi-rckFIAA).
 
 Note1: for Linux version, playing MIDI files using default settings requires installing freepats and timidity. Then follow the steps in User Instruction. On Ubuntu you can run
 
