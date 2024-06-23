@@ -636,7 +636,7 @@ class Synth:
             new_fluid_cmd_handler(self.synth, self.router)
         else:
             fluid_synth_set_midi_router(self.synth, self.router)
-        if midi_router is None:  ## Use fluidsynth to create a MIDI event handler
+        if midi_router == None:  ## Use fluidsynth to create a MIDI event handler
             self.midi_driver = new_fluid_midi_driver(
                 self.settings, fluid_midi_router_handle_midi_event,
                 self.router)
@@ -1006,8 +1006,8 @@ class Synth:
 
     def play_midi_file(self, filename):
         self.player = new_fluid_player(self.synth)
-        if self.player is None: return FLUID_FAILED
-        if self.custom_router_callback is not None:
+        if self.player == None: return FLUID_FAILED
+        if self.custom_router_callback != None:
             fluid_player_set_playback_callback(self.player,
                                                self.custom_router_callback,
                                                self.synth)
