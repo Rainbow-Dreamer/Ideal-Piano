@@ -1175,7 +1175,7 @@ class piano_engine:
             else:
                 piano_config.global_volume = 1
             if piano_config.load_sound and not piano_config.use_midi_output:
-                for j in self.wavdic.items():
+                for i, j in self.wavdic.items():
                     j.set_volume(piano_config.global_volume)
             self.configshow(
                 f'volume up to {int(piano_config.global_volume*100)}%')
@@ -1185,7 +1185,7 @@ class piano_engine:
             else:
                 piano_config.global_volume = 0
             if piano_config.load_sound and not piano_config.use_midi_output:
-                for j in self.wavdic.items():
+                for i, j in self.wavdic.items():
                     j.set_volume(piano_config.global_volume)
             self.configshow(
                 f'volume down to {int(piano_config.global_volume*100)}%')
