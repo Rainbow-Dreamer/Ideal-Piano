@@ -1309,8 +1309,10 @@ def translate(pattern,
               default_duration=1 / 8,
               default_interval=0,
               default_volume=100,
-              start_time=None):
+              start_time=None,
+              mapping=database.drum_mapping):
     result = drum(pattern,
+                  mapping=mapping,
                   default_duration=default_duration,
                   start_time=start_time,
                   default_interval=default_interval,
@@ -1618,7 +1620,11 @@ def load_data(name):
 
 
 def dotted(duration, num=1):
-    return duration * sum([(1 / 2)**i for i in range(num + 1)])
+    if num == 0:
+        return duration
+    else:
+        result = duration * sum([(1 / 2)**i for i in range(num + 1)])
+        return result
 
 
 def parse_dotted(text, get_fraction=False):

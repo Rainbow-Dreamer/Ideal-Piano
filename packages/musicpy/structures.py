@@ -67,8 +67,8 @@ class note:
         return f'{self.name}{self.num}'
 
     def __eq__(self, other):
-        return type(other) is note and self.same_note_name(
-            other) and self.num == other.num
+        return type(other) is note and self.same_note(
+            other) and self.duration == other.duration
 
     def __lt__(self, other):
         return self.degree < other.degree
@@ -90,6 +90,9 @@ class note:
 
     def same_note_name(self, other):
         return self.get_number() == other.get_number()
+
+    def same_note(self, other):
+        return self.same_note_name(other) and self.num == other.num
 
     def __matmul__(self, other):
         if isinstance(other, rhythm):
@@ -135,6 +138,8 @@ class note:
         if isinstance(unit, database.Interval):
             return self + unit
         else:
+            if unit == 0:
+                return copy(self)
             return mp.degree_to_note(self.degree + unit, self.duration,
                                      self.volume, self.channel)
 
@@ -206,6 +211,8 @@ class note:
 
     def dotted(self, num=1):
         temp = copy(self)
+        if num == 0:
+            return temp
         temp.duration = temp.duration * sum([(1 / 2)**i
                                              for i in range(num + 1)])
         return temp
@@ -275,7 +282,7 @@ class chord:
                                 default_interval=default_interval,
                                 default_volume=default_volume)
         notes, current_intervals, current_start_time = notes_msg
-        if current_intervals and not interval:
+        if current_intervals and interval is None:
             interval = current_intervals
         if standardize_msg and notes:
             root = notes[0]
@@ -333,7 +340,9 @@ class chord:
         return result
 
     def __eq__(self, other):
-        return type(other) is chord and self.notes == other.notes
+        return type(
+            other
+        ) is chord and self.notes == other.notes and self.interval == other.interval
 
     def get_msg(self, types):
         return [i for i in self.other_messages if i.type == types]
@@ -510,6 +519,8 @@ class chord:
             if last_extra_interval > 0:
                 result += last_extra_interval
             return result
+        else:
+            raise ValueError('Invalid bars mode')
         return start_time + max_length
 
     def firstnbars(self, n, start_time=0):
@@ -1523,7 +1534,7 @@ class chord:
 
     def rest(self, length, dotted=None, ind=None):
         temp = copy(self)
-        if dotted is not None:
+        if dotted is not None and dotted != 0:
             length = length * sum([(1 / 2)**i for i in range(dotted + 1)])
         if not temp.notes:
             temp.start_time += length
@@ -1883,25 +1894,25 @@ class chord:
         return temp, start_time
 
     def interval_note(self, interval, mode=0):
+        interval = str(interval)
         if mode == 0:
-            interval = str(interval)
             if interval in database.degree_match:
-                self_notes = self.same_accidentals().notes
+                self_notes_degrees = [i.degree for i in self.notes]
                 degrees = database.degree_match[interval]
                 for each in degrees:
-                    current_note = self_notes[0] + each
-                    if current_note in self_notes:
+                    current_note = self.notes[0] + each
+                    if current_note.degree in self_notes_degrees:
                         return current_note
             if interval in database.precise_degree_match:
-                self_notes = self.same_accidentals().notes
+                self_notes_degrees = [i.degree for i in self.notes]
                 degrees = database.precise_degree_match[interval]
-                current_note = self_notes[0] + degrees
-                if current_note in self_notes:
+                current_note = self.notes[0] + degrees
+                if current_note.degree in self_notes_degrees:
                     return current_note
         elif mode == 1:
             if interval in database.precise_degree_match:
                 interval = database.precise_degree_match[interval]
-            return self[0] + interval
+                return self.notes[0] + interval
 
     def note_interval(self, current_note, mode=0):
         if isinstance(current_note, str):
@@ -1920,18 +1931,16 @@ class chord:
         else:
             current_interval = current_note.degree - self[0].degree
         if mode == 0:
-            if current_interval in database.reverse_precise_degree_match:
-                return database.reverse_precise_degree_match[current_interval]
+            if current_interval in database.reverse_precise_degree_number_match:
+                return database.reverse_precise_degree_number_match[
+                    current_interval]
         elif mode == 1:
             return database.INTERVAL[current_interval]
 
-    def get_voicing(self, voicing):
-        notes = [self.interval_note(i).name for i in voicing]
+    def get_voicing(self, voicing, mode=0):
+        notes = [self.interval_note(i, mode=mode).name for i in voicing]
         pitch = self.notes[self.names().index(notes[0])].num
-        return chord(notes,
-                     interval=copy(self.interval),
-                     rootpitch=pitch,
-                     start_time=copy(self.start_time))
+        return chord(notes, rootpitch=pitch)
 
     def near_voicing(self,
                      other,
@@ -2036,6 +2045,8 @@ class chord:
 
     def dotted(self, ind=-1, num=1, duration=True, interval=False):
         temp = copy(self)
+        if num == 0:
+            return temp
         if duration:
             if isinstance(ind, list):
                 for each in ind:
@@ -3365,30 +3376,27 @@ class piece:
         return temp
 
     def __mul__(self, n):
-        temp = copy(self)
-        whole_length = temp.bars()
-        for i in range(temp.track_number):
-            current = temp.tracks[i]
-            current.interval[-1] = current.notes[-1].duration
-            current_start_time = temp.start_times[i]
-            current.interval[-1] += (whole_length - current.bars() -
-                                     current_start_time)
-            unit = copy(current)
-            for k in range(n - 1):
-                if current_start_time:
-                    current.interval[-1] += current_start_time
-                extra = (k + 1) * whole_length
-                for each in unit.tempos:
-                    each.start_time += extra
-                for each in unit.pitch_bends:
-                    each.start_time += extra
-                current.notes += unit.notes
-                current.interval += unit.interval
-            temp.tracks[i] = current
-        return temp
+        if isinstance(n, tuple):
+            return self | n
+        else:
+            temp = copy(self)
+            for i in range(n - 1):
+                temp |= self
+            return temp
 
     def __or__(self, n):
-        if isinstance(n, piece):
+        if isinstance(n, tuple):
+            n, start_time = n
+            if isinstance(n, int):
+                temp = copy(self)
+                for k in range(n - 1):
+                    temp |= (self, start_time)
+                return temp
+            elif isinstance(n, piece):
+                return self.merge_track(n,
+                                        mode='after',
+                                        extra_interval=start_time)
+        elif isinstance(n, piece):
             return self + n
         elif isinstance(n, (int, float)):
             return self.rest(n)
@@ -3396,6 +3404,13 @@ class piece:
     def __and__(self, n):
         if isinstance(n, tuple):
             n, start_time = n
+            if isinstance(n, int):
+                temp = copy(self)
+                for k in range(n - 1):
+                    temp &= (self, (k + 1) * start_time)
+                return temp
+        elif isinstance(n, int):
+            return self & (n, 0)
         else:
             start_time = 0
         return self.merge_track(n, mode='head', start_time=start_time)
@@ -3428,7 +3443,9 @@ class piece:
                     mode='after',
                     start_time=0,
                     ind_mode=1,
-                    include_last_interval=False):
+                    include_last_interval=False,
+                    ignore_last_duration=False,
+                    extra_interval=0):
         temp = copy(self)
         temp2 = copy(n)
         max_track_number = max(len(self), len(n))
@@ -3445,7 +3462,11 @@ class piece:
             ]
             counter = 0
         if mode == 'after':
-            start_time = temp.bars(mode=1 if not include_last_interval else 2)
+            if ignore_last_duration:
+                bars_mode = 0
+            else:
+                bars_mode = 1 if not include_last_interval else 2
+            start_time = temp.bars(mode=bars_mode) + extra_interval
         for i in range(len(temp2)):
             current_instrument_number = temp2.instruments[i]
             if current_instrument_number in temp.instruments:
@@ -3512,6 +3533,34 @@ class piece:
                     temp.channels.append(current_channel_number)
                 if temp.track_names is not None:
                     temp.track_names.append(temp2.track_names[i])
+        return temp
+
+    def repeat(self,
+               n,
+               start_time=0,
+               include_last_interval=False,
+               ignore_last_duration=False,
+               ind_mode=1,
+               mode='after'):
+        temp = copy(self)
+        if mode == 'after':
+            for k in range(n - 1):
+                temp = temp.merge_track(
+                    self,
+                    mode=mode,
+                    extra_interval=start_time,
+                    include_last_interval=include_last_interval,
+                    ignore_last_duration=ignore_last_duration,
+                    ind_mode=ind_mode)
+        elif mode == 'head':
+            for k in range(n - 1):
+                temp = temp.merge_track(
+                    self,
+                    mode=mode,
+                    start_time=(k + 1) * start_time,
+                    include_last_interval=include_last_interval,
+                    ignore_last_duration=ignore_last_duration,
+                    ind_mode=ind_mode)
         return temp
 
     def align(self, extra=0):
@@ -5049,6 +5098,12 @@ class drum:
             for k in range(len(left_bracket_inds))
         ]
         current_append_notes = each[:left_bracket_inds[0]]
+        relative_pitch_num = 0
+        if '(' in current_append_notes and ')' in current_append_notes:
+            current_append_notes, relative_pitch_settings = current_append_notes.split(
+                '(', 1)
+            relative_pitch_settings = relative_pitch_settings[:-1]
+            relative_pitch_num = _parse_change_num(relative_pitch_settings)[0]
         if ';' in current_append_notes:
             current_append_notes = current_append_notes.split(';')
         else:
@@ -5107,6 +5162,15 @@ class drum:
                         new_current_append_notes.append(current_each_note)
                         self.last_non_num_note = current_each_note.notes[-1]
             current_append_notes = new_current_append_notes
+        if relative_pitch_num != 0:
+            dotted_num_list = [i.dotted_num for i in current_append_notes]
+            current_append_notes = [
+                each_note + relative_pitch_num
+                for each_note in current_append_notes
+            ]
+            for i, each_note in enumerate(current_append_notes):
+                each_note.dotted_num = dotted_num_list[i]
+            self.last_non_num_note = current_append_notes[-1]
         custom_durations = False
         for j in current_brackets:
             current_bracket_settings = [k.split(':') for k in j.split(';')]
@@ -5313,6 +5377,12 @@ class drum:
                                        current_part_fix_length_unit,
                                        translate_mode):
         current_append_notes = each
+        relative_pitch_num = 0
+        if '(' in current_append_notes and ')' in current_append_notes:
+            current_append_notes, relative_pitch_settings = current_append_notes.split(
+                '(', 1)
+            relative_pitch_settings = relative_pitch_settings[:-1]
+            relative_pitch_num = _parse_change_num(relative_pitch_settings)[0]
         if ';' in current_append_notes:
             current_append_notes = current_append_notes.split(';')
         else:
@@ -5358,6 +5428,15 @@ class drum:
                         self.last_non_num_note = current_each_note.notes[-1]
             current_append_notes = new_current_append_notes
 
+        if relative_pitch_num != 0:
+            dotted_num_list = [i.dotted_num for i in current_append_notes]
+            current_append_notes = [
+                each_note + relative_pitch_num
+                for each_note in current_append_notes
+            ]
+            for i, each_note in enumerate(current_append_notes):
+                each_note.dotted_num = dotted_num_list[i]
+            self.last_non_num_note = current_append_notes[-1]
         current_append_durations = [
             self._apply_dotted_notes(default_duration, k.dotted_num)
             if not current_part_fix_length_unit else self._apply_dotted_notes(
@@ -5602,7 +5681,7 @@ class beat:
         return f'{self.rhythm_name}({current_duration}{dotted_part})'
 
     def get_duration(self):
-        if self.dotted is not None:
+        if self.dotted is not None and self.dotted != 0:
             duration = self.duration * sum([(1 / 2)**i
                                             for i in range(self.dotted + 1)])
         else:
@@ -6119,6 +6198,7 @@ def _read_notes(note_ls,
             duration = default_duration
             interval = default_interval
             volume = default_volume
+            relative_pitch_num = 0
             if '[' in each and ']' in each:
                 has_settings = True
                 each, current_settings = each.split('[', 1)
@@ -6135,6 +6215,11 @@ def _read_notes(note_ls,
                     duration = _process_note(duration)
                     interval = _process_note(
                         interval) if interval != '.' else duration
+            if '(' in each and ')' in each:
+                each, relative_pitch_settings = each.split('(', 1)
+                relative_pitch_settings = relative_pitch_settings[:-1]
+                relative_pitch_num = _parse_change_num(
+                    relative_pitch_settings)[0]
             current_notes = each.split(';')
             current_length = len(current_notes)
             for i, each_note in enumerate(current_notes):
@@ -6152,7 +6237,8 @@ def _read_notes(note_ls,
                     intervals,
                     start_time,
                     has_settings=has_settings,
-                    has_same_time=has_same_time)
+                    has_same_time=has_same_time,
+                    relative_pitch_num=relative_pitch_num)
         else:
             notes_result.append(each)
             intervals.append(default_interval)
@@ -6171,7 +6257,8 @@ def _read_single_note(each,
                       intervals,
                       start_time,
                       has_settings=False,
-                      has_same_time=False):
+                      has_same_time=False,
+                      relative_pitch_num=0):
     dotted_num = 0
     if '.' in each:
         each, dotted = each.split('.', 1)
@@ -6195,7 +6282,7 @@ def _read_single_note(each,
             each)
         if last_non_num_note is None:
             raise ValueError('requires at least a previous non-number note')
-        current_note = last_non_num_note + current_num
+        current_note = last_non_num_note + current_num + relative_pitch_num
         current_note.duration = duration
         current_note.volume = volume
         current_interval = interval
@@ -6216,10 +6303,9 @@ def _read_single_note(each,
         notes_result.append(current_note)
         intervals.append(current_interval)
     else:
-        current_note = mp.to_note(each,
-                                  duration=duration,
-                                  volume=volume,
-                                  pitch=rootpitch)
+        current_note = mp.to_note(
+            each, duration=duration, volume=volume,
+            pitch=rootpitch) + relative_pitch_num
         if has_same_time:
             current_interval = 0
             if not has_settings:
@@ -6294,6 +6380,8 @@ def _parse_change_num(each):
             current_num = -(current_octave * database.octave + current_extra)
         else:
             current_num = -int(current_content)
+    else:
+        raise ValueError('Invalid relative pitch syntax')
     return current_num, current_changed, dotted_num
 
 
@@ -6340,9 +6428,8 @@ def _process_note(value, mode=0, value2=None):
                 value = (1 / mp.parse_num(
                     value[num_ind:dotted_notes_start_ind])) * sum(
                         [(1 / 2)**i for i in range(dotted_notes + 1)])
-        if mode == 2:
-            if isinstance(value, float) and value.is_integer():
-                value = int(value)
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
         return value
 
 
