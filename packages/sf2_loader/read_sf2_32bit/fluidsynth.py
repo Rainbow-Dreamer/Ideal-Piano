@@ -1158,12 +1158,12 @@ class Sequencer:
         delete_fluid_sequencer(self.sequencer)
 
 
-def raw_audio_string(data):
-    """Return a string of bytes to send to soundcard
-
+def raw_audio_string(data) -> bytes:
+    """Return the bytes to send to soundcard
+    
     Input is a numpy array of samples.  Default output format
     is 16-bit signed (other formats not currently supported).
     
     """
     import numpy
-    return (data.astype(numpy.int16)).tostring()
+    return (data.astype(numpy.int16)).tobytes()
