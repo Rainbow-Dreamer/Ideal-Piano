@@ -6,18 +6,18 @@ Here we give you an explanation of what each parameter in the configuration file
 
 ## Contents
 
-- [Screen related parameters](#screen related parameters)
-- [Pygame mixer initialization parameters](#pygame mixer initialization parameters)
-- [Keyboard playing and MIDI files playing parameters](#keyboard playing and MIDI files playing parameters)
-- [Chord analysis parameters](#chord analysis parameters)
-- [Parameters of the algorithm for separating the main melody of a piece](#parameters of the algorithm for separating the main melody of a piece)
-- [Note display related parameters](#note display related parameters)
-- [Piano keyboard related parameters](#piano keyboard related parameters)
-- [SoundFont file related parameters](#soundFont file related parameters)
-- [Show composition analysis](#show composition analysis)
-  - [Related parameters](#related parameters)
+- [Screen related parameters](#screen-related-parameters)
+- [Pygame mixer initialization parameters](#pygame-mixer-initialization-parameters)
+- [Keyboard playing and MIDI files playing parameters](#keyboard-playing-and-midi-files-playing-parameters)
+- [Chord analysis parameters](#chord-analysis-parameters)
+- [Parameters of the algorithm for separating the main melody of a piece](#parameters-of-the-algorithm-for-separating-the-main-melody-of-a-piece)
+- [Note display related parameters](#note-display-related-parameters)
+- [Piano keyboard related parameters](#piano-keyboard-related-parameters)
+- [SoundFont file related parameters](#soundFont-file-related-parameters)
+- [Show composition analysis](#show-composition-analysis)
+  - [Related parameters](#related-parameters)
 
-* [Other parameters](#Other parameters)
+* [Other parameters](#Other-parameters)
 
 
 
