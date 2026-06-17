@@ -50,7 +50,8 @@ def load(dic, path, file_format, volume, current_wavdic=None):
 
 def load_sf2(dic, sf2, volume, current_wavdic=None):
     wavedict = {
-        i: pygame.mixer.Sound(
+        i:
+        pygame.mixer.Sound(
             buffer=sf2.export_note(dic[i],
                                    duration=piano_config.sf2_duration,
                                    decay=piano_config.sf2_decay,
@@ -720,6 +721,14 @@ class piano_window(pyglet.window.Window):
                             self.not_first()
                             pyglet.clock.schedule_interval(
                                 self.func, 1 / piano_config.fps)
+            else:
+                if current_path.endswith('.webp'):
+                    current_path = current_path.replace('\\', '/')
+                    change_parameter('background_image', current_path,
+                                     piano_config_path)
+                    piano_config.background_image = current_path
+                    self.init_screen()
+                    self.local_on_resize(self.width, self.height, mode=1)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = x, y
@@ -1495,22 +1504,23 @@ class piano_engine:
             if piano_config.load_sound and not piano_config.use_midi_output:
                 if not piano_config.play_use_soundfont:
                     current_wavdic = []
-                    current_thread = Thread(target=load,
-                                            args=({i: i
-                                                   for i in notenames
-                                                   }, piano_config.sound_path,
-                                                  piano_config.sound_format,
-                                                  piano_config.global_volume,
-                                                  current_wavdic),
-                                            daemon=True)
+                    current_thread = Thread(
+                        target=load,
+                        args=({
+                            i: i
+                            for i in notenames
+                        }, piano_config.sound_path, piano_config.sound_format,
+                              piano_config.global_volume, current_wavdic),
+                        daemon=True)
                     current_thread.start()
                 else:
                     current_wavdic = []
                     current_thread = Thread(
                         target=load_sf2,
-                        args=({i: i
-                               for i in notenames
-                               }, current_piano_window.current_sf2,
+                        args=({
+                            i: i
+                            for i in notenames
+                        }, current_piano_window.current_sf2,
                               piano_config.global_volume, current_wavdic),
                         daemon=True)
                     current_thread.start()
