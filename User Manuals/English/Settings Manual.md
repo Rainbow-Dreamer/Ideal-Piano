@@ -225,7 +225,10 @@ melody_tol, chord_tol, get_off_overlap_notes, get_off_same_time, average_degree_
 
 ## Note display related parameters
 
-note_mode: Select the note display mode, currently there are 2 modes to choose from: note bars rising and note bars falling (only available in MIDI file mode), corresponding to 'bars' and 'bars drop' respectively
+note_mode: select the note display mode, currently, the following three modes are available:
+1. Rising note bars (corresponding value: 'bars')
+2. Falling note bars (available only in MIDI file playback mode) (corresponding value: 'bars drop')
+3. No note bars, only the keyboard is highlighted (corresponding value: '')
 
 bar_width: the width of the note bar
 
