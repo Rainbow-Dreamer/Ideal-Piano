@@ -1532,6 +1532,8 @@ class piano_engine:
                         daemon=True)
                     current_thread.start()
                 self.wait_self_midi_load(current_wavdic)
+            else:
+                self.wait_self_midi_load(None, is_load_sound=False)
             if piano_config.use_midi_output:
                 if piano_config.midi_output_port is not None:
                     self.midi_output_port = pygame.midi.Output(
@@ -1574,16 +1576,17 @@ class piano_engine:
             current_piano_window.reset_click_mode()
             current_piano_window.label.draw()
 
-    def wait_self_midi_load(self, current_wavdic):
+    def wait_self_midi_load(self, current_wavdic, is_load_sound=True):
         if current_piano_window.click_mode is None:
             return
-        if not current_wavdic:
+        if is_load_sound and not current_wavdic:
             pyglet.clock.schedule_once(
                 lambda dt: self.wait_self_midi_load(current_wavdic), 0.2)
         else:
             if current_piano_window.click_mode is None:
                 return
-            self.wavdic = current_wavdic[0]
+            if is_load_sound:
+                self.wavdic = current_wavdic[0]
             if not self.device:
                 current_piano_window.label.text = language_patch.ideal_piano_language_dict[
                     'no MIDI input']
@@ -1966,7 +1969,7 @@ class piano_engine:
         if piano_config.color_mode == 'normal':
             current_piano_key.color = piano_config.bar_color
         else:
-            if piano_config.note_mode in note_display_mode:
+            if piano_config.note_mode in note_display_mode and piano_config.note_mode:
                 current_piano_key.color = current_bar.color
             else:
                 current_piano_key.color = (random.randint(0, 255),
@@ -2222,7 +2225,7 @@ class piano_engine:
                     if piano_config.color_mode == 'normal':
                         current_piano_key.color = piano_config.bar_color
                     else:
-                        if piano_config.note_mode in note_display_mode:
+                        if piano_config.note_mode in note_display_mode and piano_config.note_mode:
                             current_piano_key.color = current_bar.color
                         else:
                             current_piano_key.color = (random.randint(0, 255),

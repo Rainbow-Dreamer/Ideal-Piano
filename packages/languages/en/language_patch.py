@@ -13,7 +13,8 @@ browse_language_dict = {
     'show melody': 'show melody only',
     'show chord': 'show chord only',
     'merge': 'merge all tracks',
-    'file name': 'file name'
+    'file name': 'file name',
+    'Reading MIDI files': 'Reading MIDI files, please wait...'
 }
 
 # ideal piano

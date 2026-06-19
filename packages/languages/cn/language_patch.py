@@ -251,7 +251,8 @@ browse_language_dict = {
     'show melody': '只显示主旋律',
     'show chord': '只显示和弦',
     'merge': '合并所有音轨',
-    'file name': '文件名'
+    'file name': '文件名',
+    'Reading MIDI files': '正在读取MIDI文件，请稍候...'
 }
 
 # ideal piano

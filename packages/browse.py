@@ -203,7 +203,7 @@ class browse_window(QtWidgets.QMainWindow):
         current_read_midi_file_thread.start()
         self.current_reading = True
         self.wait_read_midi_file(state, result)
-        self.msg_label.setText('Reading MIDI files, please wait...')
+        self.msg_label.setText(self.browse_dict['Reading MIDI files'])
 
     def wait_read_midi_file(self, state, result):
         if not self.current_reading:
