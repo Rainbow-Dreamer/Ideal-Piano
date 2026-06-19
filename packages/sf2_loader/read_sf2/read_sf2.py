@@ -1251,7 +1251,7 @@ class sf2_player:
             if sys.platform == 'win32' or sys.platform == 'cygwin':
                 self.default_audio_driver = 'dsound'
             elif sys.platform == 'linux':
-                self.default_audio_driver = 'alsa'
+                self.default_audio_driver = 'pulseaudio'
             elif sys.platform == 'darwin':
                 self.default_audio_driver = 'coreaudio'
         else:
@@ -1340,7 +1340,7 @@ soundfonts id: {self.sfid_list}'''
             if sys.platform == 'win32' or sys.platform == 'cygwin':
                 self.default_audio_driver = 'dsound'
             elif sys.platform == 'linux':
-                self.default_audio_driver = 'alsa'
+                self.default_audio_driver = 'pulseaudio'
             elif sys.platform == 'darwin':
                 self.default_audio_driver = 'coreaudio'
         else:
