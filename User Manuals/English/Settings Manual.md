@@ -145,13 +145,13 @@ sound_format: the file format of the sound source (file extension)
 
 sound_path: the file path of the sound source
 
-play_midi_start_process_time: time in seconds to open the process that sends MIDI events when playing MIDI files
+play_midi_start_process_time: time in seconds to open the process that sends MIDI events when playing MIDI files (only works when 'midi_playing_multiprocess' is set to True)
 
-move_progress_adjust_time: the delay time in seconds when changing the progress bar
+move_progress_adjust_time: the delay time in seconds when changing the progress bar (only works when 'midi_playing_multiprocess' is set to True)
 
-use_soundfont_delay_time: the delay time in seconds when use SoundFont files to play MIDI files under note mode `bars drop`
+use_soundfont_delay_time: the delay time in seconds when use SoundFont files to play MIDI files under note mode `bars drop` (only works when 'midi_playing_multiprocess' is set to True)
 
-bars_mode_delay_time: delay time when note mode is `bars`
+bars_mode_delay_time: delay time when note mode is `bars` (only works when 'midi_playing_multiprocess' is set to True)
 
 play_midi_reset_sounds: Whether to mute all sounds when pausing or changing progress while playing MIDI files
 
