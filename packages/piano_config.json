@@ -423,5 +423,6 @@
     "key_header": "current key: ",
     "music_analysis_width": 1300,
     "music_analysis_fonts_size": 20,
-    "midi_playing_multiprocess": false
+    "midi_playing_multiprocess": false,
+    "default_audio_driver": null
 }

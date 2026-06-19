@@ -292,15 +292,22 @@ class piano_window(pyglet.window.Window):
                                     preset=piano_config.preset)
         if piano_config.use_soundfont:
             if mode == 0:
-                self.current_sf2_player = rs.sf2_player(piano_config.sf2_path)
+                self.current_sf2_player = rs.sf2_player(
+                    piano_config.sf2_path, piano_config.default_audio_driver)
             else:
                 if self.current_sf2_player:
+                    if self.current_sf2_player.default_audio_driver != piano_config.default_audio_driver:
+                        self.current_sf2_player.synth.delete()
+                        self.current_sf2_player = rs.sf2_player(
+                            piano_config.sf2_path,
+                            piano_config.default_audio_driver)
                     if piano_config.sf2_path != self.current_sf2_player.file[
                             -1]:
                         self.current_sf2_player.load(piano_config.sf2_path)
                 else:
                     self.current_sf2_player = rs.sf2_player(
-                        piano_config.sf2_path)
+                        piano_config.sf2_path,
+                        piano_config.default_audio_driver)
 
     def init_screen(self):
         self.screen_width, self.screen_height = piano_config.screen_size
@@ -1255,7 +1262,7 @@ class piano_engine:
                 current_midi_file = current_piano_window.current_sf2_player.current_midi_file
                 current_piano_window.current_sf2_player.synth.delete()
                 current_piano_window.current_sf2_player = rs.sf2_player(
-                    piano_config.sf2_path)
+                    piano_config.sf2_path, piano_config.default_audio_driver)
                 current_piano_window.current_sf2_player.current_midi_file = current_midi_file
             self.current_ticks_per_beat = mp.get_ticks_per_beat(
                 current_piano_window.current_sf2_player.current_midi_file)

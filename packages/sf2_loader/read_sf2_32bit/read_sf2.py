@@ -1240,7 +1240,7 @@ current preset name: {self.get_current_instrument()}'''
 
 class sf2_player:
 
-    def __init__(self, file=None):
+    def __init__(self, file=None, default_audio_driver=None):
         self.file = []
         self.synth = fluidsynth.Synth()
         self.apply_synth_settings()
@@ -1248,16 +1248,16 @@ class sf2_player:
         self.playing = False
         if file:
             self.load(file)
-        if sys.platform == 'win32' or sys.platform == 'cygwin':
-            self.default_audio_driver = 'dsound'
-        elif sys.platform == 'linux':
-            self.default_audio_driver = 'alsa'
-        elif sys.platform == 'darwin':
-            self.default_audio_driver = 'coreaudio'
+        if default_audio_driver is None:
+            if sys.platform == 'win32' or sys.platform == 'cygwin':
+                self.default_audio_driver = 'dsound'
+            elif sys.platform == 'linux':
+                self.default_audio_driver = 'alsa'
+            elif sys.platform == 'darwin':
+                self.default_audio_driver = 'coreaudio'
         else:
-            self.default_audio_driver = None
-        if self.default_audio_driver:
-            self.synth.setting('audio.driver', self.default_audio_driver)
+            self.default_audio_driver = default_audio_driver
+        self.synth.setting('audio.driver', self.default_audio_driver)
 
     def __repr__(self):
         return f'''[soundfont player]
@@ -1303,9 +1303,17 @@ soundfonts id: {self.sfid_list}'''
         for i, each in enumerate(chorus_parameters):
             self.change_setting(f'chorus.{each}', current_chorus_values[i])
 
-    def play_midi_file(self, filename):
+    def play_midi_file(self,
+                       filename,
+                       driver=None,
+                       device=None,
+                       midi_driver=None,
+                       midi_router=None):
         if not self.synth.midi_driver:
-            self.synth.start()
+            self.synth.start(driver=driver,
+                             device=device,
+                             midi_driver=midi_driver,
+                             midi_router=midi_router)
         if self.playing:
             self.synth.play_midi_stop()
         self.synth.play_midi_file(filename)
@@ -1329,7 +1337,15 @@ soundfonts id: {self.sfid_list}'''
             self.synth.player_set_tempo(tempo_type, bpm)
 
     def set_default_audio_driver(self, driver):
-        self.default_audio_driver = driver
+        if driver is None:
+            if sys.platform == 'win32' or sys.platform == 'cygwin':
+                self.default_audio_driver = 'dsound'
+            elif sys.platform == 'linux':
+                self.default_audio_driver = 'alsa'
+            elif sys.platform == 'darwin':
+                self.default_audio_driver = 'coreaudio'
+        else:
+            self.default_audio_driver = driver
         if self.default_audio_driver:
             self.synth.setting('audio.driver', self.default_audio_driver)
 

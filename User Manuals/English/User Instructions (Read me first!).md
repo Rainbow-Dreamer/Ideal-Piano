@@ -99,7 +99,14 @@ For Linux version,  to play MIDI files using the default settings you need to ma
 sudo apt-get install freepats timidity
 ```
 
-Then open terminal, run `timidity -iA` to open the MIDI port of timidity, and then select the MIDI output port of timidity in the Choose MIDI Device window.
+Then open terminal, run the following commands to open the MIDI port of timidity:
+
+```python
+sudo ln -s /usr/share/alsa /usr/local/share/alsa
+timidity -iA
+```
+
+and then select the MIDI output port of timidity in the Choose MIDI Device window.
 
 If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
 
@@ -135,9 +142,11 @@ Here are the steps to build Ideal Piano from source code. These steps are compat
 
 1. Download complete release version from [here](https://www.jianguoyun.com/p/DQBbt8AQt43aDBisrskFIAA), extract the folder `Ideal Piano`.
 
-2. Make sure you have installed python3 in your environment, please don't install the newest version as it may cause incompatible issues with some python library dependencies, the recommended version is python 3.7.9.
+2. Make sure you have installed python3 in your environment.
 
-3. Use pip to install the following python libraries: `pip install pygame==2.1.2 pyglet==1.5.11 mido_fix pydub py pyqt5 dataclasses pyinstaller`
+3. Use pip to install the following python libraries:
+
+   `pip3 install pygame pyglet==1.5.11 mido_fix pydub py pyqt5 dataclasses pyinstaller`
 
 4. Go to the path `Ideal Piano/packages/`, copy and paste the file `Ideal Piano start program.pyw` to the path `Ideal Piano/`.
 
@@ -155,9 +164,32 @@ Here are the steps to build Ideal Piano from source code. These steps are compat
    abs_path = os.path.dirname(sys.executable)
    ```
 
-7. Open terminal in the path `Ideal Piano/`, run `pyinstaller -w -F "Ideal Piano start program.pyw" --hidden-import dataclasses`, wait for the compilation. If you want to add the icon, then add `--icon="reinstruments/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
+7. Open terminal in the path `Ideal Piano/`, run the following command:
+
+   `pyinstaller -w -F "Ideal Piano start program.pyw" --hidden-import dataclasses --hidden-import=difflib --collect-all=difflib`
+
+   Then wait for the compilation to finish. If you want to add the icon, then add `--icon="reinstruments/piano.ico"` after it. (on macOS the icon file name is `piano_icon.icns`)
 
 8. When the compilation is finished, you can find the executable in the `dist` folder, and move it to the path  `Ideal Piano/` to use it.
+
+
+
+Note1: If you are unable to install Python libraries using `pip3 install` on Linux, here is a solution that has been tested and confirmed to work on Ubuntu 24.04.4:
+
+1) Open a terminal and run the following commands:
+
+```python
+sudo apt update
+sudo apt install python3-venv -y
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+2) Then try running the pip installation command again.
+
+
+
+Note 2: If on certain Linux systems, MIDI files played using SoundFont files sound severely distorted, try changing the 'default_audio_driver' setting in the configuration file to an audio driver compatible with your current Linux system. For example, on Ubuntu 24.04.4, the default value 'alsa' may cause incompatibility issues, changing it to 'pulseaudio' can resolve the audio distortion during playback.
 
 
 

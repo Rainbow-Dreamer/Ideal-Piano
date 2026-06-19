@@ -402,6 +402,8 @@ sf2_path: path to the SoundFont file
 
 sf2_mode: on some computers you need to set this to 1 to play using SoundFont files without crashing
 
+default_audio_driver: The default audio driver used by FluidSynth. On some systems, if you encounter audio issues when playing MIDI files using SoundFont files, you can modify this parameter to set it to an audio driver compatible with your current system.
+
 
 
 ## Show composition analysis
