@@ -93,7 +93,32 @@ There are Linux and macOS compatible versions, you can download from [here](http
 
 You can download the Linux compatible version from the provided link above, which contains the Linux executable for Ideal Piano, double click to open the software to use.
 
-For Linux version,  to play MIDI files using the default settings you need to make sure that you currently have a MIDI output port that can produce sound, and then select the corresponding MIDI output port in the Choose MIDI Device window. Here is a recommendation to install freepats and timidity. On Ubuntu you can run
+The most recommended solution for playing MIDI files on Linux (especially Ubuntu) is to use FluidSynth + QSynth, which allows users to freely select local SoundFont files as sound sources for playing MIDI files.
+
+On Ubuntu, you can run
+
+```
+sudo apt-get install fluidsynth
+sudo apt-get install qsynth
+```
+
+Then open the QSynth interface, configure the MIDI input and output audio drivers appropriate for your system version, and select a SoundFont sound source (FluidSynth provides default SoundFont sound sources to choose from).
+
+Next, in the Choose MIDI Device window of Ideal Piano, choose the MIDI output port corresponding to the MIDI port you set in QSynth.
+
+If you want to use SoundFont files as instruments in the Linux version, you need to install FluidSynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions.
+
+
+
+Note: If you can't find a MIDI output port to select here, open the terminal and run the following command, then reopen Ideal Piano to try again.
+
+```python
+sudo ln -s /usr/share/alsa /usr/local/share/alsa
+```
+
+
+
+Another option is to install freepats and timidity. On Ubuntu you can run
 
 ```
 sudo apt-get install freepats timidity
@@ -106,13 +131,9 @@ sudo ln -s /usr/share/alsa /usr/local/share/alsa
 timidity -iA
 ```
 
-and then select the MIDI output port of timidity in the Choose MIDI Device window.
+and then select the MIDI output port of timidity in the Choose MIDI Device window of Ideal Piano.
 
-If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
 
-```
-sudo apt-get install fluidsynth
-```
 
 ### macOS
 
@@ -122,9 +143,9 @@ For macOS version,  to play MIDI files using the default settings you need to ma
 
 If you don't currently have any MIDI ports with a synthesizer, here's a suggestion to install VMPK (Virtual MIDI Piano Keyboard), click [here](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-mac-x64.dmg/download) to download the installation package, open VMPK after installation, open `Edit - MIDI Connections ` from the menu bar, check `Enable MIDI Input` and `Enable MIDI Thru on MIDI Output`, then in the `MIDI IN Driver`, select `CoreMIDI`, then click `OK` to save the settings. Next, right-click on the `MIDI KEYBOARD` button in Ideal Piano to open the interface for selecting MIDI ports, and select `CoreMIDI,MIDI In` in the `MIDI Output Driver` column, close the window. Then you can play MIDI files normally.
 
-You can also use [VMPK](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-x86_64.AppImage/download) for Linux version, select `ALSA` for `MIDI IN Driver`, and select `ALSA, in` in `MIDI Output Driver` column of the interface for selecting MIDI ports.
+You can also use [VMPK](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-x86_64.AppImage/download) for Linux version, select `ALSA` for `MIDI IN Driver`, and select `ALSA, in` in `MIDI Output Driver` column in the Choose MIDI Device window of Ideal Piano.
 
-If you want to use SoundFont files as instruments in the macOS version, you need to install fluidsynth, it is recommended to install fluidsynth with homebrew.
+If you want to use SoundFont files as instruments in the macOS version, you need to install FluidSynth, it is recommended to install FluidSynth with homebrew.
 
 ```
 brew install fluidsynth
