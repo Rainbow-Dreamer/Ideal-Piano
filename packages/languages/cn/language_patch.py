@@ -224,7 +224,7 @@ def show(self, **to_text_args):
         ] + [
             f'{info_translate_dict[i.replace("_", " ")]}: {info_translate_dict.get(j, j) if not isinstance(j, list) else j}'
             for i, j in current_vars.items() if i not in
-            ['type', 'note_name', 'interval_name', 'highest_ratio']
+            ['type', 'note_name', 'interval_name', 'highest_ratio', 'order']
         ]
         if self.chord_speciality == 'polychord':
             for i, each in enumerate(current):

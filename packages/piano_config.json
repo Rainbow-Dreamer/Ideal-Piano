@@ -24,20 +24,20 @@
     ],
     "fonts_size": 23,
     "label1_place": [
-        300,
+        400,
         400
     ],
     "label2_place": [
-        300,
+        400,
         350
     ],
     "label3_place": [
-        300,
+        400,
         450
     ],
     "label_anchor_x": "left",
     "label_anchor_y": "center",
-    "label_width": 1000,
+    "label_width": 800,
     "fonts": "Consolas",
     "fonts_file": "",
     "fonts_path": "",
@@ -329,8 +329,8 @@
     "show_chord_accidentals": "sharp",
     "show_chord_details": false,
     "chord_details_label_place": [
-        750,
-        500
+        20,
+        450
     ],
     "chord_details_label_anchor_x": "left",
     "chord_details_label_anchor_y": "baseline",
@@ -384,8 +384,8 @@
     ],
     "black_keys_set_interval": 43.75,
     "black_keys_set_num": 7,
-    "show_note_name_on_piano_key": false,
-    "show_only_start_note_name": false,
+    "show_note_name_on_piano_key": true,
+    "show_only_start_note_name": true,
     "piano_key_note_name_font_size": 12,
     "piano_key_note_name_bold": false,
     "piano_key_note_name_italic": false,
