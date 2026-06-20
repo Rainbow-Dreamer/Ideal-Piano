@@ -23,15 +23,15 @@
         255
     ],
     "fonts_size": 23,
-    "label1_place": [
+    "note_names_label_place": [
         400,
         400
     ],
-    "label2_place": [
+    "chord_type_label_place": [
         400,
         350
     ],
-    "label3_place": [
+    "message_label_place": [
         400,
         450
     ],

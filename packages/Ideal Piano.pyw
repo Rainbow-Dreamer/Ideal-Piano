@@ -419,41 +419,44 @@ class piano_window(pyglet.window.Window):
             pyglet.font.add_file(piano_config.fonts_file)
         if piano_config.fonts_path:
             pyglet.font.add_directory(piano_config.fonts_path)
-        self.label = pyglet.text.Label('',
-                                       font_name=piano_config.fonts,
-                                       font_size=piano_config.fonts_size,
-                                       bold=piano_config.bold,
-                                       italic=piano_config.italic,
-                                       dpi=piano_config.fonts_dpi,
-                                       x=piano_config.label1_place[0],
-                                       y=piano_config.label1_place[1],
-                                       color=piano_config.message_color,
-                                       anchor_x=piano_config.label_anchor_x,
-                                       anchor_y=piano_config.label_anchor_y,
-                                       multiline=True,
-                                       width=piano_config.label_width)
-        self.label2 = pyglet.text.Label('',
-                                        font_name=piano_config.fonts,
-                                        font_size=piano_config.fonts_size,
-                                        bold=piano_config.bold,
-                                        italic=piano_config.italic,
-                                        dpi=piano_config.fonts_dpi,
-                                        x=piano_config.label2_place[0],
-                                        y=piano_config.label2_place[1],
-                                        color=piano_config.message_color,
-                                        anchor_x=piano_config.label_anchor_x,
-                                        anchor_y=piano_config.label_anchor_y)
-        self.label3 = pyglet.text.Label('',
-                                        font_name=piano_config.fonts,
-                                        font_size=piano_config.fonts_size,
-                                        bold=piano_config.bold,
-                                        italic=piano_config.italic,
-                                        dpi=piano_config.fonts_dpi,
-                                        x=piano_config.label3_place[0],
-                                        y=piano_config.label3_place[1],
-                                        color=piano_config.message_color,
-                                        anchor_x=piano_config.label_anchor_x,
-                                        anchor_y=piano_config.label_anchor_y)
+        self.note_names_label = pyglet.text.Label(
+            '',
+            font_name=piano_config.fonts,
+            font_size=piano_config.fonts_size,
+            bold=piano_config.bold,
+            italic=piano_config.italic,
+            dpi=piano_config.fonts_dpi,
+            x=piano_config.note_names_label_place[0],
+            y=piano_config.note_names_label_place[1],
+            color=piano_config.message_color,
+            anchor_x=piano_config.label_anchor_x,
+            anchor_y=piano_config.label_anchor_y,
+            multiline=True,
+            width=piano_config.label_width)
+        self.chord_type_label = pyglet.text.Label(
+            '',
+            font_name=piano_config.fonts,
+            font_size=piano_config.fonts_size,
+            bold=piano_config.bold,
+            italic=piano_config.italic,
+            dpi=piano_config.fonts_dpi,
+            x=piano_config.chord_type_label_place[0],
+            y=piano_config.chord_type_label_place[1],
+            color=piano_config.message_color,
+            anchor_x=piano_config.label_anchor_x,
+            anchor_y=piano_config.label_anchor_y)
+        self.message_label = pyglet.text.Label(
+            '',
+            font_name=piano_config.fonts,
+            font_size=piano_config.fonts_size,
+            bold=piano_config.bold,
+            italic=piano_config.italic,
+            dpi=piano_config.fonts_dpi,
+            x=piano_config.message_label_place[0],
+            y=piano_config.message_label_place[1],
+            color=piano_config.message_color,
+            anchor_x=piano_config.label_anchor_x,
+            anchor_y=piano_config.label_anchor_y)
 
         self.chord_details_label = pyglet.text.Label(
             '',
@@ -651,8 +654,8 @@ class piano_window(pyglet.window.Window):
         self.mouse_left = 1
         self.mouse_right = 4
         self.mouse_pos = 0, 0
-        self.first_time = True
-        self.message_label = False
+        self.is_first_time = True
+        self.is_show_message_label = False
         self.is_click = False
         self.mode_num = None
         self.func = None
@@ -742,22 +745,23 @@ class piano_window(pyglet.window.Window):
 
     def on_mouse_press(self, x, y, button, modifiers):
         if self.go_back_button.mouse_press(
-                self, button, mouse=self.mouse_left) and not self.first_time:
+                self, button,
+                mouse=self.mouse_left) and not self.is_first_time:
             self._go_back_func()
         if self.self_play_button.mouse_press(
-                self, button, mouse=self.mouse_left) and self.first_time:
+                self, button, mouse=self.mouse_left) and self.is_first_time:
             self.click_mode = 0
         if self.self_midi_button.mouse_press(
-                self, button, mouse=self.mouse_left) and self.first_time:
+                self, button, mouse=self.mouse_left) and self.is_first_time:
             self.click_mode = 1
         if self.self_midi_button.mouse_press(
-                self, button, mouse=self.mouse_right) and self.first_time:
+                self, button, mouse=self.mouse_right) and self.is_first_time:
             self.open_midi_keyboard_right_click_menu()
         if self.play_midi_button.mouse_press(
-                self, button, mouse=self.mouse_left) and self.first_time:
+                self, button, mouse=self.mouse_left) and self.is_first_time:
             self.click_mode = 2
         if self.settings_button.mouse_press(
-                self, button, mouse=self.mouse_left) and self.first_time:
+                self, button, mouse=self.mouse_left) and self.is_first_time:
             self.open_settings()
         if self.mode_num == 2 and button == self.mouse_left and self.inside_progression_bar(
                 x, y):
@@ -787,7 +791,7 @@ class piano_window(pyglet.window.Window):
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
-        if self.first_time:
+        if self.is_first_time:
             self._draw_window_first_time()
         else:
             self._draw_window()
@@ -891,14 +895,20 @@ class piano_window(pyglet.window.Window):
             self.settings_button.button.scale_y = scale_y
 
             if piano_config.show_notes:
-                self.label.x = piano_config.label1_place[0] * scale_x
-                self.label.y = piano_config.label1_place[1] * scale_y
+                self.note_names_label.x = piano_config.note_names_label_place[
+                    0] * scale_x
+                self.note_names_label.y = piano_config.note_names_label_place[
+                    1] * scale_y
             if piano_config.show_chord:
-                self.label2.x = piano_config.label2_place[0] * scale_x
-                self.label2.y = piano_config.label2_place[1] * scale_y
-            if self.message_label:
-                self.label3.x = piano_config.label3_place[0] * scale_x
-                self.label3.y = piano_config.label3_place[1] * scale_y
+                self.chord_type_label.x = piano_config.chord_type_label_place[
+                    0] * scale_x
+                self.chord_type_label.y = piano_config.chord_type_label_place[
+                    1] * scale_y
+            if self.is_show_message_label:
+                self.message_label.x = piano_config.message_label_place[
+                    0] * scale_x
+                self.message_label.y = piano_config.message_label_place[
+                    1] * scale_y
             if piano_config.show_chord_details:
                 self.chord_details_label.x = piano_config.chord_details_label_place[
                     0] * scale_x
@@ -977,7 +987,7 @@ class piano_window(pyglet.window.Window):
             current_piano_engine.bars_drop_time.clear()
         for k in range(len(self.piano_keys)):
             self.piano_keys[k].color = self.initial_colors[k]
-        self.label3.text = ''
+        self.message_label.text = ''
         if current_piano_engine.detect_key_info:
             current_piano_engine.detect_key_info.clear()
             current_piano_engine.detect_key_info_ind = 0
@@ -1000,19 +1010,21 @@ class piano_window(pyglet.window.Window):
             self.open_settings()
         if self.keyboard_handler[self.config_key] and self.keyboard_handler[
                 key.R]:
-            self.label.text = language_patch.ideal_piano_language_dict[
+            self.note_names_label.text = language_patch.ideal_piano_language_dict[
                 'reload']
-            self.label.draw()
+            self.note_names_label.draw()
             self.flip()
             self.reload_settings()
         if self.click_mode == 0:
             self.mode_num = 0
-            self.label.text = language_patch.ideal_piano_language_dict['load']
-            self.label.draw()
+            self.note_names_label.text = language_patch.ideal_piano_language_dict[
+                'load']
+            self.note_names_label.draw()
         elif self.click_mode == 1:
             self.mode_num = 1
-            self.label.text = language_patch.ideal_piano_language_dict['load']
-            self.label.draw()
+            self.note_names_label.text = language_patch.ideal_piano_language_dict[
+                'load']
+            self.note_names_label.draw()
         elif self.click_mode == 2:
             self.mode_num = 2
 
@@ -1041,10 +1053,10 @@ class piano_window(pyglet.window.Window):
                         _midi_show_playing_read_pc_move_progress_key, 0.1)
         elif self.mode_num == 3:
             time.sleep(2)
-            self.label.text = ''
+            self.note_names_label.text = ''
             self.mode_num = None
         elif self.mode_num == 4:
-            self.label.text = ''
+            self.note_names_label.text = ''
             self.mode_num = None
             self.reset_click_mode()
 
@@ -1052,19 +1064,19 @@ class piano_window(pyglet.window.Window):
         if self.is_click:
             self.is_click = False
             self.not_first()
-            self.label.text = ''
-            self.label2.text = ''
+            self.note_names_label.text = ''
+            self.chord_type_label.text = ''
 
             pyglet.clock.unschedule(self.func)
             self.mode_num = None
-        self.label.draw()
-        self.label2.draw()
+        self.note_names_label.draw()
+        self.chord_type_label.draw()
         if piano_config.show_chord_details:
             self.chord_details_label.draw()
         if piano_config.show_current_detect_key:
             self.current_detect_key_label.draw()
-        if self.message_label:
-            self.label3.draw()
+        if self.is_show_message_label:
+            self.message_label.draw()
         if piano_config.show_music_analysis:
             self.music_analysis_label.draw()
 
@@ -1074,13 +1086,13 @@ class piano_window(pyglet.window.Window):
         if self.batch:
             self.batch.draw()
         self.go_back_button.draw()
-        self.label2.draw()
+        self.chord_type_label.draw()
         if piano_config.show_chord_details:
             self.chord_details_label.draw()
         if piano_config.show_current_detect_key:
             self.current_detect_key_label.draw()
-        if self.message_label:
-            self.label3.draw()
+        if self.is_show_message_label:
+            self.message_label.draw()
         if piano_config.show_music_analysis:
             self.music_analysis_label.draw()
 
@@ -1088,7 +1100,7 @@ class piano_window(pyglet.window.Window):
         self.click_mode = None
 
     def not_first(self):
-        self.first_time = not self.first_time
+        self.is_first_time = not self.is_first_time
 
     def open_settings(self):
         if not self.open_settings_window:
@@ -1175,7 +1187,7 @@ class piano_engine:
                 current_piano_window.map_key_dict2[current_key]]
 
     def configshow(self, content):
-        current_piano_window.label.text = str(content)
+        current_piano_window.note_names_label.text = str(content)
 
     def switchs(self, current_key, name):
         if self.configkey(current_key):
@@ -1233,8 +1245,8 @@ class piano_engine:
                 preset=current_sf2.current_preset + step, correct=False)
             current_preset = f'{current_sf2.current_preset} {current_sf2.get_current_instrument()}' if current_change != -1 else f'{current_sf2.current_preset} No preset'
             current_piano_window.redraw()
-            current_piano_window.label.text = f'Change SoundFont preset to {current_preset}'
-            current_piano_window.label.draw()
+            current_piano_window.note_names_label.text = f'Change SoundFont preset to {current_preset}'
+            current_piano_window.note_names_label.draw()
             current_piano_window.flip()
             if current_change != -1:
                 if audio_mode == 0:
@@ -1252,8 +1264,8 @@ class piano_engine:
         else:
             current_sf2.change_bank(current_sf2.current_bank + step)
             current_piano_window.redraw()
-            current_piano_window.label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
-            current_piano_window.label.draw()
+            current_piano_window.note_names_label.text = f'Change SoundFont bank to {current_sf2.current_bank}'
+            current_piano_window.note_names_label.draw()
             current_piano_window.flip()
 
     def midi_file_play(self):
@@ -1455,9 +1467,9 @@ class piano_engine:
                 self.current_play_chords = mp.chord([])
                 current_piano_window.current_detect_key_label.text = ''
 
-            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+            current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                 'finished']
-            current_piano_window.label.draw()
+            current_piano_window.note_names_label.draw()
             current_piano_window.func = current_piano_engine.mode_self_pc
             pyglet.clock.schedule_interval(current_piano_window.func,
                                            1 / piano_config.fps)
@@ -1481,9 +1493,9 @@ class piano_engine:
                 self.current_play_chords = mp.chord([])
                 current_piano_window.current_detect_key_label.text = ''
 
-            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+            current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                 'finished']
-            current_piano_window.label.draw()
+            current_piano_window.note_names_label.draw()
             current_piano_window.func = current_piano_engine.mode_self_pc
             pyglet.clock.schedule_interval(current_piano_window.func,
                                            1 / piano_config.fps)
@@ -1547,15 +1559,15 @@ class piano_engine:
                         self.midi_output_port = pygame.midi.Output(
                             midi_output_port)
                 if not self.device:
-                    current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                    current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                         'no MIDI input']
                     current_piano_window.mode_num = 3
                     current_piano_window.reset_click_mode()
-                    current_piano_window.label.draw()
+                    current_piano_window.note_names_label.draw()
                 else:
-                    current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                    current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                         'finished']
-                    current_piano_window.label.draw()
+                    current_piano_window.note_names_label.draw()
                     current_piano_window.func = self.mode_self_midi
                     pyglet.clock.schedule_interval(current_piano_window.func,
                                                    1 / piano_config.fps)
@@ -1570,11 +1582,11 @@ class piano_engine:
         except Exception as e:
             self.has_load(False)
             pygame.midi.quit()
-            current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+            current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                 'no MIDI input']
             current_piano_window.mode_num = 3
             current_piano_window.reset_click_mode()
-            current_piano_window.label.draw()
+            current_piano_window.note_names_label.draw()
 
     def wait_self_midi_load(self, current_wavdic, is_load_sound=True):
         if current_piano_window.click_mode is None:
@@ -1588,15 +1600,15 @@ class piano_engine:
             if is_load_sound:
                 self.wavdic = current_wavdic[0]
             if not self.device:
-                current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                     'no MIDI input']
                 current_piano_window.mode_num = 3
                 current_piano_window.reset_click_mode()
-                current_piano_window.label.draw()
+                current_piano_window.note_names_label.draw()
             else:
-                current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+                current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
                     'finished']
-                current_piano_window.label.draw()
+                current_piano_window.note_names_label.draw()
                 current_piano_window.func = self.mode_self_midi
                 pyglet.clock.schedule_interval(current_piano_window.func,
                                                1 / piano_config.fps)
@@ -1773,6 +1785,10 @@ class piano_engine:
                     else:
                         self._load_file('temp.mid')
         current_start_time = current_piano_window.bars_drop_interval
+        if piano_config.use_soundfont:
+            self.original_midi_file_tempo_info = self._get_midi_file_tempo_map_segments(
+                current_piano_window.current_sf2_player.current_midi_file,
+                mp.mido.bpm2tempo(self.bpm))
         if not piano_config.use_soundfont:
             current_play_midi_start_process_time = piano_config.play_midi_start_process_time if piano_config.midi_playing_multiprocess else 0
             current_start_time -= current_play_midi_start_process_time
@@ -1782,8 +1798,8 @@ class piano_engine:
                 try:
                     self._init_send_midi(current_start_time)
                 except Exception as e:
-                    current_piano_window.label.text = str(e)
-                    current_piano_window.label.draw()
+                    current_piano_window.note_names_label.text = str(e)
+                    current_piano_window.note_names_label.draw()
                     current_piano_window.flip()
                     pyglet.clock.schedule_once(
                         lambda dt: current_piano_window._go_back_func(), 1)
@@ -1823,8 +1839,8 @@ class piano_engine:
             try:
                 self._init_send_midi(current_start_time)
             except Exception as e:
-                current_piano_window.label.text = str(e)
-                current_piano_window.label.draw()
+                current_piano_window.note_names_label.text = str(e)
+                current_piano_window.note_names_label.draw()
                 current_piano_window.flip()
                 pyglet.clock.schedule_once(
                     lambda dt: current_piano_window._go_back_func(), 1)
@@ -2062,24 +2078,37 @@ class piano_engine:
             self.currentchord.notes.sort(key=lambda x: x.degree)
             if self.currentchord != self.lastshow:
                 self.lastshow = self.currentchord
-                current_piano_window.label.text = self._show_notes(
+                current_piano_window.note_names_label.text = self._show_notes(
                     self.currentchord.notes)
                 if piano_config.show_chord and any(
                         type(t) == mp.note for t in self.currentchord):
                     chordtype = self._detect_chord(self.currentchord)
 
-                    current_piano_window.label2.text = str(chordtype)
+                    current_piano_window.chord_type_label.text = str(chordtype)
         else:
             self.lastshow = notels
-            current_piano_window.label.text = str(notels)
-            current_piano_window.label2.text = ''
+            current_note_names = ', '.join(self._deduplicate_notes(notels))
+            current_piano_window.note_names_label.text = current_note_names
+            current_piano_window.chord_type_label.text = ''
         if piano_config.show_key:
-            current_piano_window.label.text = str(self.truecurrent)
+            current_note_names = ', '.join(
+                self._deduplicate_notes(self.truecurrent))
+            current_piano_window.note_names_label.text = current_note_names
+
+    def _deduplicate_notes(self, current_chord):
+        seen = set()
+        current_chord = [
+            i for i in current_chord if not (i in seen or seen.add(i))
+        ]
+        return current_chord
 
     def _show_notes(self, current_chord):
         if piano_config.show_chord_accidentals == 'flat':
             current_chord = [~i if '#' in i.name else i for i in current_chord]
-        return str(current_chord)
+        current_chord = [str(i) for i in current_chord]
+        current_chord = self._deduplicate_notes(current_chord)
+        result = ', '.join(current_chord)
+        return result
 
     def mode_self_midi(self, dt):
         self._midi_keyboard_read_stillplay_notes()
@@ -2125,7 +2154,7 @@ class piano_engine:
             if currentchord:
                 self.currentchord = mp.chord(currentchord)
                 self.currentchord.notes.sort(key=lambda x: x.degree)
-                current_piano_window.label.text = self._show_notes(
+                current_piano_window.note_names_label.text = self._show_notes(
                     self.currentchord.notes)
                 if piano_config.show_chord:
                     if not (self.last_time_currentchord and self.currentchord
@@ -2135,10 +2164,10 @@ class piano_engine:
                         self.last_time_chordtype = chordtype
                     else:
                         chordtype = self.last_time_chordtype
-                    current_piano_window.label2.text = str(chordtype)
+                    current_piano_window.chord_type_label.text = str(chordtype)
             else:
-                current_piano_window.label.text = '[]'
-                current_piano_window.label2.text = ''
+                current_piano_window.note_names_label.text = ''
+                current_piano_window.chord_type_label.text = ''
 
     def _midi_keyboard_clear_all_bars(self):
         for each in self.still_hold:
@@ -2157,7 +2186,7 @@ class piano_engine:
                 ) if piano_config.delay_only_read_current else mp.chord(
                     self.stillplay)
                 self.currentchord.notes.sort(key=lambda x: x.degree)
-                current_piano_window.label.text = self._show_notes(
+                current_piano_window.note_names_label.text = self._show_notes(
                     self.currentchord.notes)
                 if piano_config.show_chord and any(
                         type(t) == mp.note for t in self.currentchord):
@@ -2169,11 +2198,11 @@ class piano_engine:
                     else:
                         chordtype = self.last_time_chordtype
 
-                    current_piano_window.label2.text = str(chordtype)
+                    current_piano_window.chord_type_label.text = str(chordtype)
             else:
                 if piano_config.delay_only_read_current:
-                    current_piano_window.label.text = '[]'
-                    current_piano_window.label2.text = ''
+                    current_piano_window.note_names_label.text = ''
+                    current_piano_window.chord_type_label.text = ''
 
     def _midi_keyboard_read_device_midi_events(self):
         if self.device.poll():
@@ -2449,11 +2478,12 @@ class piano_engine:
 
     def _midi_show_update_notes_text(self, dt=None, playnotes=None):
         if piano_config.show_notes:
-            current_piano_window.label.text = self._show_notes(playnotes)
+            current_piano_window.note_names_label.text = self._show_notes(
+                playnotes)
         if piano_config.show_chord and any(
                 type(t) == mp.note for t in playnotes):
             chordtype = self._detect_chord(playnotes)
-            current_piano_window.label2.text = str(chordtype)
+            current_piano_window.chord_type_label.text = str(chordtype)
 
     def _midi_show_playing_read_pc_keyboard_key(self, dt):
         if current_piano_window.keyboard_handler[
@@ -2471,8 +2501,8 @@ class piano_engine:
                 self.paused = True
             if self.paused:
                 self.pause_start = time.time()
-                current_piano_window.message_label = True
-                current_piano_window.label3.text = language_patch.ideal_piano_language_dict[
+                current_piano_window.is_show_message_label = True
+                current_piano_window.message_label.text = language_patch.ideal_piano_language_dict[
                     'pause'].format(unpause_key=piano_config.unpause_key)
 
     def _midi_show_playing_read_pc_move_progress_key(self, dt):
@@ -2519,12 +2549,124 @@ class piano_engine:
                     ['set_position', self.current_position])
         else:
             current_sf2_player = current_piano_window.current_sf2_player
-            current_ticks = int(
-                mp.mido.second2tick(current_sf2_time,
-                                    self.current_ticks_per_beat,
-                                    current_sf2_player.get_current_tempo()))
+            current_original_ticks = self._get_original_tick_from_seconds(
+                *self.original_midi_file_tempo_info,
+                target_seconds=current_sf2_time)
+            current_ticks = round(current_original_ticks)
             current_sf2_player.set_pos(current_ticks)
         self._midi_show_clear_all_bars_drop()
+
+    def _get_midi_file_tempo_map_segments(self, midi_file_path, current_tempo):
+        # 加载 MIDI 文件
+        mid = mp.mido.MidiFile(midi_file_path)
+
+        # 获取文件的分辨率 (PPQN)
+        ticks_per_beat = mid.ticks_per_beat
+
+        # 提取所有速度变化事件 (Tempo Map)
+        # 格式: [(tick_position, tempo_in_microseconds_per_beat), ...]
+        tempo_map = []
+
+        # 注意：MIDI 文件中的时间是相对 tick 值，需要转换为绝对 tick 位置
+        absolute_tick = 0
+        for track in mid.tracks:
+            for msg in track:
+                absolute_tick += msg.time
+                if msg.type == 'set_tempo':
+                    tempo_map.append((absolute_tick, msg.tempo))
+
+        # 确保速度地图按 Tick 排序（通常已经是有序的，但为了保险）
+        tempo_map.sort(key=lambda x: x[0])
+
+        # 如果没有任何速度变化事件，保持默认初始速度
+        if not tempo_map:
+            tempo_map.append((0, current_tempo))
+        else:
+            # 确保第 0 tick 处有一个初始速度定义，如果没有，则插入默认值
+            if tempo_map[0][0] != 0:
+                tempo_map.insert(0, (0, current_tempo))
+
+        # 遍历速度地图，分段计算时间
+        accumulated_seconds = 0.0
+        last_tick = 0
+        last_tempo = tempo_map[0][1]
+
+        # 用于存储每个区间的结束信息，方便后续查找
+        # segments: [(start_tick, end_tick, tempo, duration_seconds)]
+        segments = []
+
+        for i in range(len(tempo_map)):
+            start_tick = tempo_map[i][0]
+            tempo = tempo_map[i][1]
+
+            # 确定当前区间的结束 Tick
+            # 如果是最后一个区间，结束 Tick 设为一个极大值或文件总长度
+            if i + 1 < len(tempo_map):
+                end_tick = tempo_map[i + 1][0]
+            else:
+                # 对于最后一个区间，我们不知道结束位置，先标记为 None
+                end_tick = None
+
+            # 计算当前区间覆盖的 Tick 数
+            delta_ticks = (end_tick
+                           if end_tick is not None else 0) - start_tick
+
+            # 如果 end_tick 是 None，说明这是最后一段，我们需要在循环外处理
+            if end_tick is None:
+                break
+
+            # 计算当前区间持续的秒数
+            # 公式: seconds = (ticks / ticks_per_beat) * (tempo_us / 1e6)
+            duration_seconds = (delta_ticks / ticks_per_beat) * (tempo * 1e-6)
+
+            segments.append({
+                'start_tick': start_tick,
+                'end_tick': end_tick,
+                'tempo': tempo,
+                'duration_seconds': duration_seconds,
+                'accumulated_seconds_start': accumulated_seconds
+            })
+
+            accumulated_seconds += duration_seconds
+            last_tick = end_tick
+            last_tempo = tempo
+        return segments, accumulated_seconds, last_tempo, ticks_per_beat, last_tick
+
+    def _get_original_tick_from_seconds(self, segments, accumulated_seconds,
+                                        last_tempo, ticks_per_beat, last_tick,
+                                        target_seconds):
+        # 查找目标时间所在的区间
+        target_tick = 0.0
+
+        # 检查是否超出文件总时长
+        if target_seconds > accumulated_seconds:
+            # 如果目标时间超过文件总长，返回文件最后一个 Tick 或者抛出异常
+            # 这里简单返回最后一个已知 Tick 加上基于最后速度的估算
+            remaining_sec = target_seconds - accumulated_seconds
+            extra_ticks = (remaining_sec /
+                           (last_tempo * 1e-6)) * ticks_per_beat
+            return last_tick + extra_ticks
+
+        for seg in segments:
+            seg_end_time = seg['accumulated_seconds_start'] + seg[
+                'duration_seconds']
+
+            # 如果目标时间在当前区间内
+            if seg['accumulated_seconds_start'] <= target_seconds < seg_end_time:
+                # 计算在当前区间内经过的秒数
+                time_in_segment = target_seconds - seg[
+                    'accumulated_seconds_start']
+
+                # 将该秒数转换为 Tick
+                # ticks = (seconds / tempo_us * 1e6) * ticks_per_beat
+                ticks_in_segment = (time_in_segment /
+                                    (seg['tempo'] * 1e-6)) * ticks_per_beat
+
+                target_tick = seg['start_tick'] + ticks_in_segment
+                return target_tick
+
+        # 理论上不会到达这里，除非 target_seconds 恰好等于总时长
+        return segments[-1]['end_tick'] if segments else 0
 
     def _midi_show_clear_all_bars_drop(self):
         for each in self.plays:
@@ -2533,9 +2675,9 @@ class piano_engine:
                 each.num].color = current_piano_window.initial_colors[each.num]
         self.plays.clear()
         if piano_config.show_notes:
-            current_piano_window.label.text = ''
+            current_piano_window.note_names_label.text = ''
         if piano_config.show_chord:
-            current_piano_window.label2.text = ''
+            current_piano_window.chord_type_label.text = ''
         self.current_hit_key_notes.clear()
 
     def _midi_show_draw_notes_hit_key_bars_mode(self):
@@ -2604,7 +2746,7 @@ class piano_engine:
                     if piano_config.load_sound:
                         self.current_send_midi_queue.put('unpause')
             self.paused = False
-            current_piano_window.message_label = False
+            current_piano_window.is_show_message_label = False
             pause_stop = time.time()
             pause_time = pause_stop - self.pause_start
             self.startplay += pause_time
@@ -2617,14 +2759,14 @@ class piano_engine:
                         t.degree -
                         21].color = current_piano_window.initial_colors[
                             t.degree - 21]
-        current_piano_window.label2.text = ''
+        current_piano_window.chord_type_label.text = ''
         for each in self.plays:
             each.batch = None
         if piano_config.show_music_analysis:
             current_piano_window.music_analysis_label.text = ''
             self.show_music_analysis_list = copy(
                 self.default_show_music_analysis_list)
-        current_piano_window.label.text = language_patch.ideal_piano_language_dict[
+        current_piano_window.note_names_label.text = language_patch.ideal_piano_language_dict[
             'repeat'].format(repeat_key=piano_config.repeat_key)
         if current_piano_window.keyboard_handler[
                 current_piano_window.repeat_key]:
@@ -2635,7 +2777,7 @@ class piano_engine:
             for k in range(len(current_piano_window.piano_keys)):
                 current_piano_window.piano_keys[
                     k].color = current_piano_window.initial_colors[k]
-            current_piano_window.label.text = ''
+            current_piano_window.note_names_label.text = ''
             current_piano_window.redraw()
             self._midi_show_init(self.musicsheet,
                                  self.unit_time,
