@@ -31,9 +31,9 @@ Ideal Piano currently supports Windows, Linux and macOS. Please see the download
 
 Windows: tested on Windows 7, 10, 11
 
-Linux: tested on Ubuntu 21.10
+Linux: tested on Ubuntu 24.04.4
 
-macOS: tested on macOS 12
+macOS: tested on macOS 13
 
 
 
@@ -48,23 +48,7 @@ Please check user instructions in `User Manuals` folder, which provides detailed
 
 You can download this software for Windows, Linux and macOS from [here](https://www.jianguoyun.com/p/DQxzhfAQt43aDBi-rckFIAA).
 
-Note1: for Linux version, playing MIDI files using default settings requires installing freepats and timidity. Then follow the steps in User Instruction. On Ubuntu you can run
-
-```
-sudo apt-get install freepats timidity
-```
-
-If you want to use SoundFont files as instruments in the Linux version, you need to install fluidsynth, you can refer to [here](https://github.com/FluidSynth/fluidsynth/wiki/Download) for the install command for different Linux distributions. For Ubuntu, it is
-
-```
-sudo apt-get install fluidsynth
-```
-
-Note2: for macOS version, If you want to use SoundFont files as instruments, you need to install fluidsynth, you can use homebrew to install fluidsynth by running this line in the terminal
-
-```
-brew install fluidsynth
-```
+Note: For the Linux and macOS versions, some compatibility configurations are required. For details, please refer to the [documentation](https://github.com/Rainbow-Dreamer/Ideal-Piano/blob/master/User%20Manuals/English/User%20Instructions%20(Read%20me%20first!).md#is-there-a-compatible-version-for-linux-and-macos).
 
 
 

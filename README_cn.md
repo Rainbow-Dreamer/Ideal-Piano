@@ -29,9 +29,9 @@ Ideal Piano目前支持Windows, Linux和macOS。请看README的下载部分。
 
 Windows: 在Windows 7, 10, 11上测试通过
 
-Linux：在Ubuntu 21.10上测试通过
+Linux：在Ubuntu 24.04.4上测试通过
 
-macOS：在macOS 12上测试通过
+macOS：在macOS 13上测试通过
 
 
 
@@ -45,23 +45,7 @@ macOS：在macOS 12上测试通过
 
 你可以从[这里](https://www.jianguoyun.com/p/DQxzhfAQt43aDBi-rckFIAA)下载这个软件的Windows, Linux和macOS版本。
 
-注意1：对于Linux版本，使用默认设置播放MIDI文件需要安装freepats 和 timidity。然后按照使用须知里的步骤进行。在Ubuntu上，你可以运行
-
-```
-sudo apt-get install freepats timidity
-```
-
-如果你想在Linux版本中使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以参考[这里](https://github.com/FluidSynth/fluidsynth/wiki/Download)了解不同Linux发行版的安装命令。对于Ubuntu，它是
-
-```
-sudo apt-get install fluidsynth
-```
-
-注意2：对于macOS版本，如果你想使用SoundFont文件作为乐器，你需要安装fluidsynth，你可以用homebrew在terminal运行这一行来安装fluidsynth
-
-```
-brew install fluidsynth
-```
+注意：对于Linux和macOS版本，需要进行一些兼容性配置，详情请参考[说明文档](https://github.com/Rainbow-Dreamer/Ideal-Piano/blob/master/User%20Manuals/%E4%B8%AD%E6%96%87/%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5%20(%E8%AF%B7%E5%85%88%E7%9C%8B%E6%88%91!).md#%E6%9C%89linux%E5%92%8Cmacos%E7%9A%84%E5%85%BC%E5%AE%B9%E7%89%88%E6%9C%AC%E5%90%97)。
 
 
 

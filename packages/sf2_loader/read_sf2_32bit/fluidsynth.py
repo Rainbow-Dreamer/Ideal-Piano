@@ -38,7 +38,8 @@ lib = find_library('fluidsynth') or \
     find_library('libfluidsynth') or \
     find_library('libfluidsynth-3') or \
     find_library('libfluidsynth-2') or \
-    find_library('libfluidsynth-1')
+    find_library('libfluidsynth-1') or \
+    "/opt/local/lib/libfluidsynth.dylib"
 
 if lib is None:
     raise ImportError("Couldn't find the FluidSynth library.")
@@ -1160,7 +1161,7 @@ class Sequencer:
 
 def raw_audio_string(data) -> bytes:
     """Return the bytes to send to soundcard
-    
+
     Input is a numpy array of samples.  Default output format
     is 16-bit signed (other formats not currently supported).
     

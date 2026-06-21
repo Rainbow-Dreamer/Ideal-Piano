@@ -145,11 +145,16 @@ If you don't currently have any MIDI ports with a synthesizer, here's a suggesti
 
 You can also use [VMPK](https://sourceforge.net/projects/vmpk/files/vmpk/0.8.8/vmpk-0.8.8-x86_64.AppImage/download) for Linux version, select `ALSA` for `MIDI IN Driver`, and select `ALSA, in` in `MIDI Output Driver` column in the Choose MIDI Device window of Ideal Piano.
 
-If you want to use SoundFont files as instruments in the macOS version, you need to install FluidSynth, it is recommended to install FluidSynth with homebrew.
+If you want to use SoundFont files as instruments in the macOS version, you need to install FluidSynth on macOS. We recommend using MacPorts to install FluidSynth.
+
+Please install MacPorts on your current macOS system, you can refer to this [link](https://www.macports.org/install.php) for installation instructions.
+
+Then, run this command in terminal to install FluidSynth using MacPorts.
 
 ```
-brew install fluidsynth
+sudo port install fluidsynth
 ```
+
 
 
 
